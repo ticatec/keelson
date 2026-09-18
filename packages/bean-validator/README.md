@@ -18,12 +18,18 @@ A flexible and powerful validation library for Node.js that allows you to valida
 - ✅ **Custom Validation**: Flexible custom validation functions
 - ✅ **Structured Errors**: Detailed error objects for better error handling
 - ✅ **Field Aliases**: Use friendly field names in error messages
+- ✅ **Localisation**: Override any message template, partially or completely
+- ✅ **Empty Means Empty**: A blank form field reports "cannot be empty", not a type error
+- ✅ **Built-in Logging**: Failures are logged through the `@ticatec/logger-api` contract
 
 ## Installation
 
 ```shell
-npm i @ticatec/bean-validator
+npm i @ticatec/bean-validator @ticatec/logger-api
 ```
+
+`@ticatec/logger-api` is a peer dependency - the zero-dependency logging contract
+this package writes its records against. See [Logging](#logging).
 
 ## Import Usage
 
@@ -172,6 +178,22 @@ new NumberValidator('count', {
 // Input: { count: "5" } → Output: { count: 5 }
 ```
 
+**Which strings are accepted**
+
+A string must be a decimal literal: an optional sign, digits, an optional decimal
+point and an optional exponent. The converted value is written back into the bean.
+
+| Accepted | Rejected |
+|---|---|
+| `'12'`, `'  12  '`, `'-3.5'`, `'+7'`, `'.5'` | `'12abc'`, `'1,000'`, `'1 2'` |
+| `'1e3'` → `1000`, `'1E-2'` → `0.01` | `'0x1f'`, `'0b101'`, `'0o17'` |
+| | `'Infinity'`, `'-Infinity'`, `'NaN'` |
+
+Hexadecimal and binary literals are rejected deliberately: `Number('0x1f')` is 31,
+which is never what a numeric form field or JSON payload meant. Non-finite values
+are rejected whether they arrive as a string or as a number - an `Infinity` written
+back into the bean serialises to `null` and breaks a database insert.
+
 ### DateValidator
 
 Validates date values with support for date ranges and relative date constraints.
@@ -187,12 +209,30 @@ interface DateValidatorOptions extends ValidatorOptions {
 }
 ```
 
+`maxDaysBefore` / `maxDaysAfter` are **whole-day** boundaries, matching the whole
+day quoted in the error message:
+
+- `maxDaysBefore: 10` - the earliest acceptable instant is `00:00:00.000` of the
+  day 10 days ago, so any time on that day passes.
+- `maxDaysAfter: 10` - the latest acceptable instant is `23:59:59.999` of the day
+  10 days ahead.
+
+Day arithmetic goes through the calendar, not by adding 86 400 000 ms, so the
+boundary stays correct across a daylight-saving transition.
+
+`from` and `to` are exact instants and are compared exactly - use those when you
+need finer granularity than a day.
+
 #### Example
 
 ```typescript
 new DateValidator('birthDate', {
     required: true,
     maxDaysBefore: 36500  // Allow dates up to 100 years ago
+});
+
+new DateValidator('startsAt', {
+    from: new Date('2026-06-15T12:00:00Z')  // exact instant, not the whole day
 });
 ```
 
@@ -301,9 +341,44 @@ interface ValidatorOptions {
     ignoreWhen?: IgnoreCheck; // Conditional validation skip
 }
 
-type CustomCheck = (value: any, data: any, prefix: string) => string | null;
+type CustomCheck = (value: any, data: any, prefix: string | null) => any;
 type IgnoreCheck = (value: any, data: any) => boolean;
 ```
+
+### Empty Values
+
+An untouched input in an HTML form posts an empty string, not `null`. All
+validators treat that as "not filled in":
+
+| Field state | `required: true` | `required: false` |
+|---|---|---|
+| key missing, `null`, `undefined` | `cannot be empty` | skipped |
+| `''` | `cannot be empty` | skipped |
+| `'   '` (whitespace only) | `cannot be empty` | skipped |
+
+```typescript
+const rules = [new NumberValidator('age', { required: true })];
+
+beanValidator.validate({ age: '' }, rules).errorMessage;
+// "age: cannot be empty"   - not "age: is not a valid number"
+
+beanValidator.validate({ age: '' }, [new NumberValidator('age', {})]).valid;
+// true - an optional field left blank is simply absent
+```
+
+`StringValidator` is the exception, because for a string an empty value is still
+a value: `''` goes through `minLen`, `maxLen` and `format` as usual. With the
+default `trim: true` a whitespace-only string trims to `''` and a required field
+still reports `cannot be empty`; with `trim: false` the whitespace is preserved
+and counts toward the length.
+
+```typescript
+beanValidator.validate({ note: '' }, [new StringValidator('note', { minLen: 3 })]).errorMessage;
+// "note: length must be at least 3 characters"
+```
+
+A `defaultValue` takes precedence over all of this: an empty value is replaced by
+the default and then validated normally.
 
 ### Field Alias
 
@@ -393,6 +468,9 @@ if (!result.valid) {
     // Age: cannot be less than the minimum value 0
 }
 ```
+
+`errors` returns a copy of the list, so mutating the returned array does not
+change the result.
 
 **Structured errors:**
 ```typescript
@@ -491,6 +569,91 @@ const data = {
 //   price: 99.88,
 //   quantity: 1
 // }
+```
+
+## Localisation
+
+Every message is a template. `setLocaleMessage` overrides the templates you pass
+and leaves the rest alone, so a partial translation is fine:
+
+```typescript
+import { setLocaleMessage, resetLocaleMessage, getMessage, DEFAULT_MESSAGES } from "@ticatec/bean-validator";
+
+setLocaleMessage({
+    REQUIRED: '不能为空',
+    INVALID_NUMBER: '不是有效的数字',
+    STRING_LENGTH_SHORTAGE: '长度不能少于 {{minLength}} 个字符'
+});
+
+// "email: 不能为空"
+```
+
+Placeholders are written as `{{name}}` and are filled from the values the
+validator supplies. The full set of keys is the `LocaleMessages` interface;
+`DEFAULT_MESSAGES` holds the built-in English templates and is a convenient base
+for a translation. `resetLocaleMessage()` restores them, and `getMessage()`
+returns the templates currently in effect.
+
+| Key | Default | Placeholders |
+|---|---|---|
+| `REQUIRED` | cannot be empty | |
+| `INVALID_STRING` | is not a valid string | |
+| `INVALID_NUMBER` | is not a valid number | |
+| `INVALID_DATE` | is not a valid date | |
+| `INVALID_BOOLEAN` | is not a valid boolean value | |
+| `INVALID_ENUM` | is not a valid value | |
+| `STRING_LENGTH_SHORTAGE` | length must be at least {{minLength}} characters | `minLength` |
+| `STRING_LENGTH_EXCEED` | length exceeds {{maxLength}} characters | `maxLength` |
+| `NUMBER_SHORTAGE` | cannot be less than the minimum value {{min}} | `min` |
+| `NUMBER_EXCEED` | exceeds the maximum value {{max}} | `max` |
+| `EARLIEST_DATE` | date cannot be earlier than {{earliestDate}} | `earliestDate` |
+| `FINAL_DATE` | final date cannot exceed {{latestDate}} | `latestDate` |
+| `ARRAY_SHORTAGE` | array must contain at least {{min}} records | `min` |
+| `ARRAY_EXCEED` | array exceeds {{max}} records | `max` |
+| `IS_NOT_ARRAY` | is not an array | |
+| `IS_NOT_OBJECT` | is not an object | |
+
+Call it once at startup. The message set is shared by the package's CommonJS and
+ESM builds, so it applies however the package was loaded.
+
+## Logging
+
+When a validation produces errors, one record is written through
+[`@ticatec/logger-api`](https://www.npmjs.com/package/@ticatec/logger-api):
+
+```
+2026-09-18T03:36:39.945Z DEBUG [BeanValidator] Validation failed with 3 error(s) {"errors":[{"field":"Email Address","message":"cannot be empty"},{"field":"age","message":"is not a valid number"},{"field":"user.name","message":"cannot be empty"}]}
+```
+
+A few things worth knowing:
+
+- **The level is `debug`.** A validation failure is the expected outcome of
+  handling untrusted input - the caller's problem, not a server fault - so at any
+  real traffic volume logging it higher would drown out the records that matter.
+  It is the same treatment `@ticatec/node-exception` gives a 4xx. Set
+  `LOG_LEVEL=debug` when you want to see it.
+- **One record per validation**, not one per rule or per nesting level.
+  `ObjectValidator` and `ArrayValidator` re-enter the validator internally; only
+  the outermost call logs.
+- **Field values are not logged** - only field names and the rendered message.
+  The exception is a message your own `check` callback builds, which is yours to
+  control.
+- **A failing logger cannot break validation**: the failure is swallowed and the
+  result is returned as normal.
+
+With no provider registered, `@ticatec/logger-api` falls back to the console,
+filtered by `LOG_LEVEL`. To send the records to a real logger, register a provider
+once at startup:
+
+```typescript
+import { setLoggerProvider } from '@ticatec/logger-api';
+import { initialize, getPinoLogger } from '@ticatec/logger-pino';
+
+initialize({
+    appenders: [{ name: 'out', type: 'console', level: 'debug' }],
+    loggers: { root: { level: 'debug', appenders: ['out'] } }
+});
+setLoggerProvider(getPinoLogger);
 ```
 
 ## Complete Example
@@ -667,14 +830,34 @@ Validates data against the provided rules.
 
 **Returns:** `ValidationResult`
 
+### Exports
+
+| Export | Kind | Purpose |
+|---|---|---|
+| `beanValidator` (default) | object | `validate(data, rules, prefix?)` |
+| `StringValidator`, `NumberValidator`, `DateValidator`, `BooleanValidator`, `EnumValidator`, `ArrayValidator`, `ObjectValidator`, `CommonValidator` | class | The validators |
+| `BaseValidator` | class | Extend it to write your own |
+| `ValidationResult` | class | The result object |
+| `setLocaleMessage`, `resetLocaleMessage`, `getMessage`, `DEFAULT_MESSAGES` | function / const | Message templates |
+| `ValidationRules`, `ValidationError`, `ValidatorOptions`, `CustomCheck`, `IgnoreCheck`, `LocaleMessages`, and every `*ValidatorOptions` | type | Type-only exports |
+
+## Requirements
+
+- **Node.js**: ≥18.0.0
+- **Peer dependency**: `@ticatec/logger-api` (≥1.0.0, itself dependency-free)
+- No other runtime dependencies
+
 ## License
 
 MIT
 
 ## Repository
 
-- GitHub: https://github.com/ticatec/node-library
-- Issues: https://github.com/ticatec/bean-validator/issues
+This package lives in the [Keelson](https://github.com/ticatec/keelson) monorepo.
+
+- **Source**: [github.com/ticatec/keelson/tree/main/packages/bean-validator](https://github.com/ticatec/keelson/tree/main/packages/bean-validator)
+- **Issues**: [github.com/ticatec/keelson/issues](https://github.com/ticatec/keelson/issues)
+- **Changelog**: [CHANGELOG.md](./CHANGELOG.md)
 
 ## Author
 

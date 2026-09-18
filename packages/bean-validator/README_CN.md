@@ -18,12 +18,17 @@
 - ✅ **自定义验证**: 灵活的自定义验证函数
 - ✅ **结构化错误**: 详细的错误对象，便于错误处理
 - ✅ **字段别名**: 在错误消息中使用友好的字段名
+- ✅ **本地化**: 可整体或部分覆盖任意消息模板
+- ✅ **空即是空**: 表单里没填的字段报「不能为空」，而不是类型错误
+- ✅ **内置日志**: 校验失败经 `@ticatec/logger-api` 契约记录
 
 ## 安装
 
 ```shell
-npm i @ticatec/bean-validator
+npm i @ticatec/bean-validator @ticatec/logger-api
 ```
+
+`@ticatec/logger-api` 是 peer dependency——本包记录日志所依赖的零依赖日志契约，详见 [日志](#日志)。
 
 ## 导入规范
 
@@ -172,6 +177,20 @@ new NumberValidator('count', {
 // 输入: { count: "5" } → 输出: { count: 5 }
 ```
 
+**哪些字符串会被接受**
+
+字符串必须是十进制字面量：可带符号，整数、小数、科学计数法均可。转换后的值会写回 bean。
+
+| 接受 | 拒绝 |
+|---|---|
+| `'12'`、`'  12  '`、`'-3.5'`、`'+7'`、`'.5'` | `'12abc'`、`'1,000'`、`'1 2'` |
+| `'1e3'` → `1000`、`'1E-2'` → `0.01` | `'0x1f'`、`'0b101'`、`'0o17'` |
+| | `'Infinity'`、`'-Infinity'`、`'NaN'` |
+
+拒绝十六进制与二进制是刻意的：`Number('0x1f')` 等于 31，而这绝不会是一个数字表单域
+或 JSON 报文想表达的意思。非有限数无论以字符串还是数字形式传入一律拒绝——`Infinity`
+一旦写回 bean，`JSON.stringify` 会变成 `null`，入库也会失败。
+
 ### 日期验证器 (DateValidator)
 
 验证日期值，支持日期范围和相对日期约束。
@@ -187,12 +206,26 @@ interface DateValidatorOptions extends ValidatorOptions {
 }
 ```
 
+`maxDaysBefore` / `maxDaysAfter` 是**整日**边界，与错误信息里给出的「天」一致：
+
+- `maxDaysBefore: 10` —— 最早可接受的时刻是 10 天前那一天的 `00:00:00.000`，
+  因此那一天内的任意时刻都通过。
+- `maxDaysAfter: 10` —— 最晚可接受的时刻是 10 天后那一天的 `23:59:59.999`。
+
+日期运算走日历日而非加减 86400000 毫秒，跨夏令时切换不会偏差一小时。
+
+`from` 与 `to` 是确切时刻，按精确值比较——需要比「天」更细的粒度时用它们。
+
 #### 示例
 
 ```typescript
 new DateValidator('birthDate', {
     required: true,
     maxDaysBefore: 36500  // 允许100年前的日期
+});
+
+new DateValidator('startsAt', {
+    from: new Date('2026-06-15T12:00:00Z')  // 确切时刻，而非一整天
 });
 ```
 
@@ -301,9 +334,40 @@ interface ValidatorOptions {
     ignoreWhen?: IgnoreCheck; // 条件性跳过验证
 }
 
-type CustomCheck = (value: any, data: any, prefix: string) => string | null;
+type CustomCheck = (value: any, data: any, prefix: string | null) => any;
 type IgnoreCheck = (value: any, data: any) => boolean;
 ```
+
+### 空值处理
+
+HTML 表单里未填写的输入框提交上来的是空字符串，不是 `null`。所有校验器都把它视为「没填」：
+
+| 字段状态 | `required: true` | `required: false` |
+|---|---|---|
+| 键缺失、`null`、`undefined` | `cannot be empty` | 跳过 |
+| `''` | `cannot be empty` | 跳过 |
+| `'   '`（纯空白） | `cannot be empty` | 跳过 |
+
+```typescript
+const rules = [new NumberValidator('age', { required: true })];
+
+beanValidator.validate({ age: '' }, rules).errorMessage;
+// "age: cannot be empty"   —— 而不是 "age: is not a valid number"
+
+beanValidator.validate({ age: '' }, [new NumberValidator('age', {})]).valid;
+// true —— 非必填字段留空，就是没填
+```
+
+`StringValidator` 是例外：对字符串而言空值本身也是一个值，`''` 照常经过
+`minLen`、`maxLen`、`format`。默认 `trim: true` 时纯空白串会被 trim 成 `''`，
+必填仍报 `cannot be empty`；`trim: false` 时空白被保留并计入长度。
+
+```typescript
+beanValidator.validate({ note: '' }, [new StringValidator('note', { minLen: 3 })]).errorMessage;
+// "note: length must be at least 3 characters"
+```
+
+`defaultValue` 优先于以上全部规则：空值会先被默认值替换，再按正常流程校验。
 
 ### 字段别名
 
@@ -393,6 +457,8 @@ if (!result.valid) {
     // 年龄: 不能小于最小值 0
 }
 ```
+
+`errors` 返回的是列表副本，改动返回的数组不会影响校验结果。
 
 **结构化错误:**
 ```typescript
@@ -491,6 +557,82 @@ const data = {
 //   price: 99.88,
 //   quantity: 1
 // }
+```
+
+## 本地化
+
+所有消息都是模板。`setLocaleMessage` 只覆盖传入的键，其余保持不变，因此可以只翻译一部分：
+
+```typescript
+import { setLocaleMessage, resetLocaleMessage, getMessage, DEFAULT_MESSAGES } from "@ticatec/bean-validator";
+
+setLocaleMessage({
+    REQUIRED: '不能为空',
+    INVALID_NUMBER: '不是有效的数字',
+    STRING_LENGTH_SHORTAGE: '长度不能少于 {{minLength}} 个字符'
+});
+
+// "email: 不能为空"
+```
+
+占位符写作 `{{name}}`，由校验器提供的参数填充。全部键见 `LocaleMessages` 接口；
+`DEFAULT_MESSAGES` 是内置的英文模板，可作为翻译的起点。`resetLocaleMessage()`
+恢复默认，`getMessage()` 返回当前生效的模板。
+
+| 键 | 默认值 | 占位符 |
+|---|---|---|
+| `REQUIRED` | cannot be empty | |
+| `INVALID_STRING` | is not a valid string | |
+| `INVALID_NUMBER` | is not a valid number | |
+| `INVALID_DATE` | is not a valid date | |
+| `INVALID_BOOLEAN` | is not a valid boolean value | |
+| `INVALID_ENUM` | is not a valid value | |
+| `STRING_LENGTH_SHORTAGE` | length must be at least {{minLength}} characters | `minLength` |
+| `STRING_LENGTH_EXCEED` | length exceeds {{maxLength}} characters | `maxLength` |
+| `NUMBER_SHORTAGE` | cannot be less than the minimum value {{min}} | `min` |
+| `NUMBER_EXCEED` | exceeds the maximum value {{max}} | `max` |
+| `EARLIEST_DATE` | date cannot be earlier than {{earliestDate}} | `earliestDate` |
+| `FINAL_DATE` | final date cannot exceed {{latestDate}} | `latestDate` |
+| `ARRAY_SHORTAGE` | array must contain at least {{min}} records | `min` |
+| `ARRAY_EXCEED` | array exceeds {{max}} records | `max` |
+| `IS_NOT_ARRAY` | is not an array | |
+| `IS_NOT_OBJECT` | is not an object | |
+
+在启动时调用一次即可。消息表由本包的 CommonJS 与 ESM 两份构建共享，因此无论以哪种
+方式加载都生效。
+
+## 日志
+
+一次校验若产生了错误，会通过
+[`@ticatec/logger-api`](https://www.npmjs.com/package/@ticatec/logger-api) 记录一条：
+
+```
+2026-09-18T03:36:39.945Z DEBUG [BeanValidator] Validation failed with 3 error(s) {"errors":[{"field":"Email Address","message":"cannot be empty"},{"field":"age","message":"is not a valid number"},{"field":"user.name","message":"cannot be empty"}]}
+```
+
+几点需要知道：
+
+- **级别是 `debug`。** 校验失败是处理不可信输入时的预期结果，属于调用方的问题而非
+  服务端故障，在真实流量下用更高的级别记录会把真正要紧的日志淹掉。这与
+  `@ticatec/node-exception` 对 4xx 的处理一致。需要查看时把 `LOG_LEVEL` 设为 `debug`。
+- **一次校验一条**，而不是每条规则一条、每层嵌套一条。`ObjectValidator` 与
+  `ArrayValidator` 内部会递归调用校验入口，只有最外层那次记录。
+- **不记录字段值**，只有字段名与渲染后的消息。唯一的例外是你自己在 `check` 回调里
+  拼出来的消息，那部分由你掌控。
+- **日志失败不会影响校验**：异常会被吞掉，结果照常返回。
+
+未注入 provider 时，`@ticatec/logger-api` 退回写控制台，并按 `LOG_LEVEL` 过滤。
+若要接入真正的日志库，在启动时注册一次 provider：
+
+```typescript
+import { setLoggerProvider } from '@ticatec/logger-api';
+import { initialize, getPinoLogger } from '@ticatec/logger-pino';
+
+initialize({
+    appenders: [{ name: 'out', type: 'console', level: 'debug' }],
+    loggers: { root: { level: 'debug', appenders: ['out'] } }
+});
+setLoggerProvider(getPinoLogger);
 ```
 
 ## 完整示例
@@ -667,14 +809,34 @@ app.listen(3000);
 
 **返回:** `ValidationResult`
 
+### 导出清单
+
+| 导出 | 类别 | 用途 |
+|---|---|---|
+| `beanValidator`（默认导出） | 对象 | `validate(data, rules, prefix?)` |
+| `StringValidator`、`NumberValidator`、`DateValidator`、`BooleanValidator`、`EnumValidator`、`ArrayValidator`、`ObjectValidator`、`CommonValidator` | 类 | 各校验器 |
+| `BaseValidator` | 类 | 继承它编写自己的校验器 |
+| `ValidationResult` | 类 | 校验结果对象 |
+| `setLocaleMessage`、`resetLocaleMessage`、`getMessage`、`DEFAULT_MESSAGES` | 函数 / 常量 | 消息模板 |
+| `ValidationRules`、`ValidationError`、`ValidatorOptions`、`CustomCheck`、`IgnoreCheck`、`LocaleMessages` 及全部 `*ValidatorOptions` | 类型 | 仅类型导出 |
+
+## 环境要求
+
+- **Node.js**：≥18.0.0
+- **Peer 依赖**：`@ticatec/logger-api`（≥1.0.0，其本身零依赖）
+- 除此之外无任何运行时依赖
+
 ## 许可证
 
 MIT
 
 ## 仓库
 
-- GitHub: https://github.com/ticatec/node-library
-- 问题反馈: https://github.com/ticatec/bean-validator/issues
+本包位于 [Keelson](https://github.com/ticatec/keelson) monorepo。
+
+- **源码**：[github.com/ticatec/keelson/tree/main/packages/bean-validator](https://github.com/ticatec/keelson/tree/main/packages/bean-validator)
+- **问题反馈**：[github.com/ticatec/keelson/issues](https://github.com/ticatec/keelson/issues)
+- **变更日志**：[CHANGELOG.md](./CHANGELOG.md)
 
 ## 作者
 

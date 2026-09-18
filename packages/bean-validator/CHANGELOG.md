@@ -48,6 +48,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **Validation failures are logged through `@ticatec/logger-api`.** One `debug`
+  record per validation carries the structured error list. `debug` rather than
+  `warn`: a validation failure is the expected outcome of handling untrusted input
+  - the caller's problem, not a server fault - and at any real traffic volume a
+  higher level would drown out the records that matter. It is the same treatment
+  `@ticatec/node-exception` gives a 4xx. Only the outermost call logs, so a nested
+  object or an array produces one record rather than one per level or per row, and
+  field values never reach the log - only field names and rendered messages. A
+  throwing logger cannot break validation. `@ticatec/logger-api` is declared as a
+  peer dependency; with no provider registered it falls back to the console,
+  filtered by `LOG_LEVEL`.
 - **The localisation API is reachable.** `Locale.ts` had always exported
   `setLocaleMessage`, but `index.ts` never re-exported it, so the feature could not
   be used from outside the package. `setLocaleMessage`, `getMessage`,
@@ -62,7 +73,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `NumberValidatorOptions`, `DateValidatorOptions`, `EnumValidatorOptions`,
   `ArrayValidatorOptions`, `ObjectValidatorOptions`, `ValidatorOptions`,
   `CustomCheck`, `IgnoreCheck`, `LocaleMessages`), plus `CommonValidator`.
-- 83 new tests (43 -> 126), including a regression test for each defect above.
+- 90 new tests (43 -> 133), including a regression test for each defect above.
 
 ### Changed
 

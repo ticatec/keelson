@@ -95,12 +95,14 @@
     "structured-errors",
     "number-rounding",
     "case-conversion",
-    "trim"
+    "trim",
+    "logging"
   ],
   "engines": {
     "node": ">=18.0.0"
   },
   "devDependencies": {
+    "@ticatec/logger-api": "workspace:*",
     "@types/jest": "^29.5.14",
     "@types/node": "^22.8.6",
     "@typescript-eslint/eslint-plugin": "^7.18.0",
@@ -114,5 +116,8 @@
   "publishConfig": {
     "access": "public",
     "registry": "https://registry.npmjs.org/"
+  },
+  "peerDependencies": {
+    "@ticatec/logger-api": ">=1.0.0"
   }
 }

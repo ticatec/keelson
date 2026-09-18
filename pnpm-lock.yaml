@@ -14,6 +14,9 @@ importers:
 
   packages/bean-validator:
     devDependencies:
+      '@ticatec/logger-api':
+        specifier: workspace:*
+        version: link:../logger-api
       '@types/jest':
         specifier: ^29.5.14
         version: 29.5.14
