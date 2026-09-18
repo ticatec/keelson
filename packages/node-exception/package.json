@@ -1,0 +1,144 @@
+{
+  "name": "@ticatec/node-exception",
+  "version": "2.0.0",
+  "description": "Production-ready Express error handling middleware with standardized HTTP error types, centralized exception management, and automatic content negotiation for REST APIs. Type-safe, zero-dependency core.",
+  "type": "module",
+  "main": "lib/cjs/index.js",
+  "types": "lib/cjs/index.d.ts",
+  "module": "lib/esm/index.js",
+  "sideEffects": false,
+  "exports": {
+    ".": {
+      "import": {
+        "types": "./lib/esm/index.d.ts",
+        "default": "./lib/esm/index.js"
+      },
+      "require": {
+        "types": "./lib/cjs/index.d.ts",
+        "default": "./lib/cjs/index.js"
+      }
+    },
+    "./utils": {
+      "types": "./lib/cjs/utils.d.ts",
+      "import": "./lib/esm/utils.js",
+      "require": "./lib/cjs/utils.js"
+    },
+    "./ErrorResponse": {
+      "types": "./lib/cjs/ErrorResponse.d.ts",
+      "import": "./lib/esm/ErrorResponse.js",
+      "require": "./lib/cjs/ErrorResponse.js"
+    },
+    "./HttpError": {
+      "types": "./lib/cjs/HttpError.d.ts",
+      "import": "./lib/esm/HttpError.js",
+      "require": "./lib/cjs/HttpError.js"
+    },
+    "./HttpContainer": {
+      "types": "./lib/cjs/HttpContainer.d.ts",
+      "import": "./lib/esm/HttpContainer.js",
+      "require": "./lib/cjs/HttpContainer.js"
+    },
+    "./handleError": {
+      "types": "./lib/cjs/handleError.d.ts",
+      "import": "./lib/esm/handleError.js",
+      "require": "./lib/cjs/handleError.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "lib/**/*",
+    "assets/**/*",
+    "README.md",
+    "README_CN.md",
+    "LICENSE",
+    "CHANGELOG.md"
+  ],
+  "scripts": {
+    "clean": "node -e \"require('fs').rmSync('lib',{recursive:true,force:true})\"",
+    "build:cjs": "tsc -p tsconfig.cjs.json",
+    "build:esm": "tsc -p tsconfig.esm.json",
+    "build": "npm run clean && npm run build:cjs && npm run build:esm && npm run copy:pkg",
+    "copy:pkg": "node -e \"const fs=require('fs');fs.copyFileSync('assets/cjs-package.json','lib/cjs/package.json');fs.copyFileSync('assets/esm-package.json','lib/esm/package.json')\"",
+    "prepublishOnly": "npm run typecheck && npm run build",
+    "publish:public": "npm publish --access public",
+    "version:patch": "npm version patch",
+    "version:minor": "npm version minor",
+    "version:major": "npm version major",
+    "test": "echo \"@ticatec/node-exception has no test suite yet\"",
+    "lint": "echo \"No linting configured\"",
+    "typecheck": "tsc -p tsconfig.cjs.json --noEmit && tsc -p tsconfig.esm.json --noEmit"
+  },
+  "keywords": [
+    "express",
+    "express-middleware",
+    "error-handler",
+    "error-handling",
+    "exception",
+    "exception-handler",
+    "http-error",
+    "http-errors",
+    "rest-api",
+    "api",
+    "typescript",
+    "nodejs",
+    "middleware",
+    "error-middleware",
+    "error-response",
+    "http-status",
+    "status-codes",
+    "400",
+    "401",
+    "403",
+    "404",
+    "500",
+    "authentication",
+    "authorization",
+    "validation",
+    "content-negotiation",
+    "type-safe",
+    "production-ready",
+    "enterprise",
+    "esm",
+    "commonjs",
+    "dual-module",
+    "ticatec"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ticatec/keelson.git",
+    "directory": "packages/node-exception"
+  },
+  "author": {
+    "name": "Henry Feng",
+    "email": "huili.f@gmail.com",
+    "url": "https://github.com/henryfeng"
+  },
+  "contributors": [
+    {
+      "name": "Henry Feng",
+      "email": "huili.f@gmail.com",
+      "url": "https://github.com/henryfeng"
+    }
+  ],
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/ticatec/keelson/issues"
+  },
+  "homepage": "https://github.com/ticatec/keelson/tree/main/packages/node-exception",
+  "funding": {
+    "type": "individual",
+    "url": "https://github.com/sponsors/henryfeng"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=6.0.0"
+  },
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org/"
+  },
+  "devDependencies": {
+    "@types/node": "^22.8.6",
+    "typescript": "^5.6.0"
+  }
+}

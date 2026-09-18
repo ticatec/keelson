@@ -1,0 +1,23 @@
+# this is a test config file
+
+includes:
+  -
+    file: db.yaml
+    key: database
+    params:
+      db: my_database
+  -
+    file: redis.yaml
+    key: redis
+    params:
+      db: 5
+      prefix: my_prefix
+server:
+  ip: 0.0.0.0
+  port: 6401
+  contextRoot: "/webservice"
+jwt-keys:
+  private: "-----BEGIN EC PRIVATE KEY-----\nMIHcAgEBBEIBqvp9n50DObUiMcuvetI+oXjG/1rz+O0FXTb/ym+BCVOod0Um2cFEvo5CDakIO8/5jFsV7M3OYNcHTsHWci9VMTWgBwYFK4EEACOhgYkDgYYABACGeqFFbjytfBlss0rZRBzPES96lX0NGejVJBvXzclQXvhPbvHQU0IaGehGus91Lfkx1FesAX2utxX4AbcB8nUIKwD61Vdg0Hjw2yTxZ3zVi3theg0IXwm7QO75oUsNYIoZRP3JGAgPQSqNtArAednnyJGUC6MsrW9kh0iey0fCcgAmUA==\n-----END EC PRIVATE KEY-----"
+  public: "-----BEGIN PUBLIC KEY-----\nMIGbMBAGByqGSM49AgEGBSuBBAAjA4GGAAQAhnqhRW48rXwZbLNK2UQczxEvepV9DRno1SQb183JUF74T27x0FNCGhnoRrrPdS35MdRXrAF9rrcV+AG3AfJ1CCsA+tVXYNB48Nsk8Wd81Yt7YXoNCF8Ju0Du+aFLDWCKGUT9yRgID0EqjbQKwHnZ58iRlAujLK1vZIdInstHwnIAJlA=\n-----END PUBLIC KEY-----"
+  duration: 1m
+  audience: uro:anmed-aoss

@@ -1,0 +1,94 @@
+{
+  "name": "@ticatec/redis-client",
+  "version": "1.1.0",
+  "description": "A lightweight TypeScript wrapper around ioredis with singleton/multi-instance pattern support, Pino logger integration, mock Redis for testing, and abstract caching framework.",
+  "main": "lib/cjs/index.js",
+  "module": "lib/esm/index.js",
+  "types": "lib/esm/index.d.ts",
+  "sideEffects": false,
+  "exports": {
+    ".": {
+      "import": {
+        "types": "./lib/esm/index.d.ts",
+        "default": "./lib/esm/index.js"
+      },
+      "require": {
+        "types": "./lib/cjs/index.d.ts",
+        "default": "./lib/cjs/index.js"
+      }
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "lib/**/*",
+    "README.md",
+    "README_CN.md",
+    "LICENSE"
+  ],
+  "engines": {
+    "node": ">=16.0.0"
+  },
+  "scripts": {
+    "build:cjs": "tsc -p tsconfig.cjs.json && node -e \"require('fs').writeFileSync('./lib/cjs/package.json', '{\\\"type\\\": \\\"commonjs\\\"}')\"",
+    "build:esm": "tsc -p tsconfig.esm.json && node -e \"require('fs').writeFileSync('./lib/esm/package.json', '{\\\"type\\\": \\\"module\\\"}')\"",
+    "build": "node -e \"require('fs').rmSync('./lib', { recursive: true, force: true })\" && pnpm build:cjs && pnpm build:esm",
+    "clean": "node -e \"require('fs').rmSync('./lib', { recursive: true, force: true })\"",
+    "prepublishOnly": "pnpm build",
+    "publish-public": "pnpm publish --access public --no-git-checks",
+    "test": "jest",
+    "test:coverage": "jest --coverage",
+    "typecheck": "tsc -p tsconfig.cjs.json --noEmit && tsc -p tsconfig.esm.json --noEmit"
+  },
+  "keywords": [
+    "redis",
+    "ioredis",
+    "redis-client",
+    "mock-redis",
+    "typescript",
+    "pino",
+    "caching",
+    "cache-framework",
+    "singleton",
+    "multi-instance",
+    "json-serialization",
+    "ttl",
+    "redis-wrapper",
+    "data-caching",
+    "nodejs"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ticatec/keelson.git",
+    "directory": "packages/redis-client"
+  },
+  "author": {
+    "name": "Henry Feng",
+    "email": "huili.f@gmail.com"
+  },
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/ticatec/keelson/issues"
+  },
+  "homepage": "https://github.com/ticatec/keelson/tree/main/packages/redis-client",
+  "funding": {
+    "type": "github",
+    "url": "https://github.com/sponsors/ticatec"
+  },
+  "dependencies": {
+    "ioredis-mock": "^8.9.0"
+  },
+  "devDependencies": {
+    "@ticatec/logger-api": "workspace:*",
+    "@types/jest": "^29.5.14",
+    "@types/node": "^20.11.17",
+    "ioredis": "^5.11.1",
+    "jest": "^29.7.0",
+    "pino": "^9.5.0",
+    "ts-jest": "^29.2.5",
+    "typescript": "^5.0.0"
+  },
+  "peerDependencies": {
+    "@ticatec/logger-api": ">=1.0.0",
+    "ioredis": ">=5.0.0"
+  }
+}

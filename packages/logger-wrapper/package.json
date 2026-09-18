@@ -1,0 +1,87 @@
+{
+  "name": "@ticatec/logger-wrapper",
+  "version": "0.3.0",
+  "description": "A lightweight Pino logger wrapper supporting application-level Pino logger injection and child logger context binding.",
+  "type": "module",
+  "main": "./lib/cjs/index.js",
+  "module": "./lib/esm/index.js",
+  "types": "./lib/esm/index.d.ts",
+  "sideEffects": false,
+  "exports": {
+    ".": {
+      "import": {
+        "types": "./lib/esm/index.d.ts",
+        "default": "./lib/esm/index.js"
+      },
+      "require": {
+        "types": "./lib/cjs/index.d.ts",
+        "default": "./lib/cjs/index.js"
+      }
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "lib/**/*",
+    "README.md",
+    "README_CN.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "build:cjs": "tsc -p tsconfig.cjs.json && node -e \"require('fs').writeFileSync('./lib/cjs/package.json', '{\\\"type\\\": \\\"commonjs\\\"}')\"",
+    "build:esm": "tsc -p tsconfig.esm.json && node -e \"require('fs').writeFileSync('./lib/esm/package.json', '{\\\"type\\\": \\\"module\\\"}')\"",
+    "build": "node -e \"require('fs').rmSync('./lib', { recursive: true, force: true })\" && pnpm build:cjs && pnpm build:esm",
+    "clean": "node -e \"require('fs').rmSync('./lib', { recursive: true, force: true })\"",
+    "prepublishOnly": "pnpm build",
+    "publish-public": "pnpm publish --access public --no-git-checks",
+    "test": "jest",
+    "typecheck": "tsc -p tsconfig.cjs.json --noEmit && tsc -p tsconfig.esm.json --noEmit"
+  },
+  "keywords": [
+    "pino",
+    "logger",
+    "logger-wrapper",
+    "logging",
+    "context-logger",
+    "typescript",
+    "ticatec",
+    "esm",
+    "commonjs"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ticatec/keelson.git",
+    "directory": "packages/logger-wrapper"
+  },
+  "author": {
+    "name": "Henry Feng",
+    "email": "huili.f@gmail.com",
+    "url": "https://github.com/ticatec"
+  },
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/ticatec/keelson/issues"
+  },
+  "homepage": "https://github.com/ticatec/keelson/tree/main/packages/logger-wrapper",
+  "engines": {
+    "node": ">=16.0.0"
+  },
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org/"
+  },
+  "devDependencies": {
+    "@ticatec/logger-api": "workspace:*",
+    "@types/jest": "^29.5.14",
+    "@types/node": "^22.8.6",
+    "jest": "^29.7.0",
+    "pino": "^9.5.0",
+    "ts-jest": "^29.2.5",
+    "typescript": "^5.0.0"
+  },
+  "peerDependencies": {
+    "@ticatec/logger-api": ">=1.0.0"
+  },
+  "dependencies": {
+    "pino": ">=8.0.0"
+  }
+}

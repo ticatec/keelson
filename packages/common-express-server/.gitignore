@@ -1,0 +1,11 @@
+node_modules/
+lib/
+.idea/
+.DS_Store
+*.log
+coverage/
+pnpm-debug.log*
+check.dat
+/*.tgz
+/package/
+/logs/

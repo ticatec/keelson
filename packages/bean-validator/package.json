@@ -1,0 +1,110 @@
+{
+  "name": "@ticatec/bean-validator",
+  "version": "1.0.2",
+  "description": "A powerful TypeScript validation library for Node.js with data sanitization. Validate, sanitize, and transform data with rule-based validation, nested object/array support, default values, type conversion, and structured error reporting. Perfect for Express APIs and form validation.",
+  "main": "lib/cjs/index.js",
+  "module": "lib/esm/index.js",
+  "types": "lib/cjs/index.d.ts",
+  "exports": {
+    ".": {
+      "import": {
+        "types": "./lib/esm/index.d.ts",
+        "default": "./lib/esm/index.js"
+      },
+      "require": {
+        "types": "./lib/cjs/index.d.ts",
+        "default": "./lib/cjs/index.js"
+      }
+    }
+  },
+  "files": [
+    "lib/**/*",
+    "README.md",
+    "README_CN.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "build:cjs": "tsc -p tsconfig.cjs.json && node -e \"require('fs').writeFileSync('./lib/cjs/package.json', '{\\\"type\\\": \\\"commonjs\\\"}')\"",
+    "build:esm": "tsc -p tsconfig.esm.json && node -e \"require('fs').writeFileSync('./lib/esm/package.json', '{\\\"type\\\": \\\"module\\\"}')\"",
+    "build": "node -e \"require('fs').rmSync('./lib', { recursive: true, force: true })\" && pnpm build:cjs && pnpm build:esm",
+    "clean": "node -e \"require('fs').rmSync('./lib', { recursive: true, force: true })\"",
+    "prepublishOnly": "pnpm build",
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage",
+    "publish:public": "npm publish --access public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ticatec/keelson.git",
+    "directory": "packages/bean-validator"
+  },
+  "author": {
+    "name": "Henry Feng",
+    "email": "huili.f@gmail.com",
+    "url": "https://github.com/ticatec"
+  },
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/ticatec/keelson/issues"
+  },
+  "homepage": "https://github.com/ticatec/keelson/tree/main/packages/bean-validator",
+  "keywords": [
+    "validator",
+    "validation",
+    "schema",
+    "object-validation",
+    "typescript",
+    "nodejs",
+    "data-validation",
+    "form-validation",
+    "bean",
+    "express",
+    "api",
+    "rest-api",
+    "rules",
+    "type-checking",
+    "sanitization",
+    "data-cleaning",
+    "data-sanitization",
+    "input-validation",
+    "request-validation",
+    "nested-validation",
+    "array-validation",
+    "string-validator",
+    "number-validator",
+    "date-validator",
+    "email-validation",
+    "type-conversion",
+    "default-values",
+    "error-handling",
+    "express-middleware",
+    "api-validation",
+    "payload-validation",
+    "dto",
+    "data-transfer-object",
+    "schema-validation",
+    "declarative",
+    "fluent",
+    "chain-validation",
+    "field-alias",
+    "structured-errors",
+    "number-rounding",
+    "case-conversion",
+    "trim"
+  ],
+  "engines": {
+    "node": ">=14.0.0"
+  },
+  "devDependencies": {
+    "@types/jest": "^29.5.14",
+    "dayjs": "^1.11.13",
+    "jest": "^29.7.0",
+    "ts-jest": "^29.2.5",
+    "typescript": "^5.0.0"
+  },
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org/"
+  }
+}

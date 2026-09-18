@@ -1,0 +1,117 @@
+{
+  "name": "@ticatec/common-express-server",
+  "version": "2.0.1",
+  "description": "Enterprise-grade TypeScript framework for Express.js with built-in multi-tenant support, CRUD controllers, validation, authentication, and API gateway integration.",
+  "type": "module",
+  "main": "./lib/cjs/index.js",
+  "module": "./lib/esm/index.js",
+  "types": "./lib/esm/index.d.ts",
+  "sideEffects": false,
+  "exports": {
+    ".": {
+      "import": {
+        "types": "./lib/esm/index.d.ts",
+        "default": "./lib/esm/index.js"
+      },
+      "require": {
+        "types": "./lib/cjs/index.d.ts",
+        "default": "./lib/cjs/index.js"
+      }
+    },
+    "./package.json": "./package.json"
+  },
+  "scripts": {
+    "clean": "node -e \"require('fs').rmSync('lib',{recursive:true,force:true})\"",
+    "build:cjs": "tsc -p tsconfig.cjs.json",
+    "build:esm": "tsc -p tsconfig.esm.json",
+    "copy:pkg": "node -e \"const fs=require('fs');fs.copyFileSync('assets/cjs-package.json','lib/cjs/package.json');fs.copyFileSync('assets/esm-package.json','lib/esm/package.json')\"",
+    "build": "pnpm clean && pnpm build:cjs && pnpm build:esm && pnpm copy:pkg",
+    "prebuild": "pnpm lint",
+    "prepublishOnly": "pnpm lint && pnpm typecheck && pnpm test && pnpm build",
+    "publish-public": "pnpm publish --access public --no-git-checks",
+    "test": "jest",
+    "lint": "eslint 'src/**/*.ts' --max-warnings 0",
+    "typecheck": "tsc -p tsconfig.cjs.json --noEmit && tsc -p tsconfig.esm.json --noEmit"
+  },
+  "keywords": [
+    "express",
+    "typescript",
+    "nodejs",
+    "rest-api",
+    "api",
+    "crud",
+    "middleware",
+    "controller",
+    "base-controller",
+    "routing",
+    "router",
+    "multi-tenant",
+    "multitenancy",
+    "saas",
+    "authentication",
+    "authorization",
+    "validation",
+    "error-handling",
+    "logging",
+    "express-framework",
+    "api-gateway",
+    "ticatec",
+    "common-express",
+    "esm",
+    "commonjs",
+    "dual-module"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ticatec/keelson.git",
+    "directory": "packages/common-express-server"
+  },
+  "author": {
+    "name": "Henry Feng",
+    "email": "huili.f@gmail.com"
+  },
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/ticatec/keelson/issues"
+  },
+  "homepage": "https://github.com/ticatec/keelson/tree/main/packages/common-express-server",
+  "files": [
+    "lib/**/*",
+    "README.md",
+    "README_CN.md",
+    "LICENSE"
+  ],
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=8.0.0"
+  },
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org/"
+  },
+  "peerDependencies": {
+    "@ticatec/logger-api": ">=1.0.0",
+    "express": "^5.0.0",
+    "@ticatec/node-common-library": ">=3.1.0",
+    "@ticatec/bean-validator": ">=1.0.0",
+    "@ticatec/node-exception": ">=2.0.0"
+  },
+  "devDependencies": {
+    "@ticatec/bean-validator": "workspace:*",
+    "@ticatec/logger-api": "workspace:*",
+    "@ticatec/node-common-library": "workspace:*",
+    "@ticatec/node-exception": "workspace:*",
+    "@types/express": "^5.0.0",
+    "@types/jest": "^29.5.14",
+    "@types/node": "^22.8.6",
+    "@typescript-eslint/eslint-plugin": "^7.18.0",
+    "@typescript-eslint/parser": "^7.18.0",
+    "eslint": "^8.57.0",
+    "express": "^5.0.0",
+    "jest": "^29.7.0",
+    "pino": "^9.5.0",
+    "reflect-metadata": "^0.2.2",
+    "ts-jest": "^29.2.5",
+    "typescript": "^5.0.0"
+  }
+}

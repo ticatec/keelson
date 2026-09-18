@@ -1,0 +1,97 @@
+{
+  "name": "@ticatec/config-loader",
+  "version": "1.0.0",
+  "description": "A versatile configuration loader for Node.js, supporting YAML format and various sources like local files, Consul, and Nacos, with include and deep merge capabilities.",
+  "main": "lib/cjs/index.js",
+  "module": "lib/esm/index.js",
+  "types": "lib/esm/index.d.ts",
+  "exports": {
+    ".": {
+      "import": {
+        "types": "./lib/esm/index.d.ts",
+        "default": "./lib/esm/index.js"
+      },
+      "require": {
+        "types": "./lib/cjs/index.d.ts",
+        "default": "./lib/cjs/index.js"
+      }
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "lib/",
+    "README*.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "build:cjs": "tsc -p tsconfig.cjs.json && node -e \"require('fs').writeFileSync('./lib/cjs/package.json', '{\\\"type\\\": \\\"commonjs\\\"}')\"",
+    "build:esm": "tsc -p tsconfig.esm.json && node -e \"require('fs').writeFileSync('./lib/esm/package.json', '{\\\"type\\\": \\\"module\\\"}')\"",
+    "build": "node -e \"require('fs').rmSync('./lib', { recursive: true, force: true })\" && pnpm build:cjs && pnpm build:esm",
+    "dev": "tsc --watch",
+    "clean": "node -e \"require('fs').rmSync('./lib', { recursive: true, force: true })\"",
+    "prepublishOnly": "pnpm typecheck && pnpm test && pnpm build",
+    "typecheck": "tsc --noEmit",
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage",
+    "publish-public": "pnpm publish --access public --no-git-checks"
+  },
+  "keywords": [
+    "config",
+    "configuration",
+    "loader",
+    "yaml",
+    "consul",
+    "nacos",
+    "node.js",
+    "typescript",
+    "microservices",
+    "devops"
+  ],
+  "author": {
+    "name": "Henry Feng",
+    "email": "huili.f@gmail.com"
+  },
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ticatec/keelson.git",
+    "directory": "packages/config-loader"
+  },
+  "bugs": {
+    "url": "https://github.com/ticatec/keelson/issues"
+  },
+  "homepage": "https://github.com/ticatec/keelson/tree/main/packages/config-loader",
+  "engines": {
+    "node": ">=16.0.0"
+  },
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org/"
+  },
+  "dependencies": {
+    "yaml": "^2.7.0"
+  },
+  "devDependencies": {
+    "@types/jest": "^29.5.14",
+    "@types/node": "^20.11.17",
+    "consul": "^2.0.1",
+    "dotenv": "^16.4.7",
+    "jest": "^29.7.0",
+    "nacos": "^2.6.0",
+    "ts-jest": "^29.2.5",
+    "typescript": "^5.0.0"
+  },
+  "peerDependencies": {
+    "consul": "^2.0.0",
+    "nacos": "^2.6.0"
+  },
+  "peerDependenciesMeta": {
+    "consul": {
+      "optional": true
+    },
+    "nacos": {
+      "optional": true
+    }
+  }
+}

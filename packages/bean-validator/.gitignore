@@ -1,0 +1,7 @@
+/.idea/
+/package-lock.json
+/lib/
+/node_modules/
+/coverage/
+.DS_Store
+/coverage/

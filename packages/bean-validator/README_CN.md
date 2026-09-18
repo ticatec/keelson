@@ -1,0 +1,681 @@
+# Bean Validator
+
+[![Version](https://img.shields.io/npm/v/@ticatec/bean-validator)](https://www.npmjs.com/package/@ticatec/bean-validator)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+
+一个灵活而强大的 Node.js 验证库，通过基于规则的验证来校验 JavaScript 对象，并支持数据清理。
+
+[English](README.md) | 中文文档
+
+## 特性
+
+- ✅ **双模式模块支持**: 原生支持 ES Modules (ESM) 与 CommonJS (CJS)
+- ✅ **类型安全**: 使用 TypeScript 构建，提供完整的类型安全
+- ✅ **数据清理**: 自动数据清理和标准化（自动 Trim、大小写转换、数字舍入）
+- ✅ **默认值**: 为缺失或空字段设置默认值
+- ✅ **类型转换**: 自动类型转换（字符串转数字、日期转换等）
+- ✅ **嵌套验证**: 支持嵌套对象和数组
+- ✅ **自定义验证**: 灵活的自定义验证函数
+- ✅ **结构化错误**: 详细的错误对象，便于错误处理
+- ✅ **字段别名**: 在错误消息中使用友好的字段名
+
+## 安装
+
+```shell
+npm i @ticatec/bean-validator
+```
+
+## 导入规范
+
+**ES Modules (ESM):**
+```typescript
+import beanValidator, { StringValidator, NumberValidator, EnumValidator } from "@ticatec/bean-validator";
+```
+
+**CommonJS (CJS):**
+```javascript
+const beanValidator = require("@ticatec/bean-validator").default;
+const { StringValidator, NumberValidator, EnumValidator } = require("@ticatec/bean-validator");
+```
+
+## 快速开始
+
+```typescript
+import beanValidator, { StringValidator, NumberValidator, EnumValidator } from "@ticatec/bean-validator";
+
+// 定义验证规则
+const rules = [
+    new StringValidator('email', {
+        name: '邮箱地址',
+        required: true,
+        toLowerCase: true,
+        maxLen: 100
+    }),
+    new NumberValidator('age', {
+        required: true,
+        minValue: 0,
+        maxValue: 120
+    }),
+    new EnumValidator('status', {
+        defaultValue: 'active',
+        values: ['active', 'inactive', 'pending']
+    })
+];
+
+// 待验证的数据
+const data = {
+    email: 'JOHN@EXAMPLE.COM',
+    age: 30
+};
+
+// 执行验证
+const result = beanValidator.validate(data, rules);
+
+if (result.valid) {
+    console.log('验证通过！');
+    console.log('清理后的数据:', data);
+    // 输出: { email: 'john@example.com', age: 30, status: 'active' }
+} else {
+    console.log('验证错误:', result.errors);
+}
+```
+
+## 验证器
+
+### 字符串验证器 (StringValidator)
+
+验证并清理字符串值，支持长度约束、格式验证、大小写转换以及可配置的前后空格清理（Trim）。
+
+#### 选项
+
+```typescript
+interface StringValidatorOptions extends ValidatorOptions {
+    minLen?: number;           // 最小长度
+    maxLen?: number;           // 最大长度
+    format?: {
+        regex: RegExp;         // 格式验证的正则表达式
+        message: string;       // 格式验证失败时的错误消息
+    };
+    toLowerCase?: boolean;     // 转换为小写
+    toUpperCase?: boolean;     // 转换为大写
+    trim?: boolean;            // 是否自动清理前后空格（默认为 true）
+}
+```
+
+#### 示例
+
+**基础验证:**
+```typescript
+new StringValidator('email', {
+    required: true,
+    maxLen: 100,
+    format: {
+        regex: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
+        message: '邮箱格式无效'
+    }
+});
+```
+
+**自动清理:**
+```typescript
+new StringValidator('email', {
+    toLowerCase: true  // 自动转换为小写
+});
+
+new StringValidator('username', {
+    toUpperCase: true  // 自动转换为大写
+});
+```
+
+### 数字验证器 (NumberValidator)
+
+验证并清理数值，支持范围约束、自动类型转换和舍入。
+
+#### 选项
+
+```typescript
+interface NumberValidatorOptions extends ValidatorOptions {
+    minValue?: number;        // 最小值
+    maxValue?: number;        // 最大值
+    round?: number;           // 保留的小数位数
+    roundMode?: 'ceil' | 'floor' | 'round';  // 舍入模式
+}
+```
+
+#### 示例
+
+**基础验证:**
+```typescript
+new NumberValidator('age', {
+    required: true,
+    minValue: 0,
+    maxValue: 120
+});
+```
+
+**数字舍入:**
+```typescript
+new NumberValidator('price', {
+    round: 2,              // 保留2位小数
+    roundMode: 'round'     // 选项: 'round'(四舍五入), 'ceil'(向上), 'floor'(向下)
+});
+
+// 输入: 99.876 → 输出: 99.88
+```
+
+**自动类型转换:**
+```typescript
+new NumberValidator('count', {
+    defaultValue: 1
+});
+
+// 输入: { count: "5" } → 输出: { count: 5 }
+```
+
+### 日期验证器 (DateValidator)
+
+验证日期值，支持日期范围和相对日期约束。
+
+#### 选项
+
+```typescript
+interface DateValidatorOptions extends ValidatorOptions {
+    from?: Date;              // 允许的最早日期
+    to?: Date;                // 允许的最晚日期
+    maxDaysBefore?: number;   // 距今最多天数（过去）
+    maxDaysAfter?: number;    // 距今最多天数（未来）
+}
+```
+
+#### 示例
+
+```typescript
+new DateValidator('birthDate', {
+    required: true,
+    maxDaysBefore: 36500  // 允许100年前的日期
+});
+```
+
+### 枚举验证器 (EnumValidator)
+
+验证值是否在预定义的允许值集合中。
+
+#### 选项
+
+```typescript
+interface EnumValidatorOptions extends ValidatorOptions {
+    values: Array<any>;  // 允许的值数组
+}
+```
+
+#### 示例
+
+```typescript
+new EnumValidator('status', {
+    defaultValue: 'active',
+    values: ['active', 'inactive', 'pending']
+});
+```
+
+### 布尔值验证器 (BooleanValidator)
+
+验证布尔值，支持自动类型转换。
+
+#### 示例
+
+```typescript
+new BooleanValidator('isActive', {
+    defaultValue: false
+});
+
+// 接受: true, false, 0, 1, "true", "false", "1", "0"
+```
+
+### 对象验证器 (ObjectValidator)
+
+通过验证规则来验证嵌套对象的属性。
+
+#### 选项
+
+```typescript
+interface ObjectValidatorOptions extends ValidatorOptions {
+    rules: Array<BaseValidator>;  // 嵌套对象的验证规则
+}
+```
+
+#### 示例
+
+```typescript
+const addressRules = [
+    new StringValidator('street', {required: true, maxLen: 100}),
+    new StringValidator('city', {required: true, maxLen: 50}),
+    new StringValidator('zipCode', {required: true, maxLen: 10})
+];
+
+new ObjectValidator('address', {
+    required: true,
+    rules: addressRules
+});
+```
+
+### 数组验证器 (ArrayValidator)
+
+验证数组，支持长度约束和元素验证。
+
+#### 选项
+
+```typescript
+interface ArrayValidatorOptions extends ValidatorOptions {
+    rules?: Array<BaseValidator>;  // 数组元素的验证规则
+    minLen?: number;               // 最小数组长度
+    maxLen?: number;               // 最大数组长度
+}
+```
+
+#### 示例
+
+```typescript
+const itemRules = [
+    new StringValidator('name', {required: true}),
+    new NumberValidator('quantity', {required: true, minValue: 1})
+];
+
+new ArrayValidator('items', {
+    required: true,
+    minLen: 1,
+    maxLen: 10,
+    rules: itemRules
+});
+```
+
+## 通用选项
+
+所有验证器都继承自 `BaseValidator` 并支持这些通用选项：
+
+```typescript
+interface ValidatorOptions {
+    required?: boolean;      // 字段是否必需
+    name?: string;          // 用于错误消息的友好字段名
+    defaultValue?: any;     // 字段为 null/undefined/空时的默认值
+    check?: CustomCheck;     // 自定义验证函数
+    ignoreWhen?: IgnoreCheck; // 条件性跳过验证
+}
+
+type CustomCheck = (value: any, data: any, prefix: string) => string | null;
+type IgnoreCheck = (value: any, data: any) => boolean;
+```
+
+### 字段别名
+
+使用 `name` 选项在错误消息中显示友好的字段名：
+
+```typescript
+new StringValidator('usr_email', {
+    name: '邮箱地址',
+    required: true
+});
+
+// 错误消息: "邮箱地址: 不能为空"
+```
+
+### 默认值
+
+为缺失或空字段设置默认值：
+
+```typescript
+new StringValidator('status', {
+    defaultValue: 'active'
+});
+
+new NumberValidator('quantity', {
+    defaultValue: 1,
+    round: 0  // 同时舍入为整数
+});
+```
+
+### 自定义验证
+
+使用 `check` 选项添加自定义验证逻辑：
+
+```typescript
+new StringValidator('username', {
+    required: true,
+    minLen: 3,
+    maxLen: 20,
+    check: (value, data, prefix) => {
+        if (value.includes(' ')) {
+            return '用户名不能包含空格';
+        }
+        return null; // null 表示验证通过
+    }
+});
+```
+
+### 条件性验证
+
+使用 `ignoreWhen` 根据条件跳过验证：
+
+```typescript
+new StringValidator('phone', {
+    required: true,
+    ignoreWhen: (value, data) => {
+        // 如果提供了邮箱，则跳过电话验证
+        return !!data.email;
+    }
+});
+```
+
+## 验证结果
+
+验证结果提供简单和结构化的错误信息：
+
+```typescript
+interface ValidationResult {
+    valid: boolean;              // 验证是否通过
+    errorMessage: string;        // 所有错误的字符串形式（向后兼容）
+    errors: ValidationError[];   // 结构化错误数组
+}
+
+interface ValidationError {
+    field: string;              // 字段名（或别名）
+    message: string;            // 错误消息
+}
+```
+
+### 使用示例
+
+**简单错误消息:**
+```typescript
+if (!result.valid) {
+    console.log(result.errorMessage);
+    // 输出:
+    // 邮箱地址: 不能为空
+    // 年龄: 不能小于最小值 0
+}
+```
+
+**结构化错误:**
+```typescript
+if (!result.valid) {
+    result.errors.forEach(error => {
+        console.log(`${error.field}: ${error.message}`);
+    });
+}
+
+// 或在 API 响应中使用:
+res.status(400).json({
+    errors: result.errors
+});
+```
+
+**响应格式:**
+```json
+{
+  "errors": [
+    {
+      "field": "邮箱地址",
+      "message": "不能为空"
+    },
+    {
+      "field": "年龄",
+      "message": "不能小于最小值 0"
+    }
+  ]
+}
+```
+
+## 高级功能
+
+### 嵌套字段访问
+
+使用点符号访问和验证嵌套属性：
+
+```typescript
+new StringValidator('user.profile.email', {
+    name: '邮箱',
+    required: true,
+    toLowerCase: true
+});
+```
+
+### 数据清理
+
+库在验证期间自动清理数据：
+
+**字符串清理:**
+```typescript
+// 去除空白并转换大小写
+new StringValidator('email', {
+    toLowerCase: true
+});
+// 输入: "  JOHN@EXAMPLE.COM  " → 输出: "john@example.com"
+```
+
+**数字清理:**
+```typescript
+// 转换类型并舍入
+new NumberValidator('price', {
+    round: 2
+});
+// 输入: "99.876" → 输出: 99.88
+```
+
+**组合清理:**
+```typescript
+const rules = [
+    new StringValidator('email', {
+        toLowerCase: true
+    }),
+    new StringValidator('status', {
+        defaultValue: 'active',
+        toUpperCase: true
+    }),
+    new NumberValidator('price', {
+        round: 2
+    }),
+    new NumberValidator('quantity', {
+        defaultValue: 1,
+        round: 0
+    })
+];
+
+const data = {
+    email: '  USER@EXAMPLE.COM  ',
+    price: '99.876'
+};
+
+// 结果:
+// {
+//   email: 'user@example.com',
+//   status: 'ACTIVE',
+//   price: 99.88,
+//   quantity: 1
+// }
+```
+
+## 完整示例
+
+```typescript
+import beanValidator from "@ticatec/bean-validator";
+import {StringValidator, NumberValidator, DateValidator, EnumValidator, ObjectValidator, ArrayValidator} from "@ticatec/bean-validator";
+
+// 定义嵌套验证规则
+const memberRules = [
+    new DateValidator('registerOn', {maxDaysAfter: -5}),
+    new StringValidator('password', {
+        required: true,
+        format: {
+            regex: /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[A-Za-z\d]{8,}$/,
+            message: '密码必须至少8位，包含大小写字母和数字'
+        }
+    })
+];
+
+// 定义主要验证规则
+const rules = [
+    new StringValidator('name', {
+        name: '姓名',
+        required: true,
+        maxLen: 50
+    }),
+    new NumberValidator('age', {
+        required: true,
+        minValue: 15,
+        maxValue: 90
+    }),
+    new DateValidator('dob', {
+        name: '出生日期',
+        maxDaysBefore: 100000
+    }),
+    new EnumValidator('gender', {
+        values: ['F', 'M']
+    }),
+    new StringValidator('email', {
+        toLowerCase: true,
+        format: {
+            regex: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
+            message: '邮箱格式无效'
+        }
+    }),
+    new StringValidator('status', {
+        defaultValue: 'active',
+        toUpperCase: true
+    }),
+    new ObjectValidator('member', {
+        rules: memberRules
+    })
+];
+
+// 带有子元素的父规则
+const parentRules = [
+    ...rules,
+    new ArrayValidator('children', {
+        required: true,
+        rules: rules
+    })
+];
+
+const data = {
+    name: '张三',
+    age: 35,
+    dob: '1988-03-05',
+    gender: 'M',
+    email: 'ZHANGSAN@EXAMPLE.COM',
+    member: {
+        registerOn: new Date('2023-01-01'),
+        password: 'SecurePass123'
+    },
+    children: [
+        {
+            name: '李四',
+            age: 16,
+            dob: '2007-08-12',
+            gender: 'F',
+            email: 'lisi@example.com',
+            member: {
+                registerOn: new Date('2023-06-01'),
+                password: 'ChildPass456'
+            }
+        }
+    ]
+};
+
+const result = beanValidator.validate(data, parentRules);
+
+if (result.valid) {
+    console.log('所有验证通过！');
+    console.log('验证和清理后的数据:', data);
+    // 数据已被清理:
+    // - email: 'zhangsan@example.com'
+    // - status: 'ACTIVE'
+} else {
+    console.log('验证错误:');
+    result.errors.forEach(error => {
+        console.log(`${error.field}: ${error.message}`);
+    });
+}
+```
+
+## Express 集成示例
+
+```typescript
+import express from 'express';
+import beanValidator, {StringValidator, NumberValidator, EnumValidator} from '@ticatec/bean-validator';
+
+const app = express();
+app.use(express.json());
+
+// 定义验证规则
+const userCreateRules = [
+    new StringValidator('name', {
+        name: '姓名',
+        required: true,
+        maxLen: 100
+    }),
+    new StringValidator('email', {
+        name: '邮箱地址',
+        required: true,
+        toLowerCase: true,
+        maxLen: 100,
+        format: {
+            regex: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
+            message: '邮箱格式无效'
+        }
+    }),
+    new NumberValidator('age', {
+        required: true,
+        minValue: 18,
+        maxValue: 120
+    }),
+    new EnumValidator('status', {
+        defaultValue: 'active',
+        values: ['active', 'inactive']
+    })
+];
+
+app.post('/users', (req, res) => {
+    const result = beanValidator.validate(req.body, userCreateRules);
+
+    if (!result.valid) {
+        return res.status(400).json({
+            success: false,
+            errors: result.errors
+        });
+    }
+
+    // 处理验证和清理后的数据
+    const user = createUser(req.body);
+    res.status(201).json({
+        success: true,
+        data: user
+    });
+});
+
+app.listen(3000);
+```
+
+## API 参考
+
+### beanValidator.validate(data, rules, prefix?)
+
+根据提供的规则验证数据。
+
+**参数:**
+- `data`: 要验证的对象
+- `rules`: 验证规则数组
+- `prefix`: 内部使用，用于嵌套验证
+
+**返回:** `ValidationResult`
+
+## 许可证
+
+MIT
+
+## 仓库
+
+- GitHub: https://github.com/ticatec/node-library
+- 问题反馈: https://github.com/ticatec/bean-validator/issues
+
+## 作者
+
+Henry Feng

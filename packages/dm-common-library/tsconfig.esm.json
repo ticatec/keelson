@@ -1,0 +1,21 @@
+{
+  "compilerOptions": {
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "esModuleInterop": true,
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
+    "target": "es2022",
+    "declaration": true,
+    "outDir": "./lib/esm",
+    "rootDir": "src",
+    "baseUrl": "."
+  },
+  "lib": ["es2022"],
+  "include": [
+    "src/**/*"
+  ],
+  "exclude": [
+    "src/__tests__/**/*"
+  ]
+}

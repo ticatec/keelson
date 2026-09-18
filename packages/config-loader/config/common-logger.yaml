@@ -1,0 +1,28 @@
+appenders:
+  console:
+    type: console
+  app:
+    type: dateFile
+    filename: /var/log/service/#{service-name}.log
+    keepFileExt: true
+    pattern: "yyyy-MM-dd"
+  errorFile:
+    type: dateFile
+    filename: /var/log/service/#{service-name}-errors.log
+    keepFileExt: true
+    pattern: "yyyy-MM-dd"
+  errors:
+    type: logLevelFilter
+    level: ERROR
+    appender: errorFile
+categories:
+  default:
+    appenders:
+      - console
+      - app
+      - errors
+    level: DEBUG
+  errors:
+    appenders:
+      - errorFile
+    level: ERROR

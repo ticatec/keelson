@@ -1,0 +1,33 @@
+# dependencies
+node_modules/
+.pnpm-store/
+
+# build output
+lib/
+dist/
+*.tsbuildinfo
+
+# stale compiled artifacts next to sources
+packages/*/src/**/*.js
+packages/*/src/**/*.d.ts
+packages/*/src/**/*.map
+
+# test output
+coverage/
+
+# editors
+.idea/
+.vscode/
+*.iml
+
+# os
+.DS_Store
+
+# logs
+*.log
+pnpm-debug.log*
+npm-debug.log*
+
+# local
+.env
+.env.local

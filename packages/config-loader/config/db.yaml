@@ -1,0 +1,5 @@
+user: devuser
+host: 127.0.0.1
+database: aoss_db_platform
+password: mypassword
+port: 5432

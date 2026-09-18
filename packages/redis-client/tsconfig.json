@@ -1,0 +1,18 @@
+{
+  "compilerOptions": {
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "target": "es2020",
+    "sourceMap": true,
+    "declaration": true,
+    "outDir": "lib",
+    "sourceRoot": "src",
+    "baseUrl": ".",
+    "paths": {
+      "@ticatec/logger-wrapper": ["../logger_warpper/src/index.ts", "./node_modules/@ticatec/logger-wrapper"]
+    }
+  },
+  "lib": ["es2020"]
+}

@@ -1,0 +1,45 @@
+{
+  "name": "@ticatec/keelson",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Keelson — an enterprise TypeScript framework for Node.js and Express: layered data access, declarative transactions, dependency injection, bean validation and server scaffolding.",
+  "keywords": [
+    "keelson",
+    "framework",
+    "typescript",
+    "nodejs",
+    "express",
+    "monorepo",
+    "ticatec"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ticatec/keelson.git"
+  },
+  "author": {
+    "name": "Henry Feng",
+    "email": "huili.f@gmail.com",
+    "url": "https://github.com/ticatec"
+  },
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/ticatec/keelson/issues"
+  },
+  "homepage": "https://github.com/ticatec/keelson#readme",
+  "engines": {
+    "node": ">=18.0.0",
+    "pnpm": ">=9.0.0"
+  },
+  "scripts": {
+    "build": "pnpm -r --filter './packages/**' run build",
+    "clean": "pnpm -r --filter './packages/**' run clean",
+    "test": "pnpm -r --filter './packages/**' run test",
+    "lint": "pnpm -r --filter './packages/**' run lint",
+    "typecheck": "pnpm -r --filter './packages/**' run typecheck",
+    "verify": "pnpm typecheck && pnpm test && pnpm build",
+    "publish-all": "pnpm -r --filter './packages/**' publish --access public --no-git-checks"
+  },
+  "devDependencies": {
+    "typescript": "^5.0.0"
+  }
+}
