@@ -12,7 +12,7 @@
 - ✅ **双模式支持**：完整支持 ES Modules (ESM) 与 CommonJS (CJS)
 - ✅ **单例与多实例**：支持命名单例（`getInstance('session')`）与独立实例创建
 - ✅ **Mock Redis 支持**：内置基于 `ioredis-mock` 的模拟环境
-- ✅ **Pino 日志集成**：集成 `@ticatec/logger-wrapper` Pino 结构化日志输出
+- ✅ **Pino 日志集成**：集成 `@ticatec/logger-pino` Pino 结构化日志输出
 - ✅ **Cache-Aside 模式 (`getOrSet`)**：内置 `getOrSet` 自动查询与回填缓存
 - ✅ **JSON 自动序列化**：针对对象类型提供自动序列化与反序列化
 - ✅ **丰富操作接口**：高阶封装 String、Hash、Set、List 与 Pub/Sub
@@ -21,9 +21,9 @@
 ## 安装
 
 ```bash
-pnpm add @ticatec/redis-client @ticatec/logger-wrapper ioredis pino
+pnpm add @ticatec/redis-client @ticatec/logger-pino ioredis pino
 # 或 npm
-npm install @ticatec/redis-client @ticatec/logger-wrapper ioredis pino
+npm install @ticatec/redis-client @ticatec/logger-pino ioredis pino
 ```
 
 ## 快速开始

@@ -1,8 +1,8 @@
-# @ticatec/logger-wrapper
+# @ticatec/logger-pino
 
 [中文文档](README_CN.md) | English
 
-[![Version](https://img.shields.io/npm/v/@ticatec/logger-wrapper)](https://www.npmjs.com/package/@ticatec/logger-wrapper)
+[![Version](https://img.shields.io/npm/v/@ticatec/logger-pino)](https://www.npmjs.com/package/@ticatec/logger-pino)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 [Pino](https://getpino.io) 的完整封装，由解析后的配置对象驱动。在启动时调用一次 `initialize(config)` —— 配置中描述了 appender（输出目的地）与命名 logger（分类），随后通过模块名和可选的分类来获取 child logger。
@@ -15,8 +15,8 @@
 - **配置驱动初始化**：一次 `initialize(config)` 调用即可根据类型化对象构建出所有 pino logger，无需手动设置 pino。
 - **每个 logger 支持多 appender**：每个 logger 通过 `pino.multistream` 串联自己声明的 appender（例如 `console` + `file` + `errorFile`，各自独立级别）。
 - **命名分类**：可配置 `root`、`controller`、`service`、`repository`、`dao` 等，通过 `getLogger(name, category)` 路由调用。
-- **严格的单次初始化拦截**：二次调用 `initialize()` 或者在初始化前调用 `getLogger()` 都会立即抛错。
-- **进程级单例**：通过 `peerDependencies` 部署，确保同一进程内所有基础库共享同一个物理实例。
+- **单次初始化拦截**：二次调用 `initialize()` 会抛错；但初始化前调用 `getLogger()` **不会** —— 在 pino 装上之前，记录直接走 console。
+- **自注册为进程级 provider**：一次 `initialize()` 即可把所有 Keelson 包接入 pino，无论它们在依赖树里嵌套多深。
 
 ## 📦 安装
 
@@ -25,24 +25,22 @@
 安装一次即可 —— `pino` 已作为封装库的常规 `dependency` 打包，会自动随之安装：
 
 ```bash
-pnpm add @ticatec/logger-wrapper
+pnpm add @ticatec/logger-pino
 # 或 npm
-npm install @ticatec/logger-wrapper
+npm install @ticatec/logger-pino
 ```
 
-### 基础库 / 组件库
+本包将 [`@ticatec/logger-api`](https://github.com/ticatec/keelson/tree/main/packages/logger-api) 声明为 peer dependency —— 依赖树里若还没有，请一并安装。
 
-仅在 **`devDependencies`** 中声明 `@ticatec/logger-wrapper`。不需要 `peerDependencies`，也不需要单独声明 `pino` —— 你的库在运行时通过 Node 模块向上查找机制，从宿主应用顶层 `node_modules` 中解析封装库。
+### 基础库不应依赖本包
 
-```json
-{
-  "devDependencies": {
-    "@ticatec/logger-wrapper": "^0.3.0"
-  }
-}
+基础库面向**契约**写日志，而不是面向 pino：
+
+```typescript
+import { getLogger } from '@ticatec/logger-api';   // ← 不是 @ticatec/logger-pino
 ```
 
-约定很简单：任何使用你库的应用，必须自行安装 `@ticatec/logger-wrapper`。宿主应用的这一次安装会同时为整条 `@ticatec/*` 依赖链提供封装库（以及传递性地提供 `pino`）。
+这样 pino 完全不会进入你这个库的依赖图。记录最终落到 pino、winston 还是 console，是**应用**的决定，取决于它在启动时注入了哪个 provider。本包就是其中一个 provider，它只应出现在应用的 `dependencies` 里。
 
 ---
 
@@ -55,7 +53,7 @@ npm install @ticatec/logger-wrapper
 ```typescript
 import fs from 'fs';
 import YAML from 'yaml';
-import { initialize } from '@ticatec/logger-wrapper';
+import { initialize } from '@ticatec/logger-pino';
 
 const config = YAML.parse(fs.readFileSync('./config/loggers.yaml', 'utf8'));
 
@@ -66,14 +64,14 @@ initialize(config);
 JSON 文件同理：
 
 ```typescript
-import { initialize } from '@ticatec/logger-wrapper';
+import { initialize } from '@ticatec/logger-pino';
 initialize(JSON.parse(fs.readFileSync('./config/loggers.json', 'utf8')));
 ```
 
 ### 2. 在任意位置使用 logger
 
 ```typescript
-import { getLogger } from '@ticatec/logger-wrapper';
+import { getLogger } from '@ticatec/logger-api';
 
 export class UserController {
   // 路由到配置中的 `controller` 分类（其级别 + appender）
@@ -89,6 +87,8 @@ export class AppConf {
   private readonly logger = getLogger('AppConf');
 }
 ```
+
+> 应用代码可以从这里 import `getLogger`，但库代码应当从 `@ticatec/logger-api` 导入 —— 同一个函数，而且 pino 不会进入你的依赖图。
 
 ---
 
@@ -176,20 +176,25 @@ loggers:
 
 ### `initialize(config: LoggingConfig): void`
 
-校验配置，为每个条目构建一个 pino multistream logger，将 `root` 安装为单例根，并将其它条目注册为分类 logger。重复调用或配置非法时抛错。
+校验配置，为每个条目构建一个 pino multistream logger，将 `root` 安装为根 logger、其它条目注册为分类 logger —— 然后通过 `setLoggerProvider()` 把本适配器注册为进程级 provider。此后所有 Keelson 包的记录都流入 pino。重复调用或配置非法时抛错。
 
 ### `getLogger(name: string, category?: string): Logger`
 
-返回一个被缓存的 pino child logger，自动绑定 `{ module: name }`。
+转出自 `@ticatec/logger-api`，与直接从那里导入完全等价。返回的是 `Logger`（五方法契约），它在每次写入时解析当前 provider：`initialize()` 之前写到 console，之后写到 pino。
 
-- 当 `category` 被传入且匹配某个已配置的 logger 时，child 的父级就是该分类 logger（继承其 level + appender 集合）。
-- 否则父级为 `root`。
+正因为解析是逐次进行的，在构造函数里捕获的 logger 在 `initialize()` 之后依然会自动切换过去 —— 启动顺序无关紧要。
 
-缓存 key 为 `${category ?? ''}::${name}`，因此同名 + 不同分类会返回不同的 logger。
+### `getPinoLogger(name: string, category?: string): PinoLogger`
+
+逃生口。返回绑定了 `{ module: name }` 的原始 pino child logger，保留 `level`、`child()`、`bindings()` 等 pino 专有能力。只在确实需要它们时使用，并接受由此带来的耦合。
+
+- 当 `category` 匹配某个已配置的 logger 时，child 的父级就是该分类 logger（继承其 level + appender 集合）；否则父级为 `root`。
+- 缓存 key 为 `${category ?? ''}::${name}`，因此同名 + 不同分类会返回不同的 logger。
+- **未调用 `initialize()` 时抛错** —— 与 `getLogger()` 不同，返回 pino 类型的场景没有 console 兜底。
 
 ### `resetForTest(): void`
 
-清空所有单例状态。用于单元测试的 `beforeEach`。
+清空适配器的全部状态，并从 `@ticatec/logger-api` 中摘除 provider。用于单元测试的 `beforeEach`。
 
 ### 类型
 
@@ -197,16 +202,13 @@ loggers:
 
 ---
 
-## 💡 通过 Node 模块向上查找实现单例
+## 💡 一次 `initialize()` 如何覆盖所有包
 
-Node.js 解析 bare specifier（例如 `@ticatec/logger-wrapper`）时，会从导入文件所在位置沿目录树向上查找，直到找到匹配的 `node_modules` 条目。因此当：
+基础库从不 import 本包。它们调用 `@ticatec/logger-api` 的 `getLogger()`，由后者查找当前注入的 provider。
 
-1. 宿主应用把 `@ticatec/logger-wrapper` 声明为常规 `dependency`，并且
-2. 中间库（例如 `@ticatec/common-express-server`）导入它却不声明为依赖时，
+`initialize()` 做的就是把本适配器注册为那个 provider。它写入的注册表挂在 `Symbol.for('@ticatec/logger-api.registry')` 上，因此 `logger-api` 的 CommonJS 与 ESM 两套构建共享同一份；而 `logger-api` 作为 peer dependency，保证依赖树里只解析出一个版本。启动时调用一次，进程内所有 `@ticatec/*` 包 —— 无论嵌套多深 —— 就都开始写入 pino 了。
 
-……从 `node_modules/@ticatec/common-express-server/` 内部发起的 `import '@ticatec/logger-wrapper'` 都会向上找到 `<app>/node_modules/@ticatec/logger-wrapper/` —— 也就是宿主应用初始化的同一个物理实例。整个进程只有一个单例，完全不需要 `peerDependencies` 的额外声明。
-
-正因如此，中间库只需要在 `devDependencies` 中声明（供本地开发使用），而封装库把 `pino` 作为常规 `dependency` 打包：宿主应用的一次安装就提供了所有内容。
+这里不依赖 Node 的模块向上查找机制，基础库也完全不需要依赖 pino。
 
 ---
 

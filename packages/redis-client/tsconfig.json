@@ -8,11 +8,7 @@
     "sourceMap": true,
     "declaration": true,
     "outDir": "lib",
-    "sourceRoot": "src",
-    "baseUrl": ".",
-    "paths": {
-      "@ticatec/logger-wrapper": ["../logger_warpper/src/index.ts", "./node_modules/@ticatec/logger-wrapper"]
-    }
+    "sourceRoot": "src"
   },
   "lib": ["es2020"]
 }

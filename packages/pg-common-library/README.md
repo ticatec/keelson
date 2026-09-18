@@ -3,7 +3,7 @@
 [![Version](https://img.shields.io/npm/v/@ticatec/pg-common-library)](https://www.npmjs.com/package/@ticatec/pg-common-library)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-A production-ready PostgreSQL database driver implementation for Node.js applications, built on the `pg` driver with connection pooling and dual CommonJS / ESM support. Integrates seamlessly with [`@ticatec/node-common-library`](https://www.npmjs.com/package/@ticatec/node-common-library) database abstractions and `@ticatec/logger-wrapper`.
+A production-ready PostgreSQL database driver implementation for Node.js applications, built on the `pg` driver with connection pooling and dual CommonJS / ESM support. Integrates seamlessly with [`@ticatec/node-common-library`](https://www.npmjs.com/package/@ticatec/node-common-library) database abstractions and `@ticatec/logger-pino`.
 
 [中文](./README_CN.md) ｜ English
 
@@ -14,12 +14,12 @@ A production-ready PostgreSQL database driver implementation for Node.js applica
 - **CRUD Operations**: Complete support for SQL queries, inserts, updates, and deletes with generic typing
 - **Interface Compliance**: Implements standard `DBConnection` and `DBFactory` interfaces for system decoupling
 - **Connection Pooling**: Built-in connection pool management using `pg.Pool`
-- **Logger Wrapper Integration**: Uses `@ticatec/logger-wrapper` for high-performance structured logging
+- **Logger Wrapper Integration**: Uses `@ticatec/logger-pino` for high-performance structured logging
 
 ## Installation
 
 ```bash
-pnpm add @ticatec/pg-common-library @ticatec/node-common-library @ticatec/logger-wrapper pg pino
+pnpm add @ticatec/pg-common-library @ticatec/node-common-library @ticatec/logger-pino pg pino
 ```
 
 ### Peer Dependencies
@@ -27,7 +27,7 @@ pnpm add @ticatec/pg-common-library @ticatec/node-common-library @ticatec/logger
 ```json
 {
   "peerDependencies": {
-    "@ticatec/logger-wrapper": "^0.1.0",
+    "@ticatec/logger-pino": "^0.1.0",
     "@ticatec/node-common-library": "^3.1.0",
     "pg": "^8.8.0",
     "pino": ">=8.0.0"
@@ -39,7 +39,7 @@ pnpm add @ticatec/pg-common-library @ticatec/node-common-library @ticatec/logger
 
 ```typescript
 import pino from 'pino';
-import { initialize as initLogger } from '@ticatec/logger-wrapper';
+import { initialize as initLogger } from '@ticatec/logger-pino';
 import { initializePg } from '@ticatec/pg-common-library';
 import { DBManager } from '@ticatec/node-common-library';
 

@@ -12,7 +12,7 @@ A lightweight TypeScript wrapper around ioredis, providing convenient methods fo
 - ✅ **Dual Module Support**: Full ES Module (ESM) & CommonJS (CJS) compatibility
 - ✅ **Singleton & Multi-Instance**: Supports named singletons (`getInstance('session')`) and standalone instances
 - ✅ **Mock Redis Support**: Built-in mock Redis via `ioredis-mock` for testing environments
-- ✅ **Pino Logger Integration**: Structured logging via `@ticatec/logger-wrapper` (Pino)
+- ✅ **Pino Logger Integration**: Structured logging via `@ticatec/logger-pino` (Pino)
 - ✅ **Cache-Aside Pattern (`getOrSet`)**: Built-in `getOrSet` method to fetch or populate cache automatically
 - ✅ **JSON Serialization**: Automatic JSON serialization/deserialization for objects
 - ✅ **Comprehensive Operations**: High-level wrapper for Strings, Hashes, Sets, Lists, and Pub/Sub
@@ -21,9 +21,9 @@ A lightweight TypeScript wrapper around ioredis, providing convenient methods fo
 ## Installation
 
 ```bash
-pnpm add @ticatec/redis-client @ticatec/logger-wrapper ioredis pino
+pnpm add @ticatec/redis-client @ticatec/logger-pino ioredis pino
 # or npm
-npm install @ticatec/redis-client @ticatec/logger-wrapper ioredis pino
+npm install @ticatec/redis-client @ticatec/logger-pino ioredis pino
 ```
 
 ## Quick Start

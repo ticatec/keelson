@@ -38,7 +38,7 @@ Usable on their own, in any Node project.
 | Package | Version | What it does |
 | --- | --- | --- |
 | [logger-api](packages/logger-api) | 1.0.0 | Zero-dependency logging contract — packages log against it, applications inject the implementation |
-| [logger-wrapper](packages/logger-wrapper) | 0.3.0 | Optional pino adapter for `logger-api`, with appenders and per-category levels |
+| [logger-pino](packages/logger-pino) | 1.0.0 | Optional pino adapter for `logger-api`, with appenders and per-category levels |
 | [config-loader](packages/config-loader) | 1.0.0 | YAML / JSON configuration loading |
 | [redis-client](packages/redis-client) | 1.1.0 | ioredis wrapper with singleton management and cached-data helpers |
 

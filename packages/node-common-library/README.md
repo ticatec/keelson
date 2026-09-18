@@ -58,7 +58,7 @@ Nothing to do — the framework logs against the `@ticatec/logger-api` contract,
 To route them into a real logging library, install a provider once at startup. For pino, use the ready-made adapter:
 
 ```typescript
-import { initialize } from '@ticatec/logger-wrapper';
+import { initialize } from '@ticatec/logger-pino';
 
 initialize({
     appenders: [
@@ -557,7 +557,7 @@ StringUtils.genID();   // 01a0b1ab1d6674899b3f9e1c0bb70631   ← sorts after the
 
 ### Logging
 
-The library logs against [`@ticatec/logger-api`](https://www.npmjs.com/package/@ticatec/logger-api), a zero-dependency contract. Which library actually receives the records is the application's choice — install a provider with `setLoggerProvider()`, or use the pino adapter in [`@ticatec/logger-wrapper`](https://www.npmjs.com/package/@ticatec/logger-wrapper). With no provider installed, output goes to the console at `LOG_LEVEL` (default `info`).
+The library logs against [`@ticatec/logger-api`](https://www.npmjs.com/package/@ticatec/logger-api), a zero-dependency contract. Which library actually receives the records is the application's choice — install a provider with `setLoggerProvider()`, or use the pino adapter in [`@ticatec/logger-pino`](https://www.npmjs.com/package/@ticatec/logger-pino). With no provider installed, output goes to the console at `LOG_LEVEL` (default `info`).
 
 ```typescript
 import { getLogger } from '@ticatec/node-common-library';
@@ -640,7 +640,7 @@ try {
 | `DBConnection.getPlaceholder(index)` | did not exist | **abstract** — every driver must implement it |
 | `DBFactory.close()` | did not exist | **required** — every factory must implement it |
 | `BeanFactory` export | was bound to the singleton instance | is the **class**; use `beanFactory` for the singleton |
-| Logging | `@ticatec/logger-wrapper` (pino) as a peer dependency | `@ticatec/logger-api` — a zero-dependency contract. pino is now optional; install `logger-wrapper` only if you want it |
+| Logging | `@ticatec/logger-wrapper` (pino) as a peer dependency | `@ticatec/logger-api` — a zero-dependency contract. pino is now optional; install `@ticatec/logger-pino` (the renamed adapter) only if you want it |
 | `StringUtils.genID()` / `uuid()` | UUID v4 (`crypto.randomUUID()`) | **UUID v7** — time-ordered and monotonic, suitable as a primary key |
 | `NULL` columns | dropped from mapped objects | preserved as `null`, consistently across `find()` and `listQuery()` |
 

@@ -1,8 +1,8 @@
-# @ticatec/logger-wrapper
+# @ticatec/logger-pino
 
 [中文文档](README_CN.md) | English
 
-[![Version](https://img.shields.io/npm/v/@ticatec/logger-wrapper)](https://www.npmjs.com/package/@ticatec/logger-wrapper)
+[![Version](https://img.shields.io/npm/v/@ticatec/logger-pino)](https://www.npmjs.com/package/@ticatec/logger-pino)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 > **As of v1.0 this package is the optional pino adapter for [`@ticatec/logger-api`](../logger-api).** Keelson packages log against the contract in `logger-api`; install this one, and call `initialize()`, to route those records into pino with file/console appenders and per-category levels. Without it, records go to the console.
@@ -15,8 +15,8 @@ A complete [Pino](https://getpino.io) facade driven by a parsed configuration ob
 - **Config-driven initialisation**: a single `initialize(config)` call builds every pino logger from a typed object — no manual pino setup required.
 - **Multiple appenders per logger**: each logger wires its named appenders into a `pino.multistream` (e.g. `console` + `file` + `errorFile` with independent levels).
 - **Named categories**: configure `root`, `controller`, `service`, `repository`, `dao`, … and route calls via `getLogger(name, category)`.
-- **Strict single-init guard**: calling `initialize()` twice or `getLogger()` before init throws immediately.
-- **Process-wide singleton**: designed to live under `peerDependencies` so every library in the same process shares one physical instance.
+- **Single-init guard**: calling `initialize()` twice throws. Calling `getLogger()` before init does *not* — records simply go to the console until pino is installed.
+- **Installs itself as the process-wide provider**: one `initialize()` call routes every Keelson package into pino, however deep it sits in the dependency tree.
 
 ## 📦 Installation
 
@@ -25,24 +25,22 @@ A complete [Pino](https://getpino.io) facade driven by a parsed configuration ob
 Install once — `pino` is bundled as a regular `dependency` of the wrapper, so it comes along automatically:
 
 ```bash
-pnpm add @ticatec/logger-wrapper
+pnpm add @ticatec/logger-pino
 # or npm
-npm install @ticatec/logger-wrapper
+npm install @ticatec/logger-pino
 ```
 
-### Sub-libraries / component libraries
+It declares [`@ticatec/logger-api`](https://github.com/ticatec/keelson/tree/main/packages/logger-api) as a peer dependency — install that too if it is not already in your tree.
 
-Declare `@ticatec/logger-wrapper` in **`devDependencies`** only. No `peerDependencies` entry, no `pino` declaration — your library resolves the wrapper at runtime via Node's module-walk from the host application's top-level `node_modules`.
+### Libraries should not depend on this package
 
-```json
-{
-  "devDependencies": {
-    "@ticatec/logger-wrapper": "^0.3.0"
-  }
-}
+A library logs against the **contract**, not against pino:
+
+```typescript
+import { getLogger } from '@ticatec/logger-api';   // ← not @ticatec/logger-pino
 ```
 
-The contract is simple: any application that consumes your library must install `@ticatec/logger-wrapper` itself. The host's single install provides the wrapper (and transitively, `pino`) to every nested `@ticatec/*` library in the dependency tree.
+That keeps pino out of your library's dependency graph entirely. Whether records end up in pino, in winston, or on the console is the *application's* decision, made by whichever provider it installs at startup. This package is one such provider; it belongs in the application's `dependencies`, nowhere else.
 
 ---
 
@@ -55,7 +53,7 @@ The wrapper takes a **parsed** configuration object — parse your YAML or JSON 
 ```typescript
 import fs from 'fs';
 import YAML from 'yaml';
-import { initialize } from '@ticatec/logger-wrapper';
+import { initialize } from '@ticatec/logger-pino';
 
 const config = YAML.parse(fs.readFileSync('./config/loggers.yaml', 'utf8'));
 
@@ -66,14 +64,14 @@ initialize(config);
 JSON works the same way:
 
 ```typescript
-import { initialize } from '@ticatec/logger-wrapper';
+import { initialize } from '@ticatec/logger-pino';
 initialize(JSON.parse(fs.readFileSync('./config/loggers.json', 'utf8')));
 ```
 
 ### 2. Use loggers anywhere
 
 ```typescript
-import { getLogger } from '@ticatec/logger-wrapper';
+import { getLogger } from '@ticatec/logger-api';
 
 export class UserController {
   // Routes to the configured `controller` category (level + appenders).
@@ -89,6 +87,8 @@ export class AppConf {
   private readonly logger = getLogger('AppConf');
 }
 ```
+
+> Application code may import `getLogger` from here, but library code should import it from `@ticatec/logger-api` — same function, no pino in your dependency graph.
 
 ---
 
@@ -176,20 +176,25 @@ A `root` entry is required. Any other key becomes a named category accessible vi
 
 ### `initialize(config: LoggingConfig): void`
 
-Validates the config, builds one pino multistream logger per entry, installs `root` as the singleton root, and registers every other entry as a category logger. Throws on a second call or on invalid config.
+Validates the config, builds one pino multistream logger per entry, installs `root` as the root logger and every other entry as a category logger — then registers this adapter as the process-wide provider via `setLoggerProvider()`. From that point every Keelson package's records flow into pino. Throws on a second call or on invalid config.
 
 ### `getLogger(name: string, category?: string): Logger`
 
-Returns a cached pino child logger bound to `{ module: name }`.
+Re-exported from `@ticatec/logger-api`, and identical to importing it from there. Returns a `Logger` — the five-method contract — that resolves the active provider on every write. Before `initialize()` it writes to the console; after, to pino.
 
-- If `category` is provided and matches a configured logger, the child's parent is that category logger (its level + appender set).
-- Otherwise the parent is `root`.
+Because resolution is per-write, a logger captured in a constructor still switches over when `initialize()` runs later. Startup ordering does not matter.
 
-Cache key is `${category ?? ''}::${name}`, so the same name with different categories returns distinct loggers.
+### `getPinoLogger(name: string, category?: string): PinoLogger`
+
+The escape hatch. Returns the raw pino child logger bound to `{ module: name }`, with pino specifics — `level`, `child()`, `bindings()` — intact. Reach for it only when you genuinely need them, and accept the coupling.
+
+- If `category` matches a configured logger, the child's parent is that category logger (its level + appender set); otherwise the parent is `root`.
+- Cache key is `${category ?? ''}::${name}`, so the same name under different categories returns distinct loggers.
+- **Throws if `initialize()` has not been called** — unlike `getLogger()`, there is no console fallback for a pino-typed return.
 
 ### `resetForTest(): void`
 
-Clears all singleton state. Intended for unit-test `beforeEach` blocks.
+Clears all adapter state and removes the provider from `@ticatec/logger-api`. Intended for unit-test `beforeEach` blocks.
 
 ### Types
 
@@ -197,16 +202,13 @@ Clears all singleton state. Intended for unit-test `beforeEach` blocks.
 
 ---
 
-## 💡 Singleton resolution via Node module walk
+## 💡 How one `initialize()` reaches every package
 
-Node.js resolves bare specifiers (like `@ticatec/logger-wrapper`) by walking up the directory tree from the importing file until it finds a matching `node_modules` entry. So when:
+Libraries never import this package. They call `getLogger()` from `@ticatec/logger-api`, which looks up whichever provider is currently installed.
 
-1. The host application declares `@ticatec/logger-wrapper` as a regular `dependency`, and
-2. An intermediate library (e.g. `@ticatec/common-express-server`) imports it without declaring it as a dependency,
+`initialize()` installs this adapter as that provider. The registry it writes to is anchored on `Symbol.for('@ticatec/logger-api.registry')`, so it is shared across the CommonJS and ESM builds of `logger-api` alike, and `logger-api` being a peer dependency keeps a single version resolved in the tree. One call at startup, and every `@ticatec/*` package in the process — however deeply nested — starts writing to pino.
 
-…every `import '@ticatec/logger-wrapper'` from inside `node_modules/@ticatec/common-express-server/` walks up to `<app>/node_modules/@ticatec/logger-wrapper/` — the same physical instance the host app initialised. One process, one singleton, no `peerDependencies` plumbing required.
-
-This is why intermediate libraries only need a `devDependencies` entry (for their own local development), and why the wrapper bundles `pino` as a regular `dependency`: the host's single install provides everything.
+Nothing here relies on Node's module-walk resolution, and libraries need no dependency on pino at all.
 
 ---
 

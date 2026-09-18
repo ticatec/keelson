@@ -38,7 +38,7 @@ keelson（龙骨翼板）是铺在船体龙骨之上、纵贯全船的内构梁�
 | 包 | 版本 | 职责 |
 | --- | --- | --- |
 | [logger-api](packages/logger-api) | 1.0.0 | 零依赖日志契约 —— 包面向它写日志，应用注入具体实现 |
-| [logger-wrapper](packages/logger-wrapper) | 0.3.0 | `logger-api` 的可选 pino 适配器，提供 appender 与分类级别 |
+| [logger-pino](packages/logger-pino) | 1.0.0 | `logger-api` 的可选 pino 适配器，提供 appender 与分类级别 |
 | [config-loader](packages/config-loader) | 1.0.0 | YAML / JSON 配置加载 |
 | [redis-client](packages/redis-client) | 1.1.0 | ioredis 封装，含单例管理与缓存数据辅助 |
 

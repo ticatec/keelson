@@ -3,7 +3,7 @@
 [![Version](https://img.shields.io/npm/v/@ticatec/pg-common-library)](https://www.npmjs.com/package/@ticatec/pg-common-library)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-基于 `pg` 驱动构建的 PostgreSQL 数据库连接与连接池实现，专为配合 [`@ticatec/node-common-library`](https://www.npmjs.com/package/@ticatec/node-common-library) 和 `@ticatec/logger-wrapper` 使用而设计。支持 CommonJS 与 ESM 双模块导出。
+基于 `pg` 驱动构建的 PostgreSQL 数据库连接与连接池实现，专为配合 [`@ticatec/node-common-library`](https://www.npmjs.com/package/@ticatec/node-common-library) 和 `@ticatec/logger-pino` 使用而设计。支持 CommonJS 与 ESM 双模块导出。
 
 中文 ｜ [English](./README.md)
 
@@ -14,19 +14,19 @@
 - **标准接口实现**：实现 `DBConnection` 与 `DBFactory` 抽象接口
 - **自动布尔值转换**：原生支持 PostgreSQL 布尔类型及 `1/0`、`t/f` 转换
 - **连接池管理**：基于 `pg.Pool` 提供高效连接池管理
-- **日志抽象集成**：使用 `@ticatec/logger-wrapper` 提供高性能结构化日志
+- **日志抽象集成**：使用 `@ticatec/logger-pino` 提供高性能结构化日志
 
 ## 安装
 
 ```bash
-pnpm add @ticatec/pg-common-library @ticatec/node-common-library @ticatec/logger-wrapper pg pino
+pnpm add @ticatec/pg-common-library @ticatec/node-common-library @ticatec/logger-pino pg pino
 ```
 
 ## 快速上手
 
 ```typescript
 import pino from 'pino';
-import { initialize as initLogger } from '@ticatec/logger-wrapper';
+import { initialize as initLogger } from '@ticatec/logger-pino';
 import { initializePg } from '@ticatec/pg-common-library';
 import { DBManager } from '@ticatec/node-common-library';
 

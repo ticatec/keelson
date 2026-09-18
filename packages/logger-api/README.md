@@ -89,10 +89,10 @@ setLoggerProvider((name, category) => {
 });
 ```
 
-For pino, use the ready-made adapter instead — [`@ticatec/logger-wrapper`](https://github.com/ticatec/keelson/tree/main/packages/logger-wrapper) ships one, with file/console appenders and per-category levels:
+For pino, use the ready-made adapter instead — [`@ticatec/logger-pino`](https://github.com/ticatec/keelson/tree/main/packages/logger-pino) ships one, with file/console appenders and per-category levels:
 
 ```typescript
-import { initialize } from '@ticatec/logger-wrapper';
+import { initialize } from '@ticatec/logger-pino';
 
 initialize({
     appenders: [{ name: 'console', type: 'console', level: 'info' }],

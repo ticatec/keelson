@@ -17,9 +17,8 @@ Major modernization pass across core database abstractions, transaction propagat
 - **Explicit `null` database values preserved.** `setNestObj` and `resultToList` now preserve explicit database `null` values instead of dropping them, aligning `listQuery` and `find` object shapes.
 - **`DBConnection.getPlaceholder(idx)` is now abstract.** Subclasses must explicitly define dialect placeholder syntax (e.g. `$1` for PostgreSQL, `?` for MySQL), eliminating silent dialect fallback.
 - **`DBFactory.close(): Promise<void>` is now required.** All database factories must implement connection pool shutdown.
-- **`@ticatec/logger-wrapper` moved to `peerDependencies` (`>=0.3.0`).** Consumers must install a compatible logger-wrapper.
 - **`StringUtils.genID()` / `StringUtils.uuid()` now return UUID v7 instead of v4.** Values carry a 48-bit millisecond timestamp, are monotonic within the same millisecond, and keep their ordering after `genID()` strips the hyphens — which makes them suitable as database primary keys. Note that a v7 identifier discloses its creation time; generate a random value with `node:crypto` where that matters or where the value must be unguessable.
-- **Logging is now contract-based.** The framework logs against `@ticatec/logger-api`, a zero-dependency interface, instead of `@ticatec/logger-wrapper`. The peer dependency changed accordingly, `Logger` is no longer an alias for pino's type, and pino is no longer implied by using this package. Applications that want pino keep using `@ticatec/logger-wrapper`, which is now an adapter; applications that want something else install a provider with `setLoggerProvider()`; applications that configure nothing get console output filtered by `LOG_LEVEL`.
+- **Logging is now contract-based.** The framework logs against `@ticatec/logger-api`, a zero-dependency interface, instead of `@ticatec/logger-pino`. The peer dependency changed accordingly, `Logger` is no longer an alias for pino's type, and pino is no longer implied by using this package. Applications that want pino keep using `@ticatec/logger-pino`, which is now an adapter; applications that want something else install a provider with `setLoggerProvider()`; applications that configure nothing get console output filtered by `LOG_LEVEL`.
 - **`getLogger()` no longer throws when logging has not been configured**, and loggers captured in constructors resolve the active provider on every write. The `try/catch` no-op fallback in `DBConnection`'s constructor is gone, and startup ordering between logging setup and object construction no longer matters.
 - **`BeanFactory` is now the class export.** It previously resolved to the singleton instance (the same object as `beanFactory`), so `new BeanFactory()` was impossible. Use `beanFactory` for the shared singleton and `BeanFactory` when you need an isolated registry.
 
@@ -97,8 +96,8 @@ First meaningful test coverage on the framework core. Five suites, fifteen tests
 
 ### 🔧 Internal
 
-- `package.json` devDependency `@ticatec/logger-wrapper` switched from `file:../logger_warpper` to `^0.1.0` so fresh clones resolve from npm
-- `tsconfig.json` paths entry for `@ticatec/logger-wrapper` keeps local sibling path first for cross-package development, with a `node_modules` fallback for CI / external contributors
+- `package.json` devDependency `@ticatec/logger-pino` switched from `file:../logger_warpper` to `^0.1.0` so fresh clones resolve from npm
+- `tsconfig.json` paths entry for `@ticatec/logger-pino` keeps local sibling path first for cross-package development, with a `node_modules` fallback for CI / external contributors
 - `.gitignore` now excludes `.DS_Store`, `coverage/`, `*.log`, `*.iml`
 
 ### ⚠️ Known Limitations (unchanged, called out for clarity)
@@ -111,5 +110,5 @@ First meaningful test coverage on the framework core. Five suites, fifteen tests
 
 ## [3.0.0] - 2026-07-21
 
-- Adopted `@ticatec/logger-wrapper` as the logging backend
+- Adopted `@ticatec/logger-pino` as the logging backend
 - Dual ESM / CommonJS build

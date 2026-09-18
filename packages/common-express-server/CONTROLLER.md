@@ -37,7 +37,7 @@ The foundation of all controllers. Provides basic functionality including loggin
 
 ### Features
 
-- **Logging**: Automatic logger instance with Pino (via `@ticatec/logger-wrapper`)
+- **Logging**: Automatic logger instance with Pino (via `@ticatec/logger-pino`)
 - **User Context**: Access to the currently logged user via `this.getLoggedUser(req)`
 - **User Impersonation**: Automatic support for `actAs` user impersonation
 

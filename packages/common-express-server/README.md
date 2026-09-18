@@ -16,7 +16,7 @@ A comprehensive TypeScript library providing common classes, controllers, and mi
 - 📝 **Validation**: Integrated data validation using bean-validator
 - 🔄 **Error Handling**: Centralized error handling and logging
 - 🌐 **Internationalization**: Built-in language support via headers
-- 📊 **Logging**: Structured logging integrated with `@ticatec/logger-wrapper` and Pino
+- 📊 **Logging**: Structured logging integrated with `@ticatec/logger-pino` and Pino
 - 📦 **Dual Module Support**: Full CommonJS and ESM compatibility out of the box
 
 ## Documentation
@@ -28,10 +28,10 @@ A comprehensive TypeScript library providing common classes, controllers, and mi
 ## Installation
 
 ```bash
-npm install @ticatec/common-express-server @ticatec/node-common-library @ticatec/logger-wrapper
+npm install @ticatec/common-express-server @ticatec/node-common-library @ticatec/logger-pino
 ```
 
-> `@ticatec/logger-wrapper` bundles `pino` as a regular dependency, so installing the wrapper is enough — no separate `pino` install needed.
+> `@ticatec/logger-pino` bundles `pino` as a regular dependency, so installing the wrapper is enough — no separate `pino` install needed.
 
 ### Peer Dependencies
 
@@ -39,7 +39,7 @@ npm install @ticatec/common-express-server @ticatec/node-common-library @ticatec
 npm install express@^5.0.0 @ticatec/node-common-library@^3.1.0 @ticatec/bean-validator@>=1.0.0 @ticatec/node-exception@>=2.0.0
 ```
 
-> Also install `@ticatec/logger-wrapper` — every `@ticatec/*` package resolves logging through this singleton.
+> Also install `@ticatec/logger-pino` — every `@ticatec/*` package resolves logging through this singleton.
 
 ## Quick Start
 
@@ -677,7 +677,7 @@ npm run dev           # Development mode with watch
 - `@ticatec/bean-validator`: Data validation
 - `@ticatec/express-exception`: Error handling
 - `@ticatec/node-common-library`: Common utilities
-- `@ticatec/logger-wrapper`: Pino logging wrapper
+- `@ticatec/logger-pino`: Pino logging wrapper
 - `pino`: High-performance structured logging framework
 
 ## Contributing

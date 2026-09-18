@@ -89,10 +89,10 @@ setLoggerProvider((name, category) => {
 });
 ```
 
-用 pino 的话，直接使用现成的适配器 —— [`@ticatec/logger-wrapper`](https://github.com/ticatec/keelson/tree/main/packages/logger-wrapper) 提供了文件/控制台 appender 与分类级别：
+用 pino 的话，直接使用现成的适配器 —— [`@ticatec/logger-pino`](https://github.com/ticatec/keelson/tree/main/packages/logger-pino) 提供了文件/控制台 appender 与分类级别：
 
 ```typescript
-import { initialize } from '@ticatec/logger-wrapper';
+import { initialize } from '@ticatec/logger-pino';
 
 initialize({
     appenders: [{ name: 'console', type: 'console', level: 'info' }],

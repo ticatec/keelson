@@ -37,7 +37,7 @@ CommonSearchController<T>
 
 ### 特性
 
-- **日志记录**: 自动注入基于 Pino 的日志记录器实例（通过 `@ticatec/logger-wrapper`）
+- **日志记录**: 自动注入基于 Pino 的日志记录器实例（通过 `@ticatec/logger-pino`）
 - **用户上下文**: 通过 `this.getLoggedUser(req)` 访问当前登录用户
 - **用户扮演**: 自动支持 `actAs` 用户扮演机制
 

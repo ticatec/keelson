@@ -58,7 +58,7 @@ const { DBManager, beanFactory, CommonService, CommonDAO } = require('@ticatec/n
 想把日志接入真正的日志库，在启动时注入一次 provider 即可。用 pino 的话有现成适配器：
 
 ```typescript
-import { initialize } from '@ticatec/logger-wrapper';
+import { initialize } from '@ticatec/logger-pino';
 
 initialize({
     appenders: [
@@ -557,7 +557,7 @@ StringUtils.genID();   // 01a0b1ab1d6674899b3f9e1c0bb70631   ← 排序在上一
 
 ### 日志
 
-本库面向零依赖契约 [`@ticatec/logger-api`](https://www.npmjs.com/package/@ticatec/logger-api) 写日志。记录最终由哪个库接收，由应用决定 —— 用 `setLoggerProvider()` 注入，或直接使用 [`@ticatec/logger-wrapper`](https://www.npmjs.com/package/@ticatec/logger-wrapper) 里的 pino 适配器。未注入时输出到 console，按 `LOG_LEVEL` 过滤（默认 `info`）。
+本库面向零依赖契约 [`@ticatec/logger-api`](https://www.npmjs.com/package/@ticatec/logger-api) 写日志。记录最终由哪个库接收，由应用决定 —— 用 `setLoggerProvider()` 注入，或直接使用 [`@ticatec/logger-pino`](https://www.npmjs.com/package/@ticatec/logger-pino) 里的 pino 适配器。未注入时输出到 console，按 `LOG_LEVEL` 过滤（默认 `info`）。
 
 ```typescript
 import { getLogger } from '@ticatec/node-common-library';
@@ -640,7 +640,7 @@ try {
 | `DBConnection.getPlaceholder(index)` | 不存在 | **抽象方法** —— 所有驱动必须实现 |
 | `DBFactory.close()` | 不存在 | **必选** —— 所有工厂必须实现 |
 | `BeanFactory` 导出 | 绑定到单例实例 | 现在是**类**；单例请用 `beanFactory` |
-| 日志 | `@ticatec/logger-wrapper`（pino）作为 peer dependency | 改为 `@ticatec/logger-api` —— 零依赖契约。pino 变为可选，需要时才装 `logger-wrapper` |
+| 日志 | `@ticatec/logger-wrapper`（pino）作为 peer dependency | 改为 `@ticatec/logger-api` —— 零依赖契约。pino 变为可选，需要时才装 `@ticatec/logger-pino`（适配器的新名字） |
 | `StringUtils.genID()` / `uuid()` | UUID v4（`crypto.randomUUID()`） | **UUID v7** —— 时间有序且单调递增，适合直接做主键 |
 | `NULL` 列 | 从映射对象中被丢弃 | 保留为 `null`，且 `find()` 与 `listQuery()` 行为一致 |
 

@@ -16,7 +16,7 @@
 - 📝 **数据验证**: 使用 bean-validator 集成数据验证
 - 🔄 **错误处理**: 集中式错误处理和日志记录
 - 🌐 **国际化**: 通过请求头内置语言支持
-- 📊 **日志记录**: 与 `@ticatec/logger-wrapper` 和 Pino 集成的结构化日志
+- 📊 **日志记录**: 与 `@ticatec/logger-pino` 和 Pino 集成的结构化日志
 - 📦 **双模块支持**: 原生同时支持 CommonJS (`lib/cjs`) 与 ESM (`lib/esm`)
 
 ## 文档
@@ -28,10 +28,10 @@
 ## 安装
 
 ```bash
-npm install @ticatec/common-express-server @ticatec/node-common-library @ticatec/logger-wrapper
+npm install @ticatec/common-express-server @ticatec/node-common-library @ticatec/logger-pino
 ```
 
-> `@ticatec/logger-wrapper` 已经把 `pino` 作为常规依赖打包，安装封装库即可，无需单独安装 `pino`。
+> `@ticatec/logger-pino` 已经把 `pino` 作为常规依赖打包，安装封装库即可，无需单独安装 `pino`。
 
 ### 对等依赖
 
@@ -39,7 +39,7 @@ npm install @ticatec/common-express-server @ticatec/node-common-library @ticatec
 npm install express@^5.0.0 @ticatec/node-common-library@^3.1.0 @ticatec/bean-validator@>=1.0.0 @ticatec/node-exception@>=2.0.0
 ```
 
-> 此外还需安装 `@ticatec/logger-wrapper` —— 所有 `@ticatec/*` 包都通过这个单例完成日志输出。
+> 此外还需安装 `@ticatec/logger-pino` —— 所有 `@ticatec/*` 包都通过这个单例完成日志输出。
 
 ## 快速开始
 
@@ -677,7 +677,7 @@ npm run dev           # 开发模式（监听）
 - `@ticatec/bean-validator`: 数据验证
 - `@ticatec/express-exception`: 错误处理
 - `@ticatec/node-common-library`: 通用工具
-- `@ticatec/logger-wrapper`: Pino 日志封装
+- `@ticatec/logger-pino`: Pino 日志封装
 - `pino`: 高性能结构化日志框架
 
 ## 贡献

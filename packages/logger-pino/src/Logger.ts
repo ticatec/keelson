@@ -145,7 +145,7 @@ function createDestination(appender: AppenderConfig): DestinationStream {
         if (appender.options?.pretty && !prettyWarningEmitted) {
             prettyWarningEmitted = true;
             process.stderr.write(
-                '[logger-wrapper] "pretty: true" on console appender is not yet supported; emitting raw JSON to stdout.\n'
+                '[logger-pino] "pretty: true" on console appender is not yet supported; emitting raw JSON to stdout.\n'
             );
         }
         return process.stdout as unknown as DestinationStream;

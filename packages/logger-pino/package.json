@@ -1,7 +1,7 @@
 {
-  "name": "@ticatec/logger-wrapper",
-  "version": "0.3.0",
-  "description": "A lightweight Pino logger wrapper supporting application-level Pino logger injection and child logger context binding.",
+  "name": "@ticatec/logger-pino",
+  "version": "1.0.0",
+  "description": "The pino adapter for @ticatec/logger-api. Routes a framework's log records into pino, with console/file appenders, per-category levels and child logger context binding.",
   "type": "module",
   "main": "./lib/cjs/index.js",
   "module": "./lib/esm/index.js",
@@ -39,18 +39,25 @@
   "keywords": [
     "pino",
     "logger",
-    "logger-wrapper",
     "logging",
+    "logger-api",
+    "adapter",
+    "provider",
+    "appender",
     "context-logger",
+    "structured-logging",
     "typescript",
+    "nodejs",
+    "keelson",
     "ticatec",
     "esm",
-    "commonjs"
+    "commonjs",
+    "dual-module"
   ],
   "repository": {
     "type": "git",
     "url": "https://github.com/ticatec/keelson.git",
-    "directory": "packages/logger-wrapper"
+    "directory": "packages/logger-pino"
   },
   "author": {
     "name": "Henry Feng",
@@ -61,7 +68,7 @@
   "bugs": {
     "url": "https://github.com/ticatec/keelson/issues"
   },
-  "homepage": "https://github.com/ticatec/keelson/tree/main/packages/logger-wrapper",
+  "homepage": "https://github.com/ticatec/keelson/tree/main/packages/logger-pino",
   "engines": {
     "node": ">=16.0.0"
   },
@@ -74,14 +81,12 @@
     "@types/jest": "^29.5.14",
     "@types/node": "^22.8.6",
     "jest": "^29.7.0",
-    "pino": "^9.5.0",
+    "pino": "^9.0.0",
     "ts-jest": "^29.2.5",
     "typescript": "^5.0.0"
   },
   "peerDependencies": {
-    "@ticatec/logger-api": ">=1.0.0"
-  },
-  "dependencies": {
-    "pino": ">=8.0.0"
+    "@ticatec/logger-api": ">=1.0.0",
+    "pino": ">=9.0.0"
   }
 }
