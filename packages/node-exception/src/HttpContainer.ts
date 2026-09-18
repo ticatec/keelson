@@ -102,7 +102,9 @@ export class ExpressContainer implements HttpContainer {
 
     /**
      * Sends an error response to the client with content negotiation.
-     * Automatically formats the response as JSON, HTML, or plain text based on Accept header.
+     * Formats the response as HTML, plain text or JSON according to the Accept
+     * header's q-values, with JSON as the default for clients that express no
+     * preference.
      * @param req - Express request object
      * @param res - Express response object
      * @param statusCode - HTTP status code to send
@@ -114,12 +116,24 @@ export class ExpressContainer implements HttpContainer {
         if (typeof res.setHeader === 'function') {
             res.setHeader('X-Content-Type-Options', 'nosniff');
         }
-        if (req.accepts('json')) {
-            res.status(statusCode).json(err);
-        } else if (req.accepts('html')) {
-            res.type('text/html').status(statusCode).send(toHtml(err));
-        } else {
-            res.type('text/plain').status(statusCode).send(toText(err));
+        // The list form is required, not a convenience. Asking `req.accepts('json')`
+        // on its own returns 'json' for a browser, because a browser's Accept header
+        // ends in `*/*;q=0.8` - so a chain of single-type checks would answer every
+        // page request with JSON and never reach the HTML branch at all. Passing the
+        // candidates together makes Express weigh the q-values: a browser's
+        // `text/html` (q=1.0) beats its `*/*` (q=0.8) and selects 'html', while a
+        // client sending only `*/*` (curl) falls through to the first entry, 'json'.
+        switch (req.accepts(['json', 'html', 'text'])) {
+            case 'html':
+                res.type('text/html').status(statusCode).send(toHtml(err));
+                break;
+            case 'text':
+                res.type('text/plain').status(statusCode).send(toText(err));
+                break;
+            case 'json':
+            default:
+                res.status(statusCode).json(err);
+                break;
         }
     }
 

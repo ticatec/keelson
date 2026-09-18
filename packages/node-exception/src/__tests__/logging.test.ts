@@ -69,49 +69,58 @@ describe('error logging', () => {
         expect(records[0].msg).toContain('non-Error throwable');
     });
 
-    // Declared outcomes: the application raised them on purpose, chose the status
-    // code, and the client is being told exactly what happened. Nothing to
-    // diagnose, and at volume they would drown out real faults.
+    // 4xx is the client's problem: visible when debugging, silent in production.
     it.each([
-        ['AppError', new AppError(1001, 'business rule')],
-        ['UnauthenticatedError', new UnauthenticatedError()],
-        ['InsufficientPermissionError', new InsufficientPermissionError()],
-        ['IllegalParameterError', new IllegalParameterError('bad id')],
-        ['ActionNotFoundError', new ActionNotFoundError()],
-        ['TimeoutError', new TimeoutError()],
-        ['ProxyError', new ProxyError()],
-        ['ServiceUnavailableError', new ServiceUnavailableError()],
-        ['a bare HttpError', new HttpError('teapot', 418)]
-    ])('writes nothing for %s', (_name, err) => {
+        ['UnauthenticatedError', new UnauthenticatedError(), 401],
+        ['InsufficientPermissionError', new InsufficientPermissionError(), 403],
+        ['IllegalParameterError', new IllegalParameterError('bad id'), 400],
+        ['ActionNotFoundError', new ActionNotFoundError(), 404],
+        ['TimeoutError', new TimeoutError(), 408]
+    ])('logs %s at debug level', (_name, err, status) => {
         handleError(err, {method: 'GET'}, {}, jest.fn());
-        expect(records).toHaveLength(0);
+        expect(records).toHaveLength(1);
+        expect(records[0].level).toBe('debug');
+        expect(records[0].msg).toBe(`Handled ${status} on GET /api/orders`);
     });
 
-    it('stays silent for an application subclass of HttpError', () => {
+    // 5xx means the server failed. The client gets no stack in production, so this
+    // record is the only thing that says why - it must not be silenced because the
+    // error type happens to be a declared one.
+    it.each([
+        ['AppError', new AppError(5001, 'payment gateway down'), 500],
+        ['ProxyError', new ProxyError(), 502],
+        ['ServiceUnavailableError', new ServiceUnavailableError(), 503]
+    ])('logs %s at error level with its stack', (_name, err, status) => {
+        handleError(err, {method: 'POST'}, {}, jest.fn());
+        expect(records).toHaveLength(1);
+        expect(records[0].level).toBe('error');
+        expect(records[0].first).toBe(err);
+        expect((records[0].first as Error).stack).toBeTruthy();
+        expect(records[0].msg).toBe(`Handled ${status} on POST /api/orders`);
+    });
+
+    it('classifies an application subclass by its status code, not its type', () => {
         class PaymentDeclinedError extends AppError {
             constructor() {
                 super(4001, 'card declined');
             }
         }
         handleError(new PaymentDeclinedError(), {method: 'POST'}, {}, jest.fn());
-        expect(records).toHaveLength(0);
+        expect(records[0].level).toBe('error');   // AppError is a 500
     });
 
-    it('still responds normally for a declared outcome', () => {
-        const sendError = jest.fn();
-        setHttpContainer({...silentContainer, sendError});
-        handleError(new ActionNotFoundError(), {method: 'GET'}, {}, jest.fn());
-        expect(sendError).toHaveBeenCalled();
-        expect(sendError.mock.calls[0][2]).toBe(404);
-        expect(records).toHaveLength(0);
+    it('logs a bare HttpError by its status code', () => {
+        handleError(new HttpError('teapot', 418), {method: 'GET'}, {}, jest.fn());
+        expect(records[0].level).toBe('debug');
+        handleError(new HttpError('gateway', 504), {method: 'GET'}, {}, jest.fn());
+        expect(records[1].level).toBe('error');
     });
 
-    it('writes nothing for a declared outcome raised after the response started', () => {
-        const next = jest.fn();
-        const err = new ActionNotFoundError();
-        handleError(err, {method: 'GET'}, {headersSent: true}, next);
-        expect(next).toHaveBeenCalledWith(err);
-        expect(records).toHaveLength(0);
+    it('keeps the cause chain attached for the logger to unwind', () => {
+        const root = new Error('ECONNREFUSED 10.0.0.9:5432');
+        handleError(new AppError(5002, 'order save failed', {cause: root}), {method: 'POST'}, {}, jest.fn());
+        expect(records[0].level).toBe('error');
+        expect((records[0].first as Error).cause).toBe(root);
     });
 
     it('logs once, then delegates, when the response has already started', () => {

@@ -16,9 +16,12 @@ export default class HttpError extends Error {
      *
      * @param message - The error message describing what went wrong
      * @param statusCode - The HTTP status code (e.g., 400, 401, 404, 500)
+     * @param options - Standard `ErrorOptions`. Pass `{ cause }` to keep the
+     *   underlying failure attached; Node and pino both unwind the chain when
+     *   printing, so the original stack stays available for diagnosis.
      */
-    constructor(message: string, statusCode: number) {
-        super(message);
+    constructor(message: string, statusCode: number, options?: ErrorOptions) {
+        super(message, options);
         this.name = this.constructor.name;
         this.statusCode = statusCode;
         // Node.js 环境下捕获堆栈信息（仅限服务端，不涉及浏览器兼容性）
@@ -59,9 +62,10 @@ export class AppError extends HttpError {
      *
      * @param code - The numeric error code to associate with this error (e.g., 1001, 2001)
      * @param message - Optional error message describing the error
+     * @param options - Standard `ErrorOptions`, e.g. `{ cause: originalError }`
      */
-    constructor(code: number, message: string = '') {
-        super(message || 'Internal server error', 500);
+    constructor(code: number, message: string = '', options?: ErrorOptions) {
+        super(message || 'Internal server error', 500, options);
         this._code = code;
     }
 }
@@ -77,9 +81,11 @@ export class UnauthenticatedError extends HttpError {
      * Creates a new UnauthenticatedError instance with a predefined message.
      * The error message is set to "Unauthenticated user is accessing the system."
      * and the HTTP status code is automatically set to 401.
+     *
+     * @param options - Standard `ErrorOptions`, e.g. `{ cause: originalError }`
      */
-    constructor() {
-        super('Unauthenticated user is accessing the system.', 401);
+    constructor(options?: ErrorOptions) {
+        super('Unauthenticated user is accessing the system.', 401, options);
     }
 }
 
@@ -96,8 +102,8 @@ export class InsufficientPermissionError extends HttpError {
      * The error message is set to "User doesn't have permission to access this function."
      * and the HTTP status code is automatically set to 403.
      */
-    constructor() {
-        super('User doesn\'t have permission to access this function.', 403);
+    constructor(options?: ErrorOptions) {
+        super('User doesn\'t have permission to access this function.', 403, options);
     }
 }
 
@@ -115,8 +121,8 @@ export class IllegalParameterError extends HttpError {
      * @param message - A descriptive error message explaining which parameter is invalid
      *                 and why it doesn't meet the validation requirements
      */
-    constructor(message: string) {
-        super(message, 400);
+    constructor(message: string, options?: ErrorOptions) {
+        super(message, 400, options);
     }
 }
 
@@ -132,8 +138,8 @@ export class ActionNotFoundError extends HttpError {
      * The error message is set to "Web action not found."
      * and the HTTP status code is automatically set to 404.
      */
-    constructor() {
-        super('Web action not found.', 404);
+    constructor(options?: ErrorOptions) {
+        super('Web action not found.', 404, options);
     }
 }
 
@@ -149,8 +155,8 @@ export class TimeoutError extends HttpError {
      * The error message is set to "Network request timeout."
      * and the HTTP status code is automatically set to 408.
      */
-    constructor() {
-        super('Network request timeout.', 408);
+    constructor(options?: ErrorOptions) {
+        super('Network request timeout.', 408, options);
     }
 }
 
@@ -165,8 +171,8 @@ export class ProxyError extends HttpError {
      * The error message is set to "Proxy error"
      * and the HTTP status code is automatically set to 502.
      */
-    constructor() {
-        super('Proxy error', 502);
+    constructor(options?: ErrorOptions) {
+        super('Proxy error', 502, options);
     }
 }
 
@@ -182,8 +188,8 @@ export class ServiceUnavailableError extends HttpError {
      * The error message is set to "Service unavailable error"
      * and the HTTP status code is automatically set to 503.
      */
-    constructor() {
-        super('Service unavailable error', 503);
+    constructor(options?: ErrorOptions) {
+        super('Service unavailable error', 503, options);
     }
 }
 

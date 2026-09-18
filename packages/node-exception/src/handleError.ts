@@ -48,20 +48,23 @@ const describeRequest = (req: any): string => {
 /**
  * Logs the error before it is turned into a response.
  *
- * Anything that is an {@link HttpError} is a **declared outcome**: the application
- * raised it on purpose, chose the status code, and the client is being told exactly
- * what happened. There is nothing to diagnose, and at any real traffic volume these
- * would drown out the records that do matter - reporting requests is the access
- * log's job, not the error handler's. They are not logged at all.
+ * The split is by status class, not by error type:
  *
- * Everything else reached the handler unexpectedly and is logged at `error` level
- * **with its stack**, because this record is usually the only trace such a failure
- * leaves behind. A value that is not even an `Error` gets the same treatment,
- * wrapped so the logger has something to serialise.
+ * - **5xx** (`AppError`, `ProxyError`, `ServiceUnavailableError`, any subclass
+ *   returning >= 500) - `error`, **with the stack**. The server failed. The client
+ *   gets no stack in production, so this record is the only thing that says why,
+ *   and on which line. Silencing it because the type is "declared" would leave a
+ *   production 500 with nothing but `POST /pay 500` in the access log.
+ * - **4xx** - `debug`. A rejected login or a bad parameter is the client's problem;
+ *   at volume these would drown out real faults. Visible when debugging, silent in
+ *   production.
+ * - **Anything that is not an `HttpError`** - `error` with the stack. It reached the
+ *   handler unexpectedly, and this record is usually its only trace.
  *
  * The error object is passed as the first argument rather than nested in a context
  * object: that is the one shape both pino (which serialises it through its `err`
- * serializer) and the console fallback (which prints `error.stack`) render fully.
+ * serializer, following `cause` as it goes) and the console fallback (which prints
+ * `error.stack`) render fully.
  *
  * Logging must never be able to break error handling, so every failure here is
  * swallowed.
@@ -69,9 +72,13 @@ const describeRequest = (req: any): string => {
 const logApplicationError = (req: any, err: any): void => {
     try {
         if (err instanceof HttpError) {
-            return;
-        }
-        if (err instanceof Error) {
+            const where = `Handled ${err.statusCode} on ${describeRequest(req)}`;
+            if (err.statusCode >= 500) {
+                logger.error(err, where);
+            } else {
+                logger.debug(err, where);
+            }
+        } else if (err instanceof Error) {
             logger.error(err, `Unhandled error on ${describeRequest(req)}`);
         } else {
             logger.error({thrown: err}, `Unhandled non-Error throwable on ${describeRequest(req)}`);
@@ -109,8 +116,8 @@ const sendApplicationError = (req: any, res: any, err: any): void => {
  * Express error handling middleware that processes all application errors.
  * This function serves as the main entry point for error handling in Express applications.
  *
- * Errors that are not {@link HttpError}s are logged first, at error level and with
- * their stack. `HttpError`s are declared outcomes and are not logged.
+ * Every error is logged first: 5xx and unknown errors at `error` level with their
+ * stack, 4xx at `debug` level.
  *
  * @param err - The error object that was thrown or passed to next()
  * @param req - Express request object
@@ -118,15 +125,24 @@ const sendApplicationError = (req: any, res: any, err: any): void => {
  * @param next - Express next function. It is only called when the response has
  *   already started, which is the one case this middleware cannot handle: writing
  *   a status line at that point throws `ERR_HTTP_HEADERS_SENT`, so the error is
- *   delegated to Express' built-in handler, which closes the connection.
- *   The parameter must also stay declared regardless: Express identifies
+ *   delegated to Express' built-in handler, which closes the connection. It is
+ *   optional - callers that invoke this handler directly may pass `null` - and in
+ *   that case a response that has already started simply ends the handling.
+ *   The parameter must stay declared regardless: Express identifies
  *   error-handling middleware by arity (`fn.length === 4`), so dropping it would
  *   turn this into ordinary middleware.
  */
 const handleError = (err: any, req: any, res: any, next?: any): void => {
     logApplicationError(req, err);
-    if (res && res.headersSent && typeof next === 'function') {
-        next(err);
+    if (res && res.headersSent) {
+        // Nothing can be written once the response has started - not a status line,
+        // not a header. Delegating to Express is the best that can be done, and when
+        // there is no `next` to delegate to (callers such as RouterHelper pass
+        // `null`), returning is still the only safe move: falling through would
+        // throw ERR_HTTP_HEADERS_SENT out of the error handler itself.
+        if (typeof next === 'function') {
+            next(err);
+        }
         return;
     }
     sendApplicationError(req, res, err);

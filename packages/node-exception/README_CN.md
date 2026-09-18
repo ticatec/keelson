@@ -4,7 +4,7 @@
 
 [![Version](https://img.shields.io/npm/v/@ticatec/node-exception)](https://www.npmjs.com/package/@ticatec/node-exception)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Node.js](https://img.shields.io/badge/Node.js-≥14.0.0-green)](https://nodejs.org)
+[![Node.js](https://img.shields.io/badge/Node.js-≥18.0.0-green)](https://nodejs.org)
 [![TypeScript](https://img.shields.io/badge/TypeScript-Ready-blue)](https://www.typescriptlang.org/)
 
 生产就绪的 Express 错误处理中间件，具有标准化的 HTTP 错误类型、集中式异常管理和自动内容协商的 REST API 支持。类型安全，日志通过 `@ticatec/logger-api` 契约注入。
@@ -16,7 +16,7 @@
 - **📋 一致响应格式**：统一的错误响应格式，包含完整的请求上下文
 - **🎨 内容协商**：自动响应格式化（JSON、HTML、纯文本）
 - **🔍 开发支持**：开发环境中包含堆栈跟踪信息
-- **📝 内置日志**：未知错误通过 `@ticatec/logger-api` 记录并带完整堆栈；已声明的 `HttpError` 保持静默
+- **📝 内置日志**：5xx 与未知错误通过 `@ticatec/logger-api` 记录并带完整堆栈；4xx 记 `debug` 级
 - **📘 TypeScript 优先**：完整的 TypeScript 支持和类型定义
 - **🌐 IP 检测**：自动检测客户端和服务器 IP 地址
 - **⚡ 极轻依赖**：运行时仅依赖 `@ticatec/logger-api` 这一零依赖日志契约
@@ -290,22 +290,25 @@ Error: UnauthenticatedError...
 
 ## 📝 日志
 
-意料之外抵达 `handleError` 的错误，会通过
+经过 `handleError` 的错误会通过
 [`@ticatec/logger-api`](https://www.npmjs.com/package/@ticatec/logger-api)
 （框架的零依赖日志契约）记录下来：
 
 | 错误类型 | 级别 | 内容 |
 |---|---|---|
 | 非 `HttpError`（乃至非 `Error`） | `error` | 错误本身，**含完整堆栈** |
-| 任意 `HttpError` 子类 | *不记录* | - |
+| `statusCode >= 500` 的 `HttpError` | `error` | 错误本身，**含完整堆栈** |
+| 4xx 的 `HttpError` | `debug` | 错误本身及其映射到的状态码 |
 
-所有 `HttpError`——`AppError`、`UnauthenticatedError`、`InsufficientPermissionError`、
-`IllegalParameterError`、`ActionNotFoundError`、`TimeoutError`、`ProxyError`、
-`ServiceUnavailableError`，以及你自己定义的任何子类——都属于**已声明的结果**：
-应用主动抛出、自行选定状态码，并且已经把发生了什么原样告知客户端，没有任何需要排查的东西，
-因此一律不记日志。记录请求是 access log 的职责，不是错误处理中间件的。
+划分依据是**状态码等级，而非错误类型**。5xx 意味着服务端出了故障：`AppError`（恒为 500）、
+`ProxyError`（502）、`ServiceUnavailableError`（503），以及你自己定义的任何返回 >= 500 的子类。
+生产环境下客户端拿不到堆栈，因此这条日志是唯一能说明**为什么失败、挂在哪一行**的东西——
+少了它，线上故障在 access log 里就只剩一行冰冷的 `POST /pay 500`。
 
-其余的错误都是意料之外抵达这里的，而这条日志往往是它留下的唯一线索。
+4xx 是客户端的问题——登录被拒、参数不合法、路由不存在——在真实流量下用 `error` 级记录它们
+会把真正要紧的日志淹掉。因此记在 `debug`：排查时可见，生产环境静默。
+
+非 `HttpError` 的错误都是意料之外抵达这里的，而这条日志往往是它留下的唯一线索。
 
 ```
 2026-09-18T02:07:50.894Z ERROR [ErrorHandler] Unhandled error on GET /api/orders SyntaxError: Expected property name or '}' in JSON at position 1
@@ -503,8 +506,12 @@ class CustomValidationError extends IllegalParameterError {
 - ✅ 容器状态锚定到 `globalThis`，CJS 与 ESM 共享同一实例
 - ✅ `HttpContainer` 与 `ErrorResponse` 以类型方式导出（兼容 `isolatedModules`）
 - ✅ 每个子路径导出都补全了按条件区分的 `types`
-- 📝 未知错误经 `@ticatec/logger-api` 以 `error` 级记录并带完整堆栈；已声明的 `HttpError` 不记日志
-- ✅ 新增 79 个测试，含上述两个安全问题的回归用例
+- 📝 错误统一经 `@ticatec/logger-api` 记录：5xx 与未知错误 `error` 级并带完整堆栈，4xx 记 `debug` 级
+- 🐛 重写内容协商：浏览器的 `*/*;q=0.8` 会让 `req.accepts('json')` 返回 `'json'`，
+  导致 HTML 错误页在现实中永不触发
+- 🐛 响应已发出且调用方未传 `next` 时，`handleError` 不再抛出 `ERR_HTTP_HEADERS_SENT`
+- ✨ 所有错误类构造函数均接受 `ErrorOptions`，`{ cause }` 错误链得以保留
+- ✅ 新增 96 个测试，上述每一项均有回归用例
 - ✅ 启用 `strict` 与 `isolatedModules`
 
 ### 版本 2.0.0

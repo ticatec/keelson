@@ -4,7 +4,7 @@
 
 [![Version](https://img.shields.io/npm/v/@ticatec/node-exception)](https://www.npmjs.com/package/@ticatec/node-exception)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Node.js](https://img.shields.io/badge/Node.js-≥14.0.0-green)](https://nodejs.org)
+[![Node.js](https://img.shields.io/badge/Node.js-≥18.0.0-green)](https://nodejs.org)
 [![TypeScript](https://img.shields.io/badge/TypeScript-Ready-blue)](https://www.typescriptlang.org/)
 
 Production-ready Express error handling middleware with standardized HTTP error types, centralized exception management, and automatic content negotiation for REST APIs. Type-safe, with logging injected through the `@ticatec/logger-api` contract.
@@ -16,7 +16,7 @@ Production-ready Express error handling middleware with standardized HTTP error 
 - **📋 Consistent Response Format**: Uniform error responses with comprehensive request context
 - **🎨 Content Negotiation**: Automatic response formatting (JSON, HTML, plain text)
 - **🔍 Development Support**: Stack trace inclusion in development environments
-- **📝 Built-in Logging**: Unknown errors logged with their stack via `@ticatec/logger-api`; declared `HttpError`s stay silent
+- **📝 Built-in Logging**: 5xx and unknown errors logged with their stack via `@ticatec/logger-api`; 4xx kept at `debug`
 - **📘 TypeScript First**: Full TypeScript support with complete type definitions
 - **🌐 IP Detection**: Automatic client and server IP address detection
 - **⚡ Minimal Dependencies**: `@ticatec/logger-api` (itself dependency-free) is the only runtime peer
@@ -291,25 +291,30 @@ Error: UnauthenticatedError...
 
 ## 📝 Logging
 
-Errors that reach `handleError` unexpectedly are logged through
+Errors passing through `handleError` are logged through
 [`@ticatec/logger-api`](https://www.npmjs.com/package/@ticatec/logger-api), the
 framework's zero-dependency logging contract:
 
 | Error | Level | Contents |
 |---|---|---|
 | Not an `HttpError` (or not an `Error` at all) | `error` | the error **with its stack trace** |
-| Any `HttpError` subclass | *not logged* | - |
+| `HttpError` with `statusCode >= 500` | `error` | the error **with its stack trace** |
+| `HttpError` with a 4xx status | `debug` | the error and the status it mapped to |
 
-Every `HttpError` - `AppError`, `UnauthenticatedError`, `InsufficientPermissionError`,
-`IllegalParameterError`, `ActionNotFoundError`, `TimeoutError`, `ProxyError`,
-`ServiceUnavailableError`, and any subclass your application defines - is a
-**declared outcome**: the application raised it on purpose, chose the status code,
-and the client is being told exactly what happened. There is nothing to diagnose,
-so none of them are logged. Reporting requests is the access log's job, not the
-error handler's.
+The split is by **status class, not by error type**. A 5xx means the server failed:
+`AppError` (always 500), `ProxyError` (502), `ServiceUnavailableError` (503), and
+any subclass of your own that returns >= 500. In production the client gets no
+stack, so this log record is the only thing that says *why* the request failed and
+*on which line* - without it a production outage leaves nothing but `POST /pay 500`
+in the access log.
 
-Anything else arrived unexpectedly, and that log record is usually the only trace
-it leaves behind.
+4xx is the client's problem - a rejected login, a bad parameter, a missing route -
+and at any real traffic volume logging those at `error` would drown out the records
+that matter. They are written at `debug`: available while debugging, silent in
+production.
+
+Anything that is not an `HttpError` arrived unexpectedly, and that record is usually
+the only trace it leaves behind.
 
 ```
 2026-09-18T02:07:50.894Z ERROR [ErrorHandler] Unhandled error on GET /api/orders SyntaxError: Expected property name or '}' in JSON at position 1
@@ -515,9 +520,14 @@ The library uses a modular architecture with clear separation of concerns:
 - ✅ Container state anchored to `globalThis`, so CJS and ESM share one container
 - ✅ `HttpContainer` and `ErrorResponse` exported as types (`isolatedModules`-safe)
 - ✅ Per-condition `types` in every subpath export
-- 📝 Unknown errors are now logged through `@ticatec/logger-api` at `error` level
-  with their stack; declared `HttpError`s are not logged
-- ✅ 79 tests, including regression tests for both security issues
+- 📝 Errors are logged through `@ticatec/logger-api`: 5xx and unknown errors at
+  `error` level **with their stack**, 4xx at `debug` level
+- 🐛 Content negotiation rewritten: a browser's `*/*;q=0.8` made `req.accepts('json')`
+  return `'json'`, so the HTML error page was unreachable in practice
+- 🐛 `handleError` no longer throws `ERR_HTTP_HEADERS_SENT` when the response has
+  started and the caller passed no `next`
+- ✨ All error constructors accept `ErrorOptions`, so `{ cause }` chains survive
+- ✅ 96 tests, including regression tests for every issue above
 - ✅ `strict` and `isolatedModules` enabled
 
 ### Version 2.0.0

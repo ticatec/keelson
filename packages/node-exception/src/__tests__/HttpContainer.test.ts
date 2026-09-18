@@ -95,39 +95,55 @@ describe('ExpressContainer.sendError', () => {
         return res;
     };
 
-    it('prefers JSON', () => {
-        const req = makeReq({accepts: jest.fn((t: string) => t === 'json')});
-        const res = makeRes();
-        container.sendError(req, res, 500, payload);
-        expect(res.status).toHaveBeenCalledWith(500);
-        expect(res.json).toHaveBeenCalledWith(payload);
-    });
+    // Unit level: assert that sendError dispatches on the result of the LIST form
+    // of accepts(). Real q-value negotiation is covered end-to-end against Express
+    // in express.integration.test.ts.
+    const reqPicking = (best: string | false) => {
+        const accepts = jest.fn((types: string[] | string) => {
+            expect(Array.isArray(types)).toBe(true);
+            expect(types).toEqual(['json', 'html', 'text']);
+            return best;
+        });
+        return makeReq({accepts});
+    };
 
-    it('falls back to HTML', () => {
-        const req = makeReq({accepts: jest.fn((t: string) => t === 'html')});
+    it('serves HTML when negotiation picks html', () => {
         const res = makeRes();
-        container.sendError(req, res, 404, payload);
+        container.sendError(reqPicking('html'), res, 500, payload);
         expect(res.type).toHaveBeenCalledWith('text/html');
         expect(res.send.mock.calls[0][0]).toContain('<!DOCTYPE html>');
+        expect(res.json).not.toHaveBeenCalled();
     });
 
-    it('falls back to plain text', () => {
-        const req = makeReq({accepts: jest.fn(() => false)});
+    it('serves plain text when negotiation picks text', () => {
         const res = makeRes();
-        container.sendError(req, res, 400, payload);
+        container.sendError(reqPicking('text'), res, 400, payload);
         expect(res.type).toHaveBeenCalledWith('text/plain');
         expect(res.send.mock.calls[0][0]).toContain('Code: -1');
     });
 
+    it('serves JSON when negotiation picks json', () => {
+        const res = makeRes();
+        container.sendError(reqPicking('json'), res, 500, payload);
+        expect(res.status).toHaveBeenCalledWith(500);
+        expect(res.json).toHaveBeenCalledWith(payload);
+    });
+
+    it('falls back to JSON when nothing is acceptable', () => {
+        const res = makeRes();
+        container.sendError(reqPicking(false), res, 406, payload);
+        expect(res.json).toHaveBeenCalledWith(payload);
+    });
+
     it('always sets X-Content-Type-Options: nosniff', () => {
         const res = makeRes();
-        container.sendError(makeReq({accepts: jest.fn(() => false)}), res, 400, payload);
+        container.sendError(reqPicking('json'), res, 400, payload);
         expect(res.setHeader).toHaveBeenCalledWith('X-Content-Type-Options', 'nosniff');
     });
 
     it('tolerates a response without setHeader', () => {
         const res = makeRes();
         delete res.setHeader;
-        expect(() => container.sendError(makeReq({accepts: jest.fn(() => false)}), res, 400, payload)).not.toThrow();
+        expect(() => container.sendError(reqPicking('json'), res, 400, payload)).not.toThrow();
     });
 });

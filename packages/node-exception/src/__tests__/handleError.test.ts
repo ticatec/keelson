@@ -86,11 +86,14 @@ describe('handleError', () => {
         expect(sent).toHaveLength(0);
     });
 
-    it('still responds when headers are sent but no next() is available', () => {
+    // Callers that invoke the handler directly pass `null` for next
+    // (common-express-server's RouterHelper does). Falling through to write a
+    // response here throws ERR_HTTP_HEADERS_SENT out of the error handler itself.
+    it.each([[null], [undefined]])('writes nothing when headers are sent and next is %p', (next) => {
         const {container, sent} = makeContainer();
         setHttpContainer(container);
-        handleError(new Error('late'), {method: 'GET'}, {headersSent: true});
-        expect(sent).toHaveLength(1);
+        expect(() => handleError(new Error('late'), {method: 'GET'}, {headersSent: true}, next)).not.toThrow();
+        expect(sent).toHaveLength(0);
     });
 });
 

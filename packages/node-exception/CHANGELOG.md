@@ -32,6 +32,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **The HTML error page was unreachable in practice.** Content negotiation tested one
+  type at a time, starting with `req.accepts('json')`. A browser's Accept header ends
+  in `*/*;q=0.8`, which makes that call return `'json'` - so every browser page
+  request was answered with JSON and the `text/html` branch was never taken.
+  Negotiation now passes the candidates as a list, letting Express weigh the
+  q-values: a browser's `text/html` (q=1.0) beats its `*/*` (q=0.8) and selects HTML,
+  while a client sending only `*/*` still gets JSON.
+- **`handleError` could throw `ERR_HTTP_HEADERS_SENT` out of the error handler.** The
+  guard for an already-started response also required a callable `next`; callers that
+  invoke the handler directly pass `null` (common-express-server's `RouterHelper`
+  does), so they fell through to `res.status()` and crashed the process. The guard now
+  returns regardless, and delegates to `next` only when there is one.
 - `handleError` delegates to `next(err)` when the response has already started,
   instead of throwing `ERR_HTTP_HEADERS_SENT` while trying to write a status line.
 - `handleError` no longer reads `.stack` off a non-`Error` throwable.
@@ -53,26 +65,34 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- **Error logging via `@ticatec/logger-api`.** Errors that are not `HttpError`
-  instances - or not `Error`s at all - are logged at `error` level **with their
-  stack trace**. `HttpError`s are declared outcomes and are not logged: the
-  application raised them on purpose and the client is already being told what
-  happened, so logging them would only drown out real faults. The error is passed
-  as the first log argument, the one shape both pino (through its `err` serializer)
-  and the console fallback (which prints `error.stack`) render in full. A throwing
-  logger cannot break error handling: logging failures are swallowed and the
-  response is still sent. `@ticatec/logger-api` is declared as a peer dependency;
-  with no provider registered it falls back to the console, filtered by `LOG_LEVEL`.
-- Test suite: 79 tests covering the error hierarchy, content negotiation,
+- **Error logging via `@ticatec/logger-api`.** The split is by status class, not by
+  error type. A 5xx - `AppError` (always 500), `ProxyError` (502),
+  `ServiceUnavailableError` (503), any subclass returning >= 500 - and anything that
+  is not an `HttpError` at all are logged at `error` level **with their stack**; in
+  production the client gets no stack, so this record is the only thing that says
+  why the request failed and on which line. 4xx is the client's problem and is
+  logged at `debug`, so it stays out of production logs. The error is passed as the
+  first log argument, the one shape both pino (through its `err` serializer,
+  following `cause` as it goes) and the console fallback (which prints
+  `error.stack`) render in full. A throwing logger cannot break error handling:
+  logging failures are swallowed and the response is still sent.
+  `@ticatec/logger-api` is declared as a peer dependency; with no provider
+  registered it falls back to the console, filtered by `LOG_LEVEL`.
+- **`ErrorOptions` on every error constructor**, so `new AppError(1002, 'save
+  failed', { cause: dbError })` keeps the underlying failure attached. Node and pino
+  both unwind `cause` when printing.
+- Test suite: 96 tests covering the error hierarchy, content negotiation,
   environment detection, HTML escaping, logging and end-to-end Express behaviour,
-  including regression tests for both security issues above.
+  including a regression test for every defect listed here.
 - `getHttpContainer()` and the `ExpressContainer` class are exported, so
   applications can wrap or inspect the active container.
 
 ### Changed
 
 - `strict` and `isolatedModules` are enabled; the compilation target moved from
-  `es2017` to `es2020`.
+  `es2017` to `es2022`, matching `logger-api` and `logger-pino` (and giving
+  `ErrorOptions` / `Error.cause`).
+- README Node badge corrected from `>=14.0.0` to `>=18.0.0`, matching `engines`.
 - `engines.npm` (`>=6.0.0`) dropped; it contradicted `engines.node >= 18`.
 
 ## [2.0.0]

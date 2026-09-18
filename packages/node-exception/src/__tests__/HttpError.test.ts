@@ -71,3 +71,42 @@ describe('predefined errors', () => {
         expect(new IllegalParameterError('bad id').message).toBe('bad id');
     });
 });
+
+describe('Error.cause', () => {
+    const root = new Error('ECONNREFUSED');
+
+    it('HttpError accepts ErrorOptions', () => {
+        expect(new HttpError('wrapped', 500, {cause: root}).cause).toBe(root);
+    });
+
+    it('AppError accepts ErrorOptions after its message', () => {
+        const err = new AppError(1002, 'order save failed', {cause: root});
+        expect(err.cause).toBe(root);
+        expect(err.code).toBe(1002);
+        expect(err.message).toBe('order save failed');
+    });
+
+    it('AppError keeps its default message when only options are meaningful', () => {
+        const err = new AppError(1003, '', {cause: root});
+        expect(err.message).toBe('Internal server error');
+        expect(err.cause).toBe(root);
+    });
+
+    it.each([
+        ['UnauthenticatedError', (o?: ErrorOptions) => new UnauthenticatedError(o)],
+        ['InsufficientPermissionError', (o?: ErrorOptions) => new InsufficientPermissionError(o)],
+        ['ActionNotFoundError', (o?: ErrorOptions) => new ActionNotFoundError(o)],
+        ['TimeoutError', (o?: ErrorOptions) => new TimeoutError(o)],
+        ['ProxyError', (o?: ErrorOptions) => new ProxyError(o)],
+        ['ServiceUnavailableError', (o?: ErrorOptions) => new ServiceUnavailableError(o)]
+    ])('%s accepts ErrorOptions', (_name, make) => {
+        expect(make({cause: root}).cause).toBe(root);
+        expect(make().cause).toBeUndefined();
+    });
+
+    it('IllegalParameterError accepts ErrorOptions after its message', () => {
+        const err = new IllegalParameterError('bad id', {cause: root});
+        expect(err.message).toBe('bad id');
+        expect(err.cause).toBe(root);
+    });
+});
