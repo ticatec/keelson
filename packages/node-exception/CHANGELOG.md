@@ -58,6 +58,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   condition, matching the root export. The previous flat form handed CJS
   declarations to ESM consumers.
 - `package.json#files` listed `CHANGELOG.md`, which did not exist.
+- Removed `ErrorResponse.host`. It was declared as an optional field but never
+  populated anywhere in the library, so it only ever appeared as a promise the code
+  did not keep. Custom containers that want to identify the responding server can
+  add their own field.
 - Dual package hazard: the active container was a module-scoped variable, so an
   application mixing `require()` and `import` got two independent containers -
   one configured, one left at its default. State is now anchored to `globalThis`

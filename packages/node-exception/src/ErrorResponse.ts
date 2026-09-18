@@ -5,8 +5,6 @@
 export default interface ErrorResponse {
     /** The application-specific error code. -1 indicates a generic error */
     code: number,
-    /** The IP address of the server that generated this error response */
-    host?: string,
     /** The IP address of the client that made the request */
     client: string,
     /** The full request path including base URL and route path */

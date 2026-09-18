@@ -340,7 +340,6 @@ UnauthenticatedError: Unauthenticated user is accessing the system.
 | `timestamp` | number | Unix timestamp in milliseconds |
 | `message` | string \| null | Human-readable error message |
 | `stack` | string | Stack trace (development environments only) |
-| `host` | string | Optional and never set by this library. Reserved for a custom [HTTP container](#custom-http-container) that wants to identify the responding server |
 
 ## 📝 Logging
 
@@ -663,4 +662,3 @@ MIT © [Henry Feng](https://github.com/henryfeng)
 - **npm Package**: [@ticatec/node-exception](https://www.npmjs.com/package/@ticatec/node-exception)
 - **Issues**: [github.com/ticatec/keelson/issues](https://github.com/ticatec/keelson/issues)
 - **Changelog**: [CHANGELOG.md](./CHANGELOG.md)
-- **Documentation**: [https://docs.ticatec.com/node-exception](https://docs.ticatec.com/node-exception)

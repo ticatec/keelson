@@ -336,7 +336,6 @@ UnauthenticatedError: Unauthenticated user is accessing the system.
 | `timestamp` | number | Unix 时间戳（毫秒）|
 | `message` | string \| null | 人类可读的错误消息 |
 | `stack` | string | 堆栈跟踪（仅开发环境）|
-| `host` | string | 可选字段，本库从不设置。预留给需要标识响应服务器的自定义 [HTTP 容器](#自定义-http-容器) |
 
 ## 📝 日志
 
@@ -641,4 +640,3 @@ MIT © [Henry Feng](https://github.com/henryfeng)
 - **npm 包**：[@ticatec/node-exception](https://www.npmjs.com/package/@ticatec/node-exception)
 - **问题反馈**：[github.com/ticatec/keelson/issues](https://github.com/ticatec/keelson/issues)
 - **变更日志**：[CHANGELOG.md](./CHANGELOG.md)
-- **文档**: [https://docs.ticatec.com/node-exception](https://docs.ticatec.com/node-exception)
