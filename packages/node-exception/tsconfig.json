@@ -1,16 +1,21 @@
 {
   "compilerOptions": {
-    "target": "es2017",
-    "lib": ["es2017"],
+    "target": "es2020",
+    "lib": ["es2020"],
     "declaration": true,
     "declarationMap": true,
     "sourceMap": true,
     "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "isolatedModules": true,
     "forceConsistentCasingInFileNames": true,
-    "strict": false,
-    "skipLibCheck": true
+    "strict": true,
+    "skipLibCheck": true,
+    "sourceRoot": "src",
+    "types": ["node", "jest"]
   },
   "include": [
     "src/**/*"
-  ]
+  ],
+  "exclude": ["src/__tests__/**/*", "**/__tests__/**"]
 }

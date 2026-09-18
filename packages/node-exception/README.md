@@ -57,7 +57,7 @@ const HttpError = require('@ticatec/node-exception/HttpError');
 const { toHtml } = require('@ticatec/node-exception/utils');
 ```
 
-> ⚠️ **Mixing import styles**: `setHttpContainer()` mutates a module-level singleton. CJS and ESM are separate module instances, so a container set via `require()` will not be visible to code that imports the library via `import`, and vice versa. Pick one style per application.
+> ℹ️ **Mixing import styles is safe.** The active container is stored on `globalThis` under `Symbol.for('@ticatec/node-exception.state')`, so the CommonJS and ESM builds share one container. A container registered through `require()` is visible to code that loaded the package with `import`, and vice versa.
 
 ## 🔧 Quick Start
 
@@ -287,16 +287,32 @@ Error: UnauthenticatedError...
 
 ## 🔍 Development vs Production
 
-Stack traces are automatically included in development environments:
+Stack traces are included only when the **server** is running in a development
+environment. The environment is resolved from server-side configuration alone -
+never from anything the client sends:
+
+1. Express' `env` application setting (`app.set('env', ...)`, which itself
+   defaults to `process.env.NODE_ENV || 'development'`)
+2. `process.env.NODE_ENV`, when no Express application is attached to the request
+3. `development`, when neither is set
+
+`development`, `dev` and `test` enable stack traces; anything else disables them.
+
+```bash
+# Production: no stack traces in the response
+NODE_ENV=production node server.js
+```
 
 ```javascript
-// Enable development mode by setting request header
-fetch('/api/users', {
-    headers: {
-        'env': 'development' // or 'dev'
-    }
-});
+// Or set it explicitly on the app
+app.set('env', 'production');
 ```
+
+> 🔒 **Security**: versions before 2.1.0 read this from the `env` **request
+> header**, which let any client turn stack-trace disclosure on by sending
+> `env: development`. Upgrade if you are on 2.0.0 or earlier. Note that the
+> header was also the *only* way to enable stack traces back then, so if your
+> development tooling sends one, replace it with `NODE_ENV` or `app.set('env')`.
 
 ## 🚦 HTTP Status Code Mapping
 
@@ -425,6 +441,20 @@ The library uses a modular architecture with clear separation of concerns:
 - ✅ Conditional `exports` map selects the correct format automatically
 - ✅ Per-output `package.json` markers ensure correct module interpretation
 - ✅ Source updated to use explicit `.js` extensions (NodeNext-compatible)
+
+### Version 2.1.0
+- 🔒 **Security**: the development check no longer reads the `env` request header,
+  which previously allowed any client to force stack-trace disclosure
+- 🔒 **Security**: every field in the HTML error page is HTML-escaped (`client`,
+  `path`, `method` and `code` were previously interpolated raw; `client` follows
+  `X-Forwarded-For` under `trust proxy`)
+- 🔒 Error responses now send `X-Content-Type-Options: nosniff`
+- ✅ `handleError` delegates to `next(err)` when the response has already started
+- ✅ Container state anchored to `globalThis`, so CJS and ESM share one container
+- ✅ `HttpContainer` and `ErrorResponse` exported as types (`isolatedModules`-safe)
+- ✅ Per-condition `types` in every subpath export
+- ✅ 62 tests, including regression tests for both security issues
+- ✅ `strict` and `isolatedModules` enabled
 
 ### Version 2.0.0
 - ✅ Enhanced type safety with strict TypeScript typing

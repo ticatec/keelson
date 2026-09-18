@@ -57,7 +57,7 @@ const HttpError = require('@ticatec/node-exception/HttpError');
 const { toHtml } = require('@ticatec/node-exception/utils');
 ```
 
-> ⚠️ **混用导入方式**：`setHttpContainer()` 修改的是模块级单例。CJS 与 ESM 是两个独立的模块实例，通过 `require()` 设置的容器对 `import` 引入的代码不可见，反之亦然。同一应用请选择其中一种导入方式。
+> ℹ️ **混用导入方式是安全的。** 当前容器保存在 `globalThis` 上，键为 `Symbol.for('@ticatec/node-exception.state')`，因此 CommonJS 构建与 ESM 构建共享同一个容器。通过 `require()` 注册的容器，对以 `import` 加载本包的代码同样可见，反之亦然。
 
 ## 🔧 快速开始
 
@@ -287,16 +287,29 @@ Error: UnauthenticatedError...
 
 ## 🔍 开发环境 vs 生产环境
 
-堆栈跟踪会自动包含在开发环境中：
+只有当**服务端**运行在开发环境时，响应中才会包含堆栈跟踪。环境判定完全来自服务端配置，
+绝不采信客户端发来的任何内容：
+
+1. Express 的 `env` 应用设置（`app.set('env', ...)`，其默认值为 `process.env.NODE_ENV || 'development'`）
+2. 当请求上没有挂载 Express 应用时，退回读取 `process.env.NODE_ENV`
+3. 两者都未设置时，默认为 `development`
+
+`development`、`dev`、`test` 会启用堆栈跟踪，其他取值一律关闭。
+
+```bash
+# 生产环境：响应中不含堆栈跟踪
+NODE_ENV=production node server.js
+```
 
 ```javascript
-// 通过设置请求头启用开发模式
-fetch('/api/users', {
-    headers: {
-        'env': 'development' // 或 'dev'
-    }
-});
+// 也可以在应用上显式设置
+app.set('env', 'production');
 ```
+
+> 🔒 **安全提示**：2.1.0 之前的版本从 `env` **请求头**读取该值，任何客户端只要发送
+> `env: development` 就能让服务端吐出完整堆栈。如果你还在使用 2.0.0 或更早版本，请尽快升级。
+> 另需注意：当时该请求头是启用堆栈跟踪的**唯一**途径，因此如果你的开发工具链依赖它，
+> 请改用 `NODE_ENV` 或 `app.set('env')`。
 
 ## 🚦 HTTP 状态码映射
 
@@ -425,6 +438,18 @@ class CustomValidationError extends IllegalParameterError {
 - ✅ 条件 `exports` 映射自动选择正确的格式
 - ✅ 每个输出目录的 `package.json` 标记确保模块类型解析正确
 - ✅ 源码更新为显式 `.js` 扩展名（兼容 NodeNext）
+
+### 版本 2.1.0
+- 🔒 **安全**：开发环境判定不再读取 `env` 请求头，此前任何客户端都可借此强制泄露堆栈
+- 🔒 **安全**：HTML 错误页所有字段均做 HTML 转义（此前 `client`、`path`、`method`、`code`
+  为原样插值；在开启 `trust proxy` 时，`client` 取自 `X-Forwarded-For`）
+- 🔒 错误响应统一附带 `X-Content-Type-Options: nosniff`
+- ✅ 响应已开始发送时，`handleError` 改为委派给 `next(err)`
+- ✅ 容器状态锚定到 `globalThis`，CJS 与 ESM 共享同一实例
+- ✅ `HttpContainer` 与 `ErrorResponse` 以类型方式导出（兼容 `isolatedModules`）
+- ✅ 每个子路径导出都补全了按条件区分的 `types`
+- ✅ 新增 62 个测试，含上述两个安全问题的回归用例
+- ✅ 启用 `strict` 与 `isolatedModules`
 
 ### 版本 2.0.0
 - ✅ 增强类型安全，使用严格的 TypeScript 类型

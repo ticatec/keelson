@@ -13,10 +13,11 @@ import HttpError, {
     ProxyError,
     ServiceUnavailableError
 } from './HttpError.js';
-import {handleError, setHttpContainer} from "./handleError.js";
-import HttpContainer from "./HttpContainer.js";
+import {handleError, setHttpContainer, getHttpContainer} from "./handleError.js";
+import type HttpContainer from "./HttpContainer.js";
+import {ExpressContainer} from "./HttpContainer.js";
 import {toHtml, toText} from "./utils.js";
-import ErrorResponse from "./ErrorResponse.js";
+import type ErrorResponse from "./ErrorResponse.js";
 
 /**
  * Re-exports all error classes and the main error handling function.
@@ -40,8 +41,12 @@ export {
     ProxyError,
     ServiceUnavailableError,
     setHttpContainer,
-    HttpContainer,
-    ErrorResponse,
+    getHttpContainer,
+    ExpressContainer,
     toHtml,
     toText
 }
+
+/** Interfaces are exported as types so the package stays safe under
+ *  `isolatedModules` / transpile-only toolchains (esbuild, swc, ts-jest). */
+export type {HttpContainer, ErrorResponse};

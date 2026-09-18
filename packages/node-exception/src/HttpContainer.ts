@@ -33,6 +33,11 @@ export default interface HttpContainer {
 
     /**
      * Checks if the current environment is development or test.
+     *
+     * Implementations MUST derive this from server-side configuration only.
+     * Deriving it from anything the client controls (a header, a query
+     * parameter, a cookie) would let callers switch stack-trace disclosure on.
+     *
      * @param req - Express request object
      * @returns True if in development or test environment, false otherwise
      */
@@ -47,12 +52,32 @@ export default interface HttpContainer {
 export class ExpressContainer implements HttpContainer {
     /**
      * Checks if the current environment is development or test.
+     *
+     * The value is resolved from the server's own configuration only - never from
+     * the incoming request. It reads Express' `env` application setting
+     * (`app.set('env', ...)`, which itself defaults to `process.env.NODE_ENV ||
+     * 'development'`) and falls back to `process.env.NODE_ENV` when no Express
+     * application is attached to the request.
+     *
+     * Reading this from a request header would let any client turn stack-trace
+     * disclosure on at will, so it must not be done.
+     *
      * @param req - Express request object
-     * @returns True if environment is 'development' or 'dev', false otherwise
+     * @returns True if the environment is 'development', 'dev' or 'test'
      */
     isDevelopment(req: any): boolean {
-        const env = req.get('env');
-        return env === 'development' || env === 'dev';
+        let env: unknown;
+        const app = req?.app;
+        if (app && typeof app.get === 'function') {
+            env = app.get('env');
+        }
+        if (typeof env !== 'string' || env.length === 0) {
+            env = process.env.NODE_ENV;
+        }
+        if (typeof env !== 'string' || env.length === 0) {
+            env = 'development';
+        }
+        return env === 'development' || env === 'dev' || env === 'test';
     }
 
     /**
@@ -84,6 +109,11 @@ export class ExpressContainer implements HttpContainer {
      * @param err - Error response data to send
      */
     sendError(req: any, res: any, statusCode: number, err: ErrorResponse): void {
+        // Error payloads echo request-derived data back to the client; stop
+        // browsers from MIME-sniffing a text/plain body into something executable.
+        if (typeof res.setHeader === 'function') {
+            res.setHeader('X-Content-Type-Options', 'nosniff');
+        }
         if (req.accepts('json')) {
             res.status(statusCode).json(err);
         } else if (req.accepts('html')) {
