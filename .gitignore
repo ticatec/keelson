@@ -3,8 +3,12 @@ node_modules/
 .pnpm-store/
 
 # build output
-lib/
-dist/
+# 必须锚定到包根：未锚定的 `lib/` 会同时匹配 packages/*/src/lib/，
+# 而 bean-validator 与 config-loader 的源码正是放在 src/lib/ 下面。
+/lib/
+/dist/
+packages/*/lib/
+packages/*/dist/
 *.tsbuildinfo
 
 # stale compiled artifacts next to sources
