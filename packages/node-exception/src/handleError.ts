@@ -1,6 +1,14 @@
+import {getLogger} from "@ticatec/logger-api";
 import ErrorResponse from "./ErrorResponse.js";
 import HttpError, {AppError} from './HttpError.js';
 import HttpContainer, {ExpressContainer} from "./HttpContainer.js";
+
+/**
+ * `getLogger` returns a lazily-resolving proxy, so holding it at module scope is
+ * safe: the concrete logger is looked up on the first call, not here. That keeps
+ * this module independent of whether `setLoggerProvider()` has run yet.
+ */
+const logger = getLogger('ErrorHandler');
 
 /**
  * The active container is held on `globalThis` under a well-known symbol.
@@ -21,6 +29,51 @@ const STATE_KEY = Symbol.for('@ticatec/node-exception.state');
 const state: ContainerState = ((globalThis as any)[STATE_KEY] ??= {
     container: new ExpressContainer()
 });
+
+/**
+ * Describes the request for the log line, without letting a misbehaving container
+ * break error handling.
+ */
+const describeRequest = (req: any): string => {
+    const method = req?.method || 'GET';
+    let path: string;
+    try {
+        path = state.container.getPath(req) || 'unknown';
+    } catch {
+        path = 'unknown';
+    }
+    return `${method} ${path}`;
+};
+
+/**
+ * Logs the error before it is turned into a response.
+ *
+ * Errors that are instances of {@link HttpError} are declared outcomes - a 404, a
+ * validation failure, a missing token - so they are logged at debug level and stay
+ * out of the way in production. Anything else reached the handler unexpectedly and
+ * is logged at error level **with its stack**, because that record is usually the
+ * only trace such a failure leaves behind.
+ *
+ * The error object is passed as the first argument rather than nested in a context
+ * object: that is the one shape both pino (which serialises it through its `err`
+ * serializer) and the console fallback (which prints `error.stack`) render fully.
+ *
+ * Logging must never be able to break error handling, so every failure here is
+ * swallowed.
+ */
+const logApplicationError = (req: any, err: any): void => {
+    try {
+        if (err instanceof HttpError) {
+            logger.debug(err, `Handled ${err.statusCode} on ${describeRequest(req)}`);
+        } else if (err instanceof Error) {
+            logger.error(err, `Unhandled error on ${describeRequest(req)}`);
+        } else {
+            logger.error({thrown: err}, `Unhandled non-Error throwable on ${describeRequest(req)}`);
+        }
+    } catch {
+        // A broken logger must not turn a handled error into an unhandled one.
+    }
+};
 
 /**
  * Sends a standardized error response to the client with comprehensive error information.
@@ -50,6 +103,9 @@ const sendApplicationError = (req: any, res: any, err: any): void => {
  * Express error handling middleware that processes all application errors.
  * This function serves as the main entry point for error handling in Express applications.
  *
+ * Every error passing through is logged first: unknown errors at error level with
+ * their stack, declared {@link HttpError}s at debug level.
+ *
  * @param err - The error object that was thrown or passed to next()
  * @param req - Express request object
  * @param res - Express response object
@@ -62,6 +118,7 @@ const sendApplicationError = (req: any, res: any, err: any): void => {
  *   turn this into ordinary middleware.
  */
 const handleError = (err: any, req: any, res: any, next?: any): void => {
+    logApplicationError(req, err);
     if (res && res.headersSent && typeof next === 'function') {
         next(err);
         return;

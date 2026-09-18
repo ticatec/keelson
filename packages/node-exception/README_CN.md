@@ -7,7 +7,7 @@
 [![Node.js](https://img.shields.io/badge/Node.js-≥14.0.0-green)](https://nodejs.org)
 [![TypeScript](https://img.shields.io/badge/TypeScript-Ready-blue)](https://www.typescriptlang.org/)
 
-生产就绪的 Express 错误处理中间件，具有标准化的 HTTP 错误类型、集中式异常管理和自动内容协商的 REST API 支持。类型安全、零依赖核心。
+生产就绪的 Express 错误处理中间件，具有标准化的 HTTP 错误类型、集中式异常管理和自动内容协商的 REST API 支持。类型安全，日志通过 `@ticatec/logger-api` 契约注入。
 
 ## 🚀 功能特性
 
@@ -16,9 +16,10 @@
 - **📋 一致响应格式**：统一的错误响应格式，包含完整的请求上下文
 - **🎨 内容协商**：自动响应格式化（JSON、HTML、纯文本）
 - **🔍 开发支持**：开发环境中包含堆栈跟踪信息
+- **📝 内置日志**：未知错误通过 `@ticatec/logger-api` 记录，含完整堆栈
 - **📘 TypeScript 优先**：完整的 TypeScript 支持和类型定义
 - **🌐 IP 检测**：自动检测客户端和服务器 IP 地址
-- **⚡ 零依赖**：运行时无任何依赖
+- **⚡ 极轻依赖**：运行时仅依赖 `@ticatec/logger-api` 这一零依赖日志契约
 - **✨ 类型安全**：增强的类型安全，带有 null 检查和严格类型
 - **🛡️ Null 安全**：可选属性自动提供默认值
 - **🔄 双模块格式**：通过条件 `exports` 同时发布 ESM 与 CommonJS 两种构建产物
@@ -26,8 +27,10 @@
 ## 📦 安装
 
 ```bash
-npm install @ticatec/node-exception
+npm install @ticatec/node-exception @ticatec/logger-api
 ```
+
+`@ticatec/logger-api` 是 peer dependency——本包记录错误日志所依赖的零依赖日志契约，详见 [日志](#-日志)。
 
 ## 🔄 模块系统
 
@@ -285,6 +288,53 @@ Error: UnauthenticatedError...
 | `message` | string \| null | 人类可读的错误消息 |
 | `stack` | string | 堆栈跟踪（仅开发环境）|
 
+## 📝 日志
+
+所有经过 `handleError` 的错误都会通过
+[`@ticatec/logger-api`](https://www.npmjs.com/package/@ticatec/logger-api)
+（框架的零依赖日志契约）记录下来：
+
+| 错误类型 | 级别 | 内容 |
+|---|---|---|
+| 非 `HttpError`（乃至非 `Error`） | `error` | 错误本身，**含完整堆栈** |
+| 任意 `HttpError` 子类 | `debug` | 错误本身及其映射到的状态码 |
+
+`HttpError` 属于业务上已声明的结果——404、参数校验失败、缺少令牌等，因此不会污染生产日志。
+其余的错误都是意料之外抵达这里的，而这条日志往往是它留下的唯一线索。
+
+```
+2026-09-18T02:07:50.894Z ERROR [ErrorHandler] Unhandled error on GET /api/orders SyntaxError: Expected property name or '}' in JSON at position 1
+    at JSON.parse (<anonymous>)
+    at /srv/app/routes/orders.js:24:19
+    ...
+```
+
+### 选择日志实现
+
+`@ticatec/logger-api` 是 **peer dependency**。未注入任何 provider 时，它退回写控制台，
+并按环境变量 `LOG_LEVEL` 过滤（`trace` | `debug` | `info` | `warn` | `error` | `silent`，
+默认 `info`）——因此零配置即可用。
+
+若要接入真正的日志库，在组合根处（服务启动之前）注册一次 provider：
+
+```typescript
+import { setLoggerProvider } from '@ticatec/logger-api';
+import { initialize, getPinoLogger } from '@ticatec/logger-pino';
+
+initialize({
+    appenders: [{ name: 'out', type: 'console', level: 'debug' }],
+    loggers: { root: { level: 'debug', appenders: ['out'] } }
+});
+setLoggerProvider(getPinoLogger);
+```
+
+```json
+{"level":50,"module":"ErrorHandler","msg":"Unhandled error on GET /api/orders",
+ "err":{"type":"SyntaxError","message":"...","stack":"SyntaxError: ...\n    at JSON.parse ..."}}
+```
+
+日志不会影响错误响应：即使 provider 抛异常，也会被吞掉，响应照常发出。
+
 ## 🔍 开发环境 vs 生产环境
 
 只有当**服务端**运行在开发环境时，响应中才会包含堆栈跟踪。环境判定完全来自服务端配置，
@@ -448,7 +498,8 @@ class CustomValidationError extends IllegalParameterError {
 - ✅ 容器状态锚定到 `globalThis`，CJS 与 ESM 共享同一实例
 - ✅ `HttpContainer` 与 `ErrorResponse` 以类型方式导出（兼容 `isolatedModules`）
 - ✅ 每个子路径导出都补全了按条件区分的 `types`
-- ✅ 新增 62 个测试，含上述两个安全问题的回归用例
+- 📝 错误统一经 `@ticatec/logger-api` 记录：未知错误 `error` 级并带堆栈，已声明的 `HttpError` 记 `debug` 级
+- ✅ 新增 69 个测试，含上述两个安全问题的回归用例
 - ✅ 启用 `strict` 与 `isolatedModules`
 
 ### 版本 2.0.0

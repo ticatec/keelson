@@ -7,7 +7,7 @@
 [![Node.js](https://img.shields.io/badge/Node.js-≥14.0.0-green)](https://nodejs.org)
 [![TypeScript](https://img.shields.io/badge/TypeScript-Ready-blue)](https://www.typescriptlang.org/)
 
-Production-ready Express error handling middleware with standardized HTTP error types, centralized exception management, and automatic content negotiation for REST APIs. Type-safe, zero-dependency core.
+Production-ready Express error handling middleware with standardized HTTP error types, centralized exception management, and automatic content negotiation for REST APIs. Type-safe, with logging injected through the `@ticatec/logger-api` contract.
 
 ## 🚀 Features
 
@@ -16,9 +16,10 @@ Production-ready Express error handling middleware with standardized HTTP error 
 - **📋 Consistent Response Format**: Uniform error responses with comprehensive request context
 - **🎨 Content Negotiation**: Automatic response formatting (JSON, HTML, plain text)
 - **🔍 Development Support**: Stack trace inclusion in development environments
+- **📝 Built-in Logging**: Unknown errors logged with their stack via `@ticatec/logger-api`
 - **📘 TypeScript First**: Full TypeScript support with complete type definitions
 - **🌐 IP Detection**: Automatic client and server IP address detection
-- **⚡ Zero Dependencies**: Minimal runtime footprint with no runtime dependencies
+- **⚡ Minimal Dependencies**: `@ticatec/logger-api` (itself dependency-free) is the only runtime peer
 - **✨ Type-Safe**: Improved type safety with null checks and strict typing
 - **🛡️ Null-Safe**: Automatic default values for optional properties
 - **🔄 Dual Module Format**: Ships both ESM and CommonJS builds via conditional `exports`
@@ -26,8 +27,11 @@ Production-ready Express error handling middleware with standardized HTTP error 
 ## 📦 Installation
 
 ```bash
-npm install @ticatec/node-exception
+npm install @ticatec/node-exception @ticatec/logger-api
 ```
+
+`@ticatec/logger-api` is a peer dependency - the zero-dependency logging contract
+the package writes its error records against. See [Logging](#-logging).
 
 ## 🔄 Module System
 
@@ -285,6 +289,57 @@ Error: UnauthenticatedError...
 | `message` | string \| null | Human-readable error message |
 | `stack` | string | Stack trace (development environments only) |
 
+## 📝 Logging
+
+Every error passing through `handleError` is logged through
+[`@ticatec/logger-api`](https://www.npmjs.com/package/@ticatec/logger-api), the
+framework's zero-dependency logging contract:
+
+| Error | Level | Contents |
+|---|---|---|
+| Not an `HttpError` (or not an `Error` at all) | `error` | the error **with its stack trace** |
+| Any `HttpError` subclass | `debug` | the error and the status code it mapped to |
+
+`HttpError`s are declared outcomes - a 404, a validation failure, a missing token -
+so they stay out of production logs. Anything else arrived unexpectedly, and that
+log record is usually the only trace it leaves behind.
+
+```
+2026-09-18T02:07:50.894Z ERROR [ErrorHandler] Unhandled error on GET /api/orders SyntaxError: Expected property name or '}' in JSON at position 1
+    at JSON.parse (<anonymous>)
+    at /srv/app/routes/orders.js:24:19
+    ...
+```
+
+### Choosing a logger
+
+`@ticatec/logger-api` is a **peer dependency**. With no provider installed it
+writes to the console, filtered by the `LOG_LEVEL` environment variable
+(`trace` | `debug` | `info` | `warn` | `error` | `silent`, default `info`), so the
+middleware is useful out of the box with no configuration.
+
+To route the records into a real logger, register a provider once at the
+composition root - before the server starts:
+
+```typescript
+import { setLoggerProvider } from '@ticatec/logger-api';
+import { initialize, getPinoLogger } from '@ticatec/logger-pino';
+
+initialize({
+    appenders: [{ name: 'out', type: 'console', level: 'debug' }],
+    loggers: { root: { level: 'debug', appenders: ['out'] } }
+});
+setLoggerProvider(getPinoLogger);
+```
+
+```json
+{"level":50,"module":"ErrorHandler","msg":"Unhandled error on GET /api/orders",
+ "err":{"type":"SyntaxError","message":"...","stack":"SyntaxError: ...\n    at JSON.parse ..."}}
+```
+
+Logging never interferes with the response: if the provider throws, the failure is
+swallowed and the error response is still sent.
+
 ## 🔍 Development vs Production
 
 Stack traces are included only when the **server** is running in a development
@@ -453,7 +508,9 @@ The library uses a modular architecture with clear separation of concerns:
 - ✅ Container state anchored to `globalThis`, so CJS and ESM share one container
 - ✅ `HttpContainer` and `ErrorResponse` exported as types (`isolatedModules`-safe)
 - ✅ Per-condition `types` in every subpath export
-- ✅ 62 tests, including regression tests for both security issues
+- 📝 Errors are now logged through `@ticatec/logger-api`: unknown errors at
+  `error` level with their stack, declared `HttpError`s at `debug` level
+- ✅ 69 tests, including regression tests for both security issues
 - ✅ `strict` and `isolatedModules` enabled
 
 ### Version 2.0.0

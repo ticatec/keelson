@@ -292,6 +292,9 @@ importers:
 
   packages/node-exception:
     devDependencies:
+      '@ticatec/logger-api':
+        specifier: workspace:*
+        version: link:../logger-api
       '@types/express':
         specifier: ^5.0.0
         version: 5.0.6

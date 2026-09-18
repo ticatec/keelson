@@ -1,7 +1,7 @@
 {
   "name": "@ticatec/node-exception",
   "version": "2.1.0",
-  "description": "Production-ready Express error handling middleware with standardized HTTP error types, centralized exception management, and automatic content negotiation for REST APIs. Type-safe, zero-dependency core.",
+  "description": "Production-ready Express error handling middleware with standardized HTTP error types, centralized exception management, and automatic content negotiation for REST APIs. Type-safe, with logging injected through the @ticatec/logger-api contract.",
   "type": "module",
   "main": "lib/cjs/index.js",
   "types": "lib/cjs/index.d.ts",
@@ -127,7 +127,8 @@
     "esm",
     "commonjs",
     "dual-module",
-    "ticatec"
+    "ticatec",
+    "logging"
   ],
   "repository": {
     "type": "git",
@@ -163,6 +164,7 @@
     "registry": "https://registry.npmjs.org/"
   },
   "devDependencies": {
+    "@ticatec/logger-api": "workspace:*",
     "@types/express": "^5.0.0",
     "@types/jest": "^29.5.14",
     "@types/node": "^22.8.6",
@@ -173,5 +175,8 @@
     "jest": "^29.7.0",
     "ts-jest": "^29.2.5",
     "typescript": "^5.6.0"
+  },
+  "peerDependencies": {
+    "@ticatec/logger-api": ">=1.0.0"
   }
 }
