@@ -2,7 +2,16 @@ import {setLoggerProvider, resetLoggerProvider} from '@ticatec/logger-api';
 import type {Logger} from '@ticatec/logger-api';
 import {handleError, setHttpContainer} from '../handleError.js';
 import HttpContainer, {ExpressContainer} from '../HttpContainer.js';
-import {AppError, ActionNotFoundError} from '../HttpError.js';
+import HttpError, {
+    AppError,
+    UnauthenticatedError,
+    InsufficientPermissionError,
+    IllegalParameterError,
+    ActionNotFoundError,
+    TimeoutError,
+    ProxyError,
+    ServiceUnavailableError
+} from '../HttpError.js';
 
 type Record_ = {level: string; first: unknown; msg?: string};
 
@@ -60,18 +69,49 @@ describe('error logging', () => {
         expect(records[0].msg).toContain('non-Error throwable');
     });
 
-    it('logs declared HttpErrors at debug level, not error level', () => {
-        handleError(new ActionNotFoundError(), {method: 'GET'}, {}, jest.fn());
-
-        expect(records).toHaveLength(1);
-        expect(records[0].level).toBe('debug');
-        expect(records[0].msg).toBe('Handled 404 on GET /api/orders');
+    // Declared outcomes: the application raised them on purpose, chose the status
+    // code, and the client is being told exactly what happened. Nothing to
+    // diagnose, and at volume they would drown out real faults.
+    it.each([
+        ['AppError', new AppError(1001, 'business rule')],
+        ['UnauthenticatedError', new UnauthenticatedError()],
+        ['InsufficientPermissionError', new InsufficientPermissionError()],
+        ['IllegalParameterError', new IllegalParameterError('bad id')],
+        ['ActionNotFoundError', new ActionNotFoundError()],
+        ['TimeoutError', new TimeoutError()],
+        ['ProxyError', new ProxyError()],
+        ['ServiceUnavailableError', new ServiceUnavailableError()],
+        ['a bare HttpError', new HttpError('teapot', 418)]
+    ])('writes nothing for %s', (_name, err) => {
+        handleError(err, {method: 'GET'}, {}, jest.fn());
+        expect(records).toHaveLength(0);
     });
 
-    it('treats AppError as declared even though it is a 500', () => {
-        handleError(new AppError(1001, 'nope'), {method: 'GET'}, {}, jest.fn());
-        expect(records[0].level).toBe('debug');
-        expect(records[0].msg).toBe('Handled 500 on GET /api/orders');
+    it('stays silent for an application subclass of HttpError', () => {
+        class PaymentDeclinedError extends AppError {
+            constructor() {
+                super(4001, 'card declined');
+            }
+        }
+        handleError(new PaymentDeclinedError(), {method: 'POST'}, {}, jest.fn());
+        expect(records).toHaveLength(0);
+    });
+
+    it('still responds normally for a declared outcome', () => {
+        const sendError = jest.fn();
+        setHttpContainer({...silentContainer, sendError});
+        handleError(new ActionNotFoundError(), {method: 'GET'}, {}, jest.fn());
+        expect(sendError).toHaveBeenCalled();
+        expect(sendError.mock.calls[0][2]).toBe(404);
+        expect(records).toHaveLength(0);
+    });
+
+    it('writes nothing for a declared outcome raised after the response started', () => {
+        const next = jest.fn();
+        const err = new ActionNotFoundError();
+        handleError(err, {method: 'GET'}, {headersSent: true}, next);
+        expect(next).toHaveBeenCalledWith(err);
+        expect(records).toHaveLength(0);
     });
 
     it('logs once, then delegates, when the response has already started', () => {

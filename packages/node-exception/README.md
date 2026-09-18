@@ -16,7 +16,7 @@ Production-ready Express error handling middleware with standardized HTTP error 
 - **📋 Consistent Response Format**: Uniform error responses with comprehensive request context
 - **🎨 Content Negotiation**: Automatic response formatting (JSON, HTML, plain text)
 - **🔍 Development Support**: Stack trace inclusion in development environments
-- **📝 Built-in Logging**: Unknown errors logged with their stack via `@ticatec/logger-api`
+- **📝 Built-in Logging**: Unknown errors logged with their stack via `@ticatec/logger-api`; declared `HttpError`s stay silent
 - **📘 TypeScript First**: Full TypeScript support with complete type definitions
 - **🌐 IP Detection**: Automatic client and server IP address detection
 - **⚡ Minimal Dependencies**: `@ticatec/logger-api` (itself dependency-free) is the only runtime peer
@@ -291,18 +291,25 @@ Error: UnauthenticatedError...
 
 ## 📝 Logging
 
-Every error passing through `handleError` is logged through
+Errors that reach `handleError` unexpectedly are logged through
 [`@ticatec/logger-api`](https://www.npmjs.com/package/@ticatec/logger-api), the
 framework's zero-dependency logging contract:
 
 | Error | Level | Contents |
 |---|---|---|
 | Not an `HttpError` (or not an `Error` at all) | `error` | the error **with its stack trace** |
-| Any `HttpError` subclass | `debug` | the error and the status code it mapped to |
+| Any `HttpError` subclass | *not logged* | - |
 
-`HttpError`s are declared outcomes - a 404, a validation failure, a missing token -
-so they stay out of production logs. Anything else arrived unexpectedly, and that
-log record is usually the only trace it leaves behind.
+Every `HttpError` - `AppError`, `UnauthenticatedError`, `InsufficientPermissionError`,
+`IllegalParameterError`, `ActionNotFoundError`, `TimeoutError`, `ProxyError`,
+`ServiceUnavailableError`, and any subclass your application defines - is a
+**declared outcome**: the application raised it on purpose, chose the status code,
+and the client is being told exactly what happened. There is nothing to diagnose,
+so none of them are logged. Reporting requests is the access log's job, not the
+error handler's.
+
+Anything else arrived unexpectedly, and that log record is usually the only trace
+it leaves behind.
 
 ```
 2026-09-18T02:07:50.894Z ERROR [ErrorHandler] Unhandled error on GET /api/orders SyntaxError: Expected property name or '}' in JSON at position 1
@@ -508,9 +515,9 @@ The library uses a modular architecture with clear separation of concerns:
 - ✅ Container state anchored to `globalThis`, so CJS and ESM share one container
 - ✅ `HttpContainer` and `ErrorResponse` exported as types (`isolatedModules`-safe)
 - ✅ Per-condition `types` in every subpath export
-- 📝 Errors are now logged through `@ticatec/logger-api`: unknown errors at
-  `error` level with their stack, declared `HttpError`s at `debug` level
-- ✅ 69 tests, including regression tests for both security issues
+- 📝 Unknown errors are now logged through `@ticatec/logger-api` at `error` level
+  with their stack; declared `HttpError`s are not logged
+- ✅ 79 tests, including regression tests for both security issues
 - ✅ `strict` and `isolatedModules` enabled
 
 ### Version 2.0.0

@@ -55,14 +55,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - **Error logging via `@ticatec/logger-api`.** Errors that are not `HttpError`
   instances - or not `Error`s at all - are logged at `error` level **with their
-  stack trace**; declared `HttpError`s are logged at `debug` level with the status
-  code they mapped to. The error is passed as the first log argument, the one shape
-  both pino (through its `err` serializer) and the console fallback (which prints
-  `error.stack`) render in full. A throwing logger cannot break error handling:
-  logging failures are swallowed and the response is still sent.
-  `@ticatec/logger-api` is declared as a peer dependency; with no provider
-  registered it falls back to the console, filtered by `LOG_LEVEL`.
-- Test suite: 69 tests covering the error hierarchy, content negotiation,
+  stack trace**. `HttpError`s are declared outcomes and are not logged: the
+  application raised them on purpose and the client is already being told what
+  happened, so logging them would only drown out real faults. The error is passed
+  as the first log argument, the one shape both pino (through its `err` serializer)
+  and the console fallback (which prints `error.stack`) render in full. A throwing
+  logger cannot break error handling: logging failures are swallowed and the
+  response is still sent. `@ticatec/logger-api` is declared as a peer dependency;
+  with no provider registered it falls back to the console, filtered by `LOG_LEVEL`.
+- Test suite: 79 tests covering the error hierarchy, content negotiation,
   environment detection, HTML escaping, logging and end-to-end Express behaviour,
   including regression tests for both security issues above.
 - `getHttpContainer()` and the `ExpressContainer` class are exported, so

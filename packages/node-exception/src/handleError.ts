@@ -48,11 +48,16 @@ const describeRequest = (req: any): string => {
 /**
  * Logs the error before it is turned into a response.
  *
- * Errors that are instances of {@link HttpError} are declared outcomes - a 404, a
- * validation failure, a missing token - so they are logged at debug level and stay
- * out of the way in production. Anything else reached the handler unexpectedly and
- * is logged at error level **with its stack**, because that record is usually the
- * only trace such a failure leaves behind.
+ * Anything that is an {@link HttpError} is a **declared outcome**: the application
+ * raised it on purpose, chose the status code, and the client is being told exactly
+ * what happened. There is nothing to diagnose, and at any real traffic volume these
+ * would drown out the records that do matter - reporting requests is the access
+ * log's job, not the error handler's. They are not logged at all.
+ *
+ * Everything else reached the handler unexpectedly and is logged at `error` level
+ * **with its stack**, because this record is usually the only trace such a failure
+ * leaves behind. A value that is not even an `Error` gets the same treatment,
+ * wrapped so the logger has something to serialise.
  *
  * The error object is passed as the first argument rather than nested in a context
  * object: that is the one shape both pino (which serialises it through its `err`
@@ -64,8 +69,9 @@ const describeRequest = (req: any): string => {
 const logApplicationError = (req: any, err: any): void => {
     try {
         if (err instanceof HttpError) {
-            logger.debug(err, `Handled ${err.statusCode} on ${describeRequest(req)}`);
-        } else if (err instanceof Error) {
+            return;
+        }
+        if (err instanceof Error) {
             logger.error(err, `Unhandled error on ${describeRequest(req)}`);
         } else {
             logger.error({thrown: err}, `Unhandled non-Error throwable on ${describeRequest(req)}`);
@@ -103,8 +109,8 @@ const sendApplicationError = (req: any, res: any, err: any): void => {
  * Express error handling middleware that processes all application errors.
  * This function serves as the main entry point for error handling in Express applications.
  *
- * Every error passing through is logged first: unknown errors at error level with
- * their stack, declared {@link HttpError}s at debug level.
+ * Errors that are not {@link HttpError}s are logged first, at error level and with
+ * their stack. `HttpError`s are declared outcomes and are not logged.
  *
  * @param err - The error object that was thrown or passed to next()
  * @param req - Express request object

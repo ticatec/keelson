@@ -16,7 +16,7 @@
 - **📋 一致响应格式**：统一的错误响应格式，包含完整的请求上下文
 - **🎨 内容协商**：自动响应格式化（JSON、HTML、纯文本）
 - **🔍 开发支持**：开发环境中包含堆栈跟踪信息
-- **📝 内置日志**：未知错误通过 `@ticatec/logger-api` 记录，含完整堆栈
+- **📝 内置日志**：未知错误通过 `@ticatec/logger-api` 记录并带完整堆栈；已声明的 `HttpError` 保持静默
 - **📘 TypeScript 优先**：完整的 TypeScript 支持和类型定义
 - **🌐 IP 检测**：自动检测客户端和服务器 IP 地址
 - **⚡ 极轻依赖**：运行时仅依赖 `@ticatec/logger-api` 这一零依赖日志契约
@@ -290,16 +290,21 @@ Error: UnauthenticatedError...
 
 ## 📝 日志
 
-所有经过 `handleError` 的错误都会通过
+意料之外抵达 `handleError` 的错误，会通过
 [`@ticatec/logger-api`](https://www.npmjs.com/package/@ticatec/logger-api)
 （框架的零依赖日志契约）记录下来：
 
 | 错误类型 | 级别 | 内容 |
 |---|---|---|
 | 非 `HttpError`（乃至非 `Error`） | `error` | 错误本身，**含完整堆栈** |
-| 任意 `HttpError` 子类 | `debug` | 错误本身及其映射到的状态码 |
+| 任意 `HttpError` 子类 | *不记录* | - |
 
-`HttpError` 属于业务上已声明的结果——404、参数校验失败、缺少令牌等，因此不会污染生产日志。
+所有 `HttpError`——`AppError`、`UnauthenticatedError`、`InsufficientPermissionError`、
+`IllegalParameterError`、`ActionNotFoundError`、`TimeoutError`、`ProxyError`、
+`ServiceUnavailableError`，以及你自己定义的任何子类——都属于**已声明的结果**：
+应用主动抛出、自行选定状态码，并且已经把发生了什么原样告知客户端，没有任何需要排查的东西，
+因此一律不记日志。记录请求是 access log 的职责，不是错误处理中间件的。
+
 其余的错误都是意料之外抵达这里的，而这条日志往往是它留下的唯一线索。
 
 ```
@@ -498,8 +503,8 @@ class CustomValidationError extends IllegalParameterError {
 - ✅ 容器状态锚定到 `globalThis`，CJS 与 ESM 共享同一实例
 - ✅ `HttpContainer` 与 `ErrorResponse` 以类型方式导出（兼容 `isolatedModules`）
 - ✅ 每个子路径导出都补全了按条件区分的 `types`
-- 📝 错误统一经 `@ticatec/logger-api` 记录：未知错误 `error` 级并带堆栈，已声明的 `HttpError` 记 `debug` 级
-- ✅ 新增 69 个测试，含上述两个安全问题的回归用例
+- 📝 未知错误经 `@ticatec/logger-api` 以 `error` 级记录并带完整堆栈；已声明的 `HttpError` 不记日志
+- ✅ 新增 79 个测试，含上述两个安全问题的回归用例
 - ✅ 启用 `strict` 与 `isolatedModules`
 
 ### 版本 2.0.0
