@@ -78,10 +78,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   logging failures are swallowed and the response is still sent.
   `@ticatec/logger-api` is declared as a peer dependency; with no provider
   registered it falls back to the console, filtered by `LOG_LEVEL`.
+- **`ConflictError` (409)** for uniqueness violations and optimistic-locking
+  failures, and **`TooManyRequestsError` (429)** for rate limits and quotas. No 422
+  type ships with the library: `IllegalParameterError` (400) covers validation
+  failures, and the 400/422 boundary is blurry enough in practice that two
+  overlapping classes would only invite inconsistent use.
 - **`ErrorOptions` on every error constructor**, so `new AppError(1002, 'save
   failed', { cause: dbError })` keeps the underlying failure attached. Node and pino
   both unwind `cause` when printing.
-- Test suite: 96 tests covering the error hierarchy, content negotiation,
+- Test suite: 104 tests covering the error hierarchy, content negotiation,
   environment detection, HTML escaping, logging and end-to-end Express behaviour,
   including a regression test for every defect listed here.
 - `getHttpContainer()` and the `ExpressContainer` class are exported, so

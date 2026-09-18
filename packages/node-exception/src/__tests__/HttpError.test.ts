@@ -4,6 +4,8 @@ import HttpError, {
     InsufficientPermissionError,
     IllegalParameterError,
     ActionNotFoundError,
+    ConflictError,
+    TooManyRequestsError,
     TimeoutError,
     ProxyError,
     ServiceUnavailableError
@@ -57,6 +59,8 @@ describe('predefined errors', () => {
         [new InsufficientPermissionError(), 403],
         [new IllegalParameterError('bad id'), 400],
         [new ActionNotFoundError(), 404],
+        [new ConflictError('email already registered'), 409],
+        [new TooManyRequestsError(), 429],
         [new TimeoutError(), 408],
         [new ProxyError(), 502],
         [new ServiceUnavailableError(), 503]
@@ -69,6 +73,14 @@ describe('predefined errors', () => {
 
     it('IllegalParameterError keeps the caller message', () => {
         expect(new IllegalParameterError('bad id').message).toBe('bad id');
+    });
+
+    it('ConflictError keeps the caller message', () => {
+        expect(new ConflictError('email already registered').message).toBe('email already registered');
+    });
+
+    it('TooManyRequestsError carries a fixed message', () => {
+        expect(new TooManyRequestsError().message).toBe('Too many requests.');
     });
 });
 
@@ -96,6 +108,7 @@ describe('Error.cause', () => {
         ['UnauthenticatedError', (o?: ErrorOptions) => new UnauthenticatedError(o)],
         ['InsufficientPermissionError', (o?: ErrorOptions) => new InsufficientPermissionError(o)],
         ['ActionNotFoundError', (o?: ErrorOptions) => new ActionNotFoundError(o)],
+        ['TooManyRequestsError', (o?: ErrorOptions) => new TooManyRequestsError(o)],
         ['TimeoutError', (o?: ErrorOptions) => new TimeoutError(o)],
         ['ProxyError', (o?: ErrorOptions) => new ProxyError(o)],
         ['ServiceUnavailableError', (o?: ErrorOptions) => new ServiceUnavailableError(o)]
@@ -104,9 +117,13 @@ describe('Error.cause', () => {
         expect(make().cause).toBeUndefined();
     });
 
-    it('IllegalParameterError accepts ErrorOptions after its message', () => {
-        const err = new IllegalParameterError('bad id', {cause: root});
-        expect(err.message).toBe('bad id');
+    it.each([
+        ['IllegalParameterError', (m: string, o?: ErrorOptions) => new IllegalParameterError(m, o)],
+        ['ConflictError', (m: string, o?: ErrorOptions) => new ConflictError(m, o)]
+    ])('%s accepts ErrorOptions after its message', (_name, make) => {
+        const err = make('boom', {cause: root});
+        expect(err.message).toBe('boom');
         expect(err.cause).toBe(root);
+        expect(make('boom').cause).toBeUndefined();
     });
 });

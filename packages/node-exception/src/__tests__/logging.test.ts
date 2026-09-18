@@ -8,6 +8,8 @@ import HttpError, {
     InsufficientPermissionError,
     IllegalParameterError,
     ActionNotFoundError,
+    ConflictError,
+    TooManyRequestsError,
     TimeoutError,
     ProxyError,
     ServiceUnavailableError
@@ -75,6 +77,8 @@ describe('error logging', () => {
         ['InsufficientPermissionError', new InsufficientPermissionError(), 403],
         ['IllegalParameterError', new IllegalParameterError('bad id'), 400],
         ['ActionNotFoundError', new ActionNotFoundError(), 404],
+        ['ConflictError', new ConflictError('email taken'), 409],
+        ['TooManyRequestsError', new TooManyRequestsError(), 429],
         ['TimeoutError', new TimeoutError(), 408]
     ])('logs %s at debug level', (_name, err, status) => {
         handleError(err, {method: 'GET'}, {}, jest.fn());

@@ -9,6 +9,8 @@ import HttpError, {
     InsufficientPermissionError,
     IllegalParameterError,
     ActionNotFoundError,
+    ConflictError,
+    TooManyRequestsError,
     TimeoutError,
     ProxyError,
     ServiceUnavailableError
@@ -35,6 +37,10 @@ export {
         IllegalParameterError,
     /** Error for non-existent routes or actions */
         ActionNotFoundError,
+    /** Error for a request conflicting with the resource's current state */
+        ConflictError,
+    /** Error for a client exceeding a rate limit or quota */
+        TooManyRequestsError,
     /** Main error handling middleware function */
         handleError,
     TimeoutError,

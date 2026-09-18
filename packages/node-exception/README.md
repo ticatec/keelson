@@ -11,7 +11,7 @@ Production-ready Express error handling middleware with standardized HTTP error 
 
 ## 🚀 Features
 
-- **🎯 Standardized Error Types**: Eight predefined error classes covering common HTTP scenarios
+- **🎯 Standardized Error Types**: Ten predefined error classes covering common HTTP scenarios
 - **🔧 Express Middleware**: Drop-in error handling middleware with zero configuration
 - **📋 Consistent Response Format**: Uniform error responses with comprehensive request context
 - **🎨 Content Negotiation**: Automatic response formatting (JSON, HTML, plain text)
@@ -173,6 +173,35 @@ if (!user) {
     throw new ActionNotFoundError();
 }
 ```
+
+### ⚡ ConflictError
+For a request that conflicts with the resource's current state (HTTP 409).
+
+```javascript
+// Uniqueness violation
+if (await users.existsByEmail(email)) {
+    throw new ConflictError("Email already registered");
+}
+
+// Optimistic locking
+if (order.version !== payload.version) {
+    throw new ConflictError("Order was modified by someone else");
+}
+```
+
+### 🚧 TooManyRequestsError
+For a client that exceeded a rate limit or quota (HTTP 429).
+
+```javascript
+if (!rateLimiter.tryConsume(req.ip)) {
+    res.set('Retry-After', '60');   // the header belongs on the response
+    throw new TooManyRequestsError();
+}
+```
+
+> Use `IllegalParameterError` (400) for input that fails validation. This library
+> does not ship a separate 422 type - the 400/422 boundary is blurry in practice,
+> and two overlapping classes only invite inconsistent use.
 
 ### ⏱️ TimeoutError
 For request timeouts (HTTP 408).
@@ -389,6 +418,8 @@ app.set('env', 'production');
 | `InsufficientPermissionError` | 403 Forbidden | Insufficient permissions/authorization |
 | `IllegalParameterError` | 400 Bad Request | Invalid input parameters or validation |
 | `ActionNotFoundError` | 404 Not Found | Non-existent routes or resources |
+| `ConflictError` | 409 Conflict | Uniqueness violations, optimistic-locking failures |
+| `TooManyRequestsError` | 429 Too Many Requests | Rate limits and quotas |
 | `TimeoutError` | 408 Request Timeout | Network requests or operations timeout |
 | `AppError` | 500 Internal Server Error | Business logic or application errors |
 | `ProxyError` | 502 Bad Gateway | Proxy server or gateway issues |
@@ -527,7 +558,8 @@ The library uses a modular architecture with clear separation of concerns:
 - 🐛 `handleError` no longer throws `ERR_HTTP_HEADERS_SENT` when the response has
   started and the caller passed no `next`
 - ✨ All error constructors accept `ErrorOptions`, so `{ cause }` chains survive
-- ✅ 96 tests, including regression tests for every issue above
+- ✨ New error types: `ConflictError` (409) and `TooManyRequestsError` (429)
+- ✅ 104 tests, including regression tests for every issue above
 - ✅ `strict` and `isolatedModules` enabled
 
 ### Version 2.0.0

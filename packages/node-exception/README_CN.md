@@ -11,7 +11,7 @@
 
 ## 🚀 功能特性
 
-- **🎯 标准化错误类型**：八种预定义错误类覆盖常见 HTTP 场景
+- **🎯 标准化错误类型**：十种预定义错误类覆盖常见 HTTP 场景
 - **🔧 Express 中间件**：零配置的即插即用错误处理中间件
 - **📋 一致响应格式**：统一的错误响应格式，包含完整的请求上下文
 - **🎨 内容协商**：自动响应格式化（JSON、HTML、纯文本）
@@ -172,6 +172,34 @@ if (!user) {
     throw new ActionNotFoundError();
 }
 ```
+
+### ⚡ ConflictError
+用于请求与资源当前状态冲突的场景（HTTP 409）。
+
+```javascript
+// 唯一性冲突
+if (await users.existsByEmail(email)) {
+    throw new ConflictError("该邮箱已被注册");
+}
+
+// 乐观锁冲突
+if (order.version !== payload.version) {
+    throw new ConflictError("订单已被他人修改");
+}
+```
+
+### 🚧 TooManyRequestsError
+用于客户端超出限流或配额的场景（HTTP 429）。
+
+```javascript
+if (!rateLimiter.tryConsume(req.ip)) {
+    res.set('Retry-After', '60');   // Retry-After 属于响应，不属于错误对象
+    throw new TooManyRequestsError();
+}
+```
+
+> 参数校验失败请继续使用 `IllegalParameterError`（400）。本库不单独提供 422 类型——
+> 400 与 422 的边界在实践中本就模糊，两个语义重叠的类只会导致使用上的不一致。
 
 ### ⏱️ TimeoutError
 用于请求超时（HTTP 408）。
@@ -377,6 +405,8 @@ app.set('env', 'production');
 | `InsufficientPermissionError` | 403 Forbidden | 权限/授权不足 |
 | `IllegalParameterError` | 400 Bad Request | 无效的输入参数或验证 |
 | `ActionNotFoundError` | 404 Not Found | 不存在的路由或资源 |
+| `ConflictError` | 409 Conflict | 唯一性冲突、乐观锁冲突 |
+| `TooManyRequestsError` | 429 Too Many Requests | 限流与配额 |
 | `TimeoutError` | 408 Request Timeout | 网络请求或操作超时 |
 | `AppError` | 500 Internal Server Error | 业务逻辑或应用程序错误 |
 | `ProxyError` | 502 Bad Gateway | 代理服务器或网关问题 |
@@ -511,7 +541,8 @@ class CustomValidationError extends IllegalParameterError {
   导致 HTML 错误页在现实中永不触发
 - 🐛 响应已发出且调用方未传 `next` 时，`handleError` 不再抛出 `ERR_HTTP_HEADERS_SENT`
 - ✨ 所有错误类构造函数均接受 `ErrorOptions`，`{ cause }` 错误链得以保留
-- ✅ 新增 96 个测试，上述每一项均有回归用例
+- ✨ 新增错误类型：`ConflictError`（409）与 `TooManyRequestsError`（429）
+- ✅ 新增 104 个测试，上述每一项均有回归用例
 - ✅ 启用 `strict` 与 `isolatedModules`
 
 ### 版本 2.0.0

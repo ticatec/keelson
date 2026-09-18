@@ -145,6 +145,50 @@ export class ActionNotFoundError extends HttpError {
 
 
 /**
+ * Error thrown when a request conflicts with the current state of the resource.
+ * Typical causes are a uniqueness violation (an email already registered), an
+ * optimistic-locking failure, or an attempt to create something that already
+ * exists. The condition is specific to the operation, so a message is required.
+ * Always returns HTTP status 409 (Conflict).
+ */
+export class ConflictError extends HttpError {
+    /**
+     * Creates a new ConflictError instance with a custom error message.
+     * The HTTP status code is automatically set to 409.
+     *
+     * @param message - A descriptive message explaining what conflicts with what
+     * @param options - Standard `ErrorOptions`, e.g. `{ cause: originalError }`
+     */
+    constructor(message: string, options?: ErrorOptions) {
+        super(message, 409, options);
+    }
+}
+
+
+/**
+ * Error thrown when a client has sent too many requests in a given period.
+ * Raised by rate limiters and quota checks. Always returns HTTP status 429
+ * (Too Many Requests).
+ *
+ * Note that this class does not set a `Retry-After` header - that belongs to the
+ * response, not the error. Set it on `res` in your rate limiter, or in a custom
+ * {@link HttpContainer}.
+ */
+export class TooManyRequestsError extends HttpError {
+    /**
+     * Creates a new TooManyRequestsError instance with a predefined message.
+     * The error message is set to "Too many requests."
+     * and the HTTP status code is automatically set to 429.
+     *
+     * @param options - Standard `ErrorOptions`, e.g. `{ cause: originalError }`
+     */
+    constructor(options?: ErrorOptions) {
+        super('Too many requests.', 429, options);
+    }
+}
+
+
+/**
  * Error thrown when a network request or operation times out.
  * This error indicates that an operation took longer than the allowed time limit.
  * Always returns HTTP status 408 (Request Timeout).
