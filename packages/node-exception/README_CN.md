@@ -18,7 +18,7 @@
 - **🔍 开发支持**：开发环境中包含堆栈跟踪信息
 - **📝 内置日志**：5xx 与未知错误通过 `@ticatec/logger-api` 记录并带完整堆栈；4xx 记 `debug` 级
 - **📘 TypeScript 优先**：完整的 TypeScript 支持和类型定义
-- **🌐 IP 检测**：自动检测客户端和服务器 IP 地址
+- **🌐 客户端 IP 检测**：从请求中解析客户端地址（遵循 `trust proxy`）
 - **⚡ 极轻依赖**：运行时仅依赖 `@ticatec/logger-api` 这一零依赖日志契约
 - **✨ 类型安全**：增强的类型安全，带有 null 检查和严格类型
 - **🛡️ Null 安全**：可选属性自动提供默认值
@@ -82,10 +82,10 @@ app.get('/api/protected', (req, res, next) => {
     }
 });
 
-// 错误处理中间件（必须是最后一个中间件）
-app.use((err, req, res, next) => {
-    handleError(err, req, res);
-});
+// 错误处理中间件（必须注册在最后）
+// 直接注册即可：Express 靠形参个数识别错误中间件，而把 next 一并传入，
+// 响应已开始发送时处理器才能委派出去。
+app.use(handleError);
 
 app.listen(3000, () => {
     console.log('服务器运行在端口 3000');
@@ -248,7 +248,19 @@ if (activeConnections > maxConnections) {
 
 ## 🎨 响应格式与内容协商
 
-库会根据 `Accept` 请求头自动处理内容协商：
+响应格式依据 `Accept` 头的 q 值权重选定：
+
+| 客户端发送 | 响应格式 |
+|---|---|
+| `application/json` | JSON |
+| `*/*`（curl 及多数 HTTP 库） | JSON |
+| 浏览器的 `text/html,...,*/*;q=0.8` | HTML |
+| `text/html` | HTML |
+| `text/plain` | 纯文本 |
+| 无可接受类型 | JSON |
+
+JSON 是默认格式：未表达偏好的客户端拿到 JSON，HTML 只留给真正要页面的客户端。
+所有响应都会附带 `X-Content-Type-Options: nosniff`。
 
 ### JSON 响应（默认）
 ```json
@@ -258,63 +270,73 @@ if (activeConnections > maxConnections) {
     "path": "/api/users",
     "method": "GET",
     "timestamp": 1699123456789,
-    "message": "未认证的用户正在访问系统。",
-    "stack": "Error: ...（仅开发环境）"
+    "message": "Unauthenticated user is accessing the system.",
+    "stack": "Error: ... (仅开发环境)"
 }
 ```
 
+> `code` 是**应用级错误码，不是 HTTP 状态码**。除 `AppError` 会带上你传入的码之外，
+> 其余错误一律为 `-1`。HTTP 状态码在响应状态行里。
+
 ### HTML 响应
-当请求 `Accept: text/html` 时，返回专业样式的 HTML5 页面：
+返回给浏览器，以及任何偏好 `text/html` 的客户端。注意页面内容是英文——
+下面是库的真实输出，未作翻译；需要中文页面请在自定义
+[HTTP 容器](#自定义-http-容器)里替换 `sendError`：
 
 ```html
 <!DOCTYPE html>
 <html>
 <head>
-    <title>错误 401</title>
+    <title>Error -1</title>
     <style>
         body { font-family: Arial, sans-serif; margin: 20px; }
         .error-container { border: 1px solid #ccc; padding: 20px; border-radius: 5px; }
         h1 { color: #d32f2f; }
-        .stack { background: #f5f5f5; padding: 10px; font-family: monospace; }
+        div { margin: 10px 0; }
+        .stack { background: #f5f5f5; padding: 10px; border-radius: 3px; font-family: monospace; white-space: pre-wrap; }
     </style>
 </head>
 <body>
     <div class="error-container">
-        <h1>错误代码：401</h1>
-        <div><strong>客户端：</strong> 192.168.1.50</div>
-        <div><strong>方法：</strong> GET</div>
-        <div><strong>路径：</strong> /api/users</div>
-        <div><strong>时间戳：</strong> 1699123456789</div>
-        <div><strong>消息：</strong> 未认证的用户正在访问系统。</div>
+        <h1>Error Code: -1</h1>
+        <div><strong>Client:</strong> 192.168.1.50</div>
+        <div><strong>Method:</strong> GET</div>
+        <div><strong>Path:</strong> /api/users</div>
+        <div><strong>Timestamp:</strong> 1699123456789</div>
+        <div><strong>Message:</strong> Unauthenticated user is accessing the system.</div>
     </div>
 </body>
 </html>
 ```
 
+所有插值字段均做 HTML 转义；堆栈块仅在开发环境下追加。
+
 ### 纯文本响应
-当请求 `Accept: text/plain` 时：
+当客户端请求 `text/plain` 时返回（同样是库的真实输出）：
 ```
-代码：401
-客户端：192.168.1.50
-方法：GET
-路径：/api/users
-时间戳：1699123456789
-消息：未认证的用户正在访问系统。
----堆栈跟踪---
-Error: UnauthenticatedError...
+Code: -1
+Client: 192.168.1.50
+Method: GET
+Path: /api/users
+Timestamp: 1699123456789
+Message: Unauthenticated user is accessing the system.
+---Stack Trace---
+UnauthenticatedError: Unauthenticated user is accessing the system.
+    at ... (仅开发环境)
 ```
 
 ## 📊 响应字段
 
 | 字段 | 类型 | 描述 |
 |-------|------|-------------|
-| `code` | number | 应用程序特定的错误代码（通用错误为 -1）|
+| `code` | number | 应用级错误码，**不是** HTTP 状态码。除 `AppError` 外一律为 `-1` |
 | `client` | string | 客户端 IP 地址（如果不可用默认为 'unknown'）|
 | `path` | string | 完整的请求路径（baseUrl + path）|
 | `method` | string | HTTP 方法（GET、POST、PUT、DELETE 等）|
 | `timestamp` | number | Unix 时间戳（毫秒）|
 | `message` | string \| null | 人类可读的错误消息 |
 | `stack` | string | 堆栈跟踪（仅开发环境）|
+| `host` | string | 可选字段，本库从不设置。预留给需要标识响应服务器的自定义 [HTTP 容器](#自定义-http-容器) |
 
 ## 📝 日志
 
@@ -418,28 +440,53 @@ app.set('env', 'production');
 ### 自定义 HTTP 容器
 为不同框架创建自定义 HTTP 适配器：
 
-```javascript
-import { setHttpContainer, HttpContainer } from '@ticatec/node-exception';
+```typescript
+import { setHttpContainer } from '@ticatec/node-exception';
+import type { HttpContainer, ErrorResponse } from '@ticatec/node-exception';
 
 class CustomContainer implements HttpContainer {
-    getRemoteIp(req) {
-        return req.connection.remoteAddress;
+    getRemoteIp(req: any): string {
+        return req.ip || 'unknown';
     }
 
-    getPath(req) {
+    getPath(req: any): string {
         return req.originalUrl;
     }
 
-    isDevelopment(req) {
+    isDevelopment(_req: any): boolean {
+        // 只能从服务端配置解析。一旦从客户端可控的地方读取——请求头、查询参数、
+        // Cookie——调用方就能自行打开堆栈泄露的开关。
         return process.env.NODE_ENV === 'development';
     }
 
-    sendError(req, res, statusCode, data) {
+    sendError(req: any, res: any, statusCode: number, data: ErrorResponse): void {
+        res.setHeader('X-Content-Type-Options', 'nosniff');
         res.status(statusCode).json(data);
     }
 }
 
+// 在组合根处调用一次，且须在服务器开始接收请求之前。
 setHttpContainer(new CustomContainer());
+```
+
+`ExpressContainer`（默认实现）与 `getHttpContainer()` 同样是导出的，因此自定义容器
+可以继承默认实现而非从头重写，测试也能在结束后恢复原状：
+
+```typescript
+import { setHttpContainer, getHttpContainer, ExpressContainer } from '@ticatec/node-exception';
+import type { ErrorResponse } from '@ticatec/node-exception';
+
+class AuditingContainer extends ExpressContainer {
+    sendError(req: any, res: any, statusCode: number, data: ErrorResponse): void {
+        metrics.increment('http.error', { status: statusCode });
+        super.sendError(req, res, statusCode, data);
+    }
+}
+
+const previous = getHttpContainer();
+setHttpContainer(new AuditingContainer());
+// ……之后，例如在测试的 teardown 里
+setHttpContainer(previous);
 ```
 
 ### 错误码规范
@@ -481,6 +528,7 @@ import {
     InsufficientPermissionError,
     IllegalParameterError,
     ActionNotFoundError,
+    ConflictError,
     handleError
 } from '@ticatec/node-exception';
 import { Request, Response, NextFunction } from 'express';
@@ -492,7 +540,7 @@ const errorHandler = (
     res: Response,
     next: NextFunction
 ): void => {
-    handleError(err, req, res);
+    handleError(err, req, res, next);
 };
 
 // 带有正确类型的自定义错误
@@ -500,6 +548,13 @@ class CustomValidationError extends IllegalParameterError {
     constructor(field: string, value: any) {
         super(`无效的 ${field}: ${value}`);
     }
+}
+
+// 保留底层失败原因
+try {
+    await orders.insert(order);
+} catch (cause) {
+    throw new ConflictError('订单号已存在', { cause });
 }
 ```
 
@@ -513,11 +568,14 @@ class CustomValidationError extends IllegalParameterError {
 - **响应类型** (`ErrorResponse.ts`)：标准化的响应结构
 - **工具** (`utils.ts`)：带有 XSS 保护的响应格式化助手
 
+日志走 `@ticatec/logger-api` 契约而非某个具体日志库，因此本包不与应用选用的
+日志实现绑定。
+
 ## 📋 要求
 
-- **Node.js**: ≥14.0.0
-- **npm**: ≥6.0.0
-- 无运行时依赖
+- **Node.js**：≥18.0.0
+- **Peer 依赖**：`@ticatec/logger-api`（≥1.0.0，其本身零依赖）
+- 除此之外无任何运行时依赖
 
 ## 🆕 最新改进
 
@@ -556,18 +614,22 @@ class CustomValidationError extends IllegalParameterError {
 
 ## 🤝 贡献
 
-我们欢迎贡献！详情请参阅我们的[贡献指南](https://github.com/ticatec/node-exception/blob/main/CONTRIBUTING.md)。
+本包位于 [Keelson](https://github.com/ticatec/keelson) monorepo，欢迎在该仓库提交 issue 与 PR。
 
 ### 开发设置
 ```bash
-git clone https://github.com/ticatec/node-exception.git
-cd node-exception
-npm install
-npm run build       # 同时构建 CJS 与 ESM 产物
-npm run build:cjs   # 仅构建 CommonJS 产物
-npm run build:esm   # 仅构建 ESM 产物
-npm run typecheck   # 对两套配置进行类型检查
+git clone https://github.com/ticatec/keelson.git
+cd keelson
+pnpm install
+cd packages/node-exception
+
+pnpm build       # 同时构建 CJS 与 ESM 产物（构建前先跑 lint）
+pnpm test        # 运行测试
+pnpm typecheck   # 对两套配置进行类型检查
+pnpm lint        # 仅 lint
 ```
+
+在 monorepo 根目录执行 `pnpm verify`，会对全部包做类型检查、测试与构建。
 
 ## 📄 许可证
 
@@ -575,7 +637,8 @@ MIT © [Henry Feng](https://github.com/henryfeng)
 
 ## 🔗 链接
 
-- **GitHub 仓库**: [https://github.com/ticatec/node-exception](https://github.com/ticatec/node-exception)
-- **npm 包**: [https://www.npmjs.com/package/@ticatec/node-exception](https://www.npmjs.com/package/@ticatec/node-exception)
-- **问题反馈**: [https://github.com/ticatec/node-exception/issues](https://github.com/ticatec/node-exception/issues)
+- **源码**：[github.com/ticatec/keelson/tree/main/packages/node-exception](https://github.com/ticatec/keelson/tree/main/packages/node-exception)
+- **npm 包**：[@ticatec/node-exception](https://www.npmjs.com/package/@ticatec/node-exception)
+- **问题反馈**：[github.com/ticatec/keelson/issues](https://github.com/ticatec/keelson/issues)
+- **变更日志**：[CHANGELOG.md](./CHANGELOG.md)
 - **文档**: [https://docs.ticatec.com/node-exception](https://docs.ticatec.com/node-exception)

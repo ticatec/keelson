@@ -18,7 +18,7 @@ Production-ready Express error handling middleware with standardized HTTP error 
 - **🔍 Development Support**: Stack trace inclusion in development environments
 - **📝 Built-in Logging**: 5xx and unknown errors logged with their stack via `@ticatec/logger-api`; 4xx kept at `debug`
 - **📘 TypeScript First**: Full TypeScript support with complete type definitions
-- **🌐 IP Detection**: Automatic client and server IP address detection
+- **🌐 Client IP Detection**: Client address resolved from the request (honours `trust proxy`)
 - **⚡ Minimal Dependencies**: `@ticatec/logger-api` (itself dependency-free) is the only runtime peer
 - **✨ Type-Safe**: Improved type safety with null checks and strict typing
 - **🛡️ Null-Safe**: Automatic default values for optional properties
@@ -83,10 +83,10 @@ app.get('/api/protected', (req, res, next) => {
     }
 });
 
-// Error handling middleware (must be the last middleware)
-app.use((err, req, res, next) => {
-    handleError(err, req, res);
-});
+// Error handling middleware (must be registered last)
+// Register it directly - Express detects error middleware by arity, and passing
+// `next` through lets the handler delegate if the response has already started.
+app.use(handleError);
 
 app.listen(3000, () => {
     console.log('Server running on port 3000');
@@ -250,9 +250,22 @@ if (activeConnections > maxConnections) {
 
 ## 🎨 Response Format & Content Negotiation
 
-The library automatically handles content negotiation based on the `Accept` header:
+The format is chosen from the `Accept` header, weighing its q-values:
 
-### JSON Response (Default)
+| Client sends | Response |
+|---|---|
+| `application/json` | JSON |
+| `*/*` (curl, most HTTP libraries) | JSON |
+| a browser's `text/html,...,*/*;q=0.8` | HTML |
+| `text/html` | HTML |
+| `text/plain` | plain text |
+| nothing acceptable | JSON |
+
+JSON is the default: a client that expresses no preference gets it, and HTML is
+reserved for clients that actually asked for a page. Every response also carries
+`X-Content-Type-Options: nosniff`.
+
+### JSON Response (default)
 ```json
 {
     "code": -1,
@@ -265,24 +278,29 @@ The library automatically handles content negotiation based on the `Accept` head
 }
 ```
 
+> `code` is the **application** error code, not the HTTP status. It is `-1` for
+> every error except `AppError`, which carries the code you passed it. The HTTP
+> status lives in the response status line.
+
 ### HTML Response
-When `Accept: text/html` is requested, a professionally styled HTML5 page is returned:
+Returned to browsers and to any client that prefers `text/html`:
 
 ```html
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Error 401</title>
+    <title>Error -1</title>
     <style>
         body { font-family: Arial, sans-serif; margin: 20px; }
         .error-container { border: 1px solid #ccc; padding: 20px; border-radius: 5px; }
         h1 { color: #d32f2f; }
-        .stack { background: #f5f5f5; padding: 10px; font-family: monospace; }
+        div { margin: 10px 0; }
+        .stack { background: #f5f5f5; padding: 10px; border-radius: 3px; font-family: monospace; white-space: pre-wrap; }
     </style>
 </head>
 <body>
     <div class="error-container">
-        <h1>Error Code: 401</h1>
+        <h1>Error Code: -1</h1>
         <div><strong>Client:</strong> 192.168.1.50</div>
         <div><strong>Method:</strong> GET</div>
         <div><strong>Path:</strong> /api/users</div>
@@ -293,30 +311,36 @@ When `Accept: text/html` is requested, a professionally styled HTML5 page is ret
 </html>
 ```
 
+Every interpolated value is HTML-escaped; the stack trace block is appended only in
+development. To change the markup, replace `sendError` in a custom
+[HTTP container](#custom-http-container).
+
 ### Plain Text Response
-When `Accept: text/plain` is requested:
+Returned when the client asks for `text/plain`:
 ```
-Code: 401
+Code: -1
 Client: 192.168.1.50
 Method: GET
 Path: /api/users
 Timestamp: 1699123456789
 Message: Unauthenticated user is accessing the system.
 ---Stack Trace---
-Error: UnauthenticatedError...
+UnauthenticatedError: Unauthenticated user is accessing the system.
+    at ... (development only)
 ```
 
 ## 📊 Response Fields
 
 | Field | Type | Description |
 |-------|------|-------------|
-| `code` | number | Application-specific error code (-1 for generic errors) |
+| `code` | number | Application error code, **not** the HTTP status. `-1` for every error except `AppError` |
 | `client` | string | Client IP address (defaults to 'unknown' if unavailable) |
 | `path` | string | Full request path (baseUrl + path) |
 | `method` | string | HTTP method (GET, POST, PUT, DELETE, etc.) |
 | `timestamp` | number | Unix timestamp in milliseconds |
 | `message` | string \| null | Human-readable error message |
 | `stack` | string | Stack trace (development environments only) |
+| `host` | string | Optional and never set by this library. Reserved for a custom [HTTP container](#custom-http-container) that wants to identify the responding server |
 
 ## 📝 Logging
 
@@ -431,28 +455,55 @@ app.set('env', 'production');
 ### Custom HTTP Container
 Create custom HTTP adapters for different frameworks:
 
-```javascript
-import { setHttpContainer, HttpContainer } from '@ticatec/node-exception';
+```typescript
+import { setHttpContainer } from '@ticatec/node-exception';
+import type { HttpContainer, ErrorResponse } from '@ticatec/node-exception';
 
 class CustomContainer implements HttpContainer {
-    getRemoteIp(req) {
-        return req.connection.remoteAddress;
+    getRemoteIp(req: any): string {
+        return req.ip || 'unknown';
     }
 
-    getPath(req) {
+    getPath(req: any): string {
         return req.originalUrl;
     }
 
-    isDevelopment(req) {
+    isDevelopment(_req: any): boolean {
+        // Resolve this from server-side configuration only. Reading it from
+        // anything the client controls - a header, a query parameter, a cookie -
+        // lets callers switch stack-trace disclosure on for themselves.
         return process.env.NODE_ENV === 'development';
     }
 
-    sendError(req, res, statusCode, data) {
+    sendError(req: any, res: any, statusCode: number, data: ErrorResponse): void {
+        res.setHeader('X-Content-Type-Options', 'nosniff');
         res.status(statusCode).json(data);
     }
 }
 
+// Call this once at the composition root, before the server accepts requests.
 setHttpContainer(new CustomContainer());
+```
+
+`ExpressContainer` (the default) and `getHttpContainer()` are exported too, so a
+custom container can extend the default rather than reimplement it, and tests can
+restore it afterwards:
+
+```typescript
+import { setHttpContainer, getHttpContainer, ExpressContainer } from '@ticatec/node-exception';
+import type { ErrorResponse } from '@ticatec/node-exception';
+
+class AuditingContainer extends ExpressContainer {
+    sendError(req: any, res: any, statusCode: number, data: ErrorResponse): void {
+        metrics.increment('http.error', { status: statusCode });
+        super.sendError(req, res, statusCode, data);
+    }
+}
+
+const previous = getHttpContainer();
+setHttpContainer(new AuditingContainer());
+// ... later, e.g. in a test teardown
+setHttpContainer(previous);
 ```
 
 ### Error Code Conventions
@@ -494,6 +545,7 @@ import {
     InsufficientPermissionError,
     IllegalParameterError,
     ActionNotFoundError,
+    ConflictError,
     handleError
 } from '@ticatec/node-exception';
 import { Request, Response, NextFunction } from 'express';
@@ -505,7 +557,7 @@ const errorHandler = (
     res: Response,
     next: NextFunction
 ): void => {
-    handleError(err, req, res);
+    handleError(err, req, res, next);
 };
 
 // Custom error with proper typing
@@ -513,6 +565,13 @@ class CustomValidationError extends IllegalParameterError {
     constructor(field: string, value: any) {
         super(`Invalid ${field}: ${value}`);
     }
+}
+
+// Keeping the underlying failure attached
+try {
+    await orders.insert(order);
+} catch (cause) {
+    throw new ConflictError('Order number already exists', { cause });
 }
 ```
 
@@ -526,11 +585,15 @@ The library uses a modular architecture with clear separation of concerns:
 - **Response Types** (`ErrorResponse.ts`): Standardized response structure
 - **Utilities** (`utils.ts`): Response formatting helpers with XSS protection
 
+Logging goes through the `@ticatec/logger-api` contract rather than a concrete
+logging library, so the package stays independent of whichever logger the
+application chooses.
+
 ## 📋 Requirements
 
-- **Node.js**: ≥14.0.0
-- **npm**: ≥6.0.0
-- No runtime dependencies
+- **Node.js**: ≥18.0.0
+- **Peer dependency**: `@ticatec/logger-api` (≥1.0.0, itself dependency-free)
+- No other runtime dependencies
 
 ## 🆕 Recent Improvements
 
@@ -573,18 +636,22 @@ The library uses a modular architecture with clear separation of concerns:
 
 ## 🤝 Contributing
 
-We welcome contributions! Please see our [Contributing Guidelines](https://github.com/ticatec/node-exception/blob/main/CONTRIBUTING.md) for details.
+This package lives in the [Keelson](https://github.com/ticatec/keelson) monorepo. Issues and pull requests are welcome there.
 
 ### Development Setup
 ```bash
-git clone https://github.com/ticatec/node-exception.git
-cd node-exception
-npm install
-npm run build       # Build both CJS and ESM outputs
-npm run build:cjs   # Build only the CommonJS output
-npm run build:esm   # Build only the ESM output
-npm run typecheck   # Type-check both configurations
+git clone https://github.com/ticatec/keelson.git
+cd keelson
+pnpm install
+cd packages/node-exception
+
+pnpm build       # Build both CJS and ESM outputs (lints first)
+pnpm test        # Run the test suite
+pnpm typecheck   # Type-check both configurations
+pnpm lint        # Lint only
 ```
+
+From the monorepo root, `pnpm verify` type-checks, tests and builds every package.
 
 ## 📄 License
 
@@ -592,7 +659,8 @@ MIT © [Henry Feng](https://github.com/henryfeng)
 
 ## 🔗 Links
 
-- **GitHub Repository**: [https://github.com/ticatec/node-exception](https://github.com/ticatec/node-exception)
-- **npm Package**: [https://www.npmjs.com/package/@ticatec/node-exception](https://www.npmjs.com/package/@ticatec/node-exception)
-- **Issues**: [https://github.com/ticatec/node-exception/issues](https://github.com/ticatec/node-exception/issues)
+- **Source**: [github.com/ticatec/keelson/tree/main/packages/node-exception](https://github.com/ticatec/keelson/tree/main/packages/node-exception)
+- **npm Package**: [@ticatec/node-exception](https://www.npmjs.com/package/@ticatec/node-exception)
+- **Issues**: [github.com/ticatec/keelson/issues](https://github.com/ticatec/keelson/issues)
+- **Changelog**: [CHANGELOG.md](./CHANGELOG.md)
 - **Documentation**: [https://docs.ticatec.com/node-exception](https://docs.ticatec.com/node-exception)
