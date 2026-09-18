@@ -13,17 +13,31 @@ describe('NumberValidator', () => {
         expect(res2.valid).toBe(true);
     });
 
-    test('should reject empty strings or whitespace strings', () => {
+    // 此前这里断言的是 'is not a valid number'。空输入框提交上来的正是空字符串，
+    // 把「没填」报成「不是有效的数字」对使用者没有任何帮助。
+    test('reports a required empty string as missing, not as a type error', () => {
         const rules = [new NumberValidator('score', { required: true })];
-        const data1 = { score: '' };
-        const res1 = beanValidator.validate(data1, rules);
-        expect(res1.valid).toBe(false);
-        expect(res1.errors[0].message).toContain('is not a valid number');
 
-        const data2 = { score: '   ' };
-        const res2 = beanValidator.validate(data2, rules);
+        const res1 = beanValidator.validate({ score: '' }, rules);
+        expect(res1.valid).toBe(false);
+        expect(res1.errors[0].message).toBe('cannot be empty');
+
+        const res2 = beanValidator.validate({ score: '   ' }, rules);
         expect(res2.valid).toBe(false);
-        expect(res2.errors[0].message).toContain('is not a valid number');
+        expect(res2.errors[0].message).toBe('cannot be empty');
+    });
+
+    test('skips an optional empty string instead of failing it', () => {
+        const rules = [new NumberValidator('score', {})];
+        expect(beanValidator.validate({ score: '' }, rules).valid).toBe(true);
+        expect(beanValidator.validate({ score: '   ' }, rules).valid).toBe(true);
+    });
+
+    test('still rejects a non-empty string that is not a number', () => {
+        const rules = [new NumberValidator('score', {})];
+        const res = beanValidator.validate({ score: '12abc' }, rules);
+        expect(res.valid).toBe(false);
+        expect(res.errors[0].message).toBe('is not a valid number');
     });
 
     test('should reject boolean inputs', () => {

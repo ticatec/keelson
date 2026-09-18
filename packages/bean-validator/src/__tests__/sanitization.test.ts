@@ -1,5 +1,6 @@
 import beanValidator from '../lib/BeanValidator';
-import {StringValidator, NumberValidator, BooleanValidator, ValidationError} from '../index';
+import {StringValidator, NumberValidator} from '../index';
+import type {ValidationError} from '../index';
 
 describe('Bean Validator - Sanitization Features', () => {
 

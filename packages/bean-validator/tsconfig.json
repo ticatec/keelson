@@ -1,13 +1,19 @@
 {
   "compilerOptions": {
     "esModuleInterop": true,
-    "target": "es2017",
+    "target": "es2022",
+    "lib": ["es2022"],
     "moduleResolution": "node",
     "declaration": true,
+    "declarationMap": true,
+    "sourceMap": true,
+    "isolatedModules": true,
+    "forceConsistentCasingInFileNames": true,
     "strict": true,
-    "noEmit": true
+    "skipLibCheck": true,
+    "noEmit": true,
+    "types": ["node", "jest"]
   },
-  "lib": ["es2017"],
   "include": [
     "src/**/*"
   ]

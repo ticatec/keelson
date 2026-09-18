@@ -10,12 +10,12 @@ describe('EnumValidator', () => {
     });
 
     test('should handle missing or invalid values array defensibly', () => {
-        // @ts-ignore
+        // @ts-expect-error - 故意传入非法 options，验证防御性处理
         const rules1 = [new EnumValidator('status', {})];
         const res1 = beanValidator.validate({ status: 'active' }, rules1);
         expect(res1.valid).toBe(false);
 
-        // @ts-ignore
+        // @ts-expect-error - 故意传入非法 options，验证防御性处理
         const rules2 = [new EnumValidator('status', { values: null })];
         const res2 = beanValidator.validate({ status: 'active' }, rules2);
         expect(res2.valid).toBe(false);
