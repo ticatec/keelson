@@ -36,7 +36,7 @@
     "test": "pnpm -r --filter './packages/**' run test",
     "lint": "pnpm -r --filter './packages/**' run lint",
     "typecheck": "pnpm -r --filter './packages/**' run typecheck",
-    "verify": "pnpm typecheck && pnpm test && pnpm build",
+    "verify": "pnpm build && pnpm typecheck && pnpm test",
     "publish-all": "pnpm -r --filter './packages/**' publish --access public --no-git-checks"
   },
   "devDependencies": {
