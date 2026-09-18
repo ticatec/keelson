@@ -26,8 +26,8 @@ It is a **peer dependency** of the framework packages, so install it once at the
 
 ```typescript
 interface LogFn {
-    (obj: unknown, msg?: string, ...args: unknown[]): void;
     (msg: string, ...args: unknown[]): void;
+    (obj: unknown, msg?: string, ...args: unknown[]): void;
 }
 
 interface Logger {
@@ -38,6 +38,8 @@ interface Logger {
     error: LogFn;
 }
 ```
+
+> The string overload is declared first on purpose. `obj: unknown` also accepts a string, so the other order would shadow it and make an editor suggest `obj: unknown` for the common `logger.info('...')` call.
 
 Five methods, two call shapes, nothing else — no `child()`, no transports, no configuration. Anything richer belongs to the logging library behind the provider.
 
@@ -87,7 +89,7 @@ setLoggerProvider((name, category) => {
 });
 ```
 
-For pino, use the ready-made adapter instead — [`@ticatec/logger-wrapper`](../logger-wrapper) ships one, with file/console appenders and per-category levels:
+For pino, use the ready-made adapter instead — [`@ticatec/logger-wrapper`](https://github.com/ticatec/keelson/tree/main/packages/logger-wrapper) ships one, with file/console appenders and per-category levels:
 
 ```typescript
 import { initialize } from '@ticatec/logger-wrapper';

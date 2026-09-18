@@ -26,8 +26,8 @@ pnpm add @ticatec/logger-api
 
 ```typescript
 interface LogFn {
-    (obj: unknown, msg?: string, ...args: unknown[]): void;
     (msg: string, ...args: unknown[]): void;
+    (obj: unknown, msg?: string, ...args: unknown[]): void;
 }
 
 interface Logger {
@@ -38,6 +38,8 @@ interface Logger {
     error: LogFn;
 }
 ```
+
+> 字符串重载放在前面是有意的。`obj: unknown` 同样接受字符串，反过来写会遮蔽另一个签名，导致编辑器在最常见的 `logger.info('...')` 上提示 `obj: unknown`。
 
 五个方法、两种调用形态，再无其他 —— 没有 `child()`、没有 transport、没有配置。更丰富的能力属于 provider 背后的日志库，不属于这个接口。
 
@@ -87,7 +89,7 @@ setLoggerProvider((name, category) => {
 });
 ```
 
-用 pino 的话，直接使用现成的适配器 —— [`@ticatec/logger-wrapper`](../logger-wrapper) 提供了文件/控制台 appender 与分类级别：
+用 pino 的话，直接使用现成的适配器 —— [`@ticatec/logger-wrapper`](https://github.com/ticatec/keelson/tree/main/packages/logger-wrapper) 提供了文件/控制台 appender 与分类级别：
 
 ```typescript
 import { initialize } from '@ticatec/logger-wrapper';
