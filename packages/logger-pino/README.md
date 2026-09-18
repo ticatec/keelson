@@ -14,7 +14,8 @@ A complete [Pino](https://getpino.io) facade driven by a parsed configuration ob
 - **Dual ESM / CommonJS**: ships native ES Modules and CommonJS outputs.
 - **Config-driven initialisation**: a single `initialize(config)` call builds every pino logger from a typed object — no manual pino setup required.
 - **Multiple appenders per logger**: each logger wires its named appenders into a `pino.multistream` (e.g. `console` + `file` + `errorFile` with independent levels).
-- **Named categories**: configure `root`, `controller`, `service`, `repository`, `dao`, … and route calls via `getLogger(name, category)`.
+- **Named categories**: configure `root`, `controller`, `service`, `repository`, `dao`, … and route calls via `getLogger(name, category)`. The category is bound onto the record too, so downstream systems can aggregate on it.
+- **One stream per appender**: appenders are built once and shared, so several loggers naming the same `file` appender write through a single descriptor and a single buffer — not one per logger.
 - **Single-init guard**: calling `initialize()` twice throws. Calling `getLogger()` before init does *not* — records simply go to the console until pino is installed.
 - **Installs itself as the process-wide provider**: one `initialize()` call routes every Keelson package into pino, however deep it sits in the dependency tree.
 
@@ -88,6 +89,13 @@ export class AppConf {
 
 > Application code may import `getLogger` from here, but library code should import it from `@ticatec/logger-api` — same function, no pino in your dependency graph.
 
+Both `module` and `category` land in the record:
+
+```json
+{"level":30,"time":1789694519706,"pid":5,"hostname":"app","module":"UserController","category":"controller","msg":"Updating user"}
+{"level":30,"time":1789694519706,"pid":5,"hostname":"app","module":"AppConf","msg":"Loaded"}
+```
+
 ---
 
 ## 📄 Configuration Schema
@@ -148,7 +156,7 @@ loggers:
 |-----------|-------------------------------|----------|-------|
 | `name`    | string                        | yes      | Referenced by `loggers.*.appenders`. |
 | `type`    | `'console'` \| `'file'`       | yes      | |
-| `level`   | string                        | no       | Min level emitted by this appender. Defaults to `'info'`. |
+| `level`   | level string                  | no       | Min level emitted by this appender. Defaults to `'info'`. |
 | `options` | object                        | no       | Type-specific options (see below). |
 
 **Appender options**
@@ -159,11 +167,13 @@ loggers:
 | `file`    | `filename` | —       | **Required.** Path to the log file. |
 | `file`    | `sync`     | `false` | `true` writes synchronously (slower); `false` uses async SonicBoom. |
 
+Levels must be one of `trace`, `debug`, `info`, `warn`, `error`, `fatal`, `silent`. `initialize()` rejects anything else — a typo like `'warning'` or `'inf'` fails at validation with a clear message, rather than surfacing later from inside pino.
+
 **`loggers[name]`**
 
 | Field      | Type     | Required | Notes |
 |------------|----------|----------|-------|
-| `level`    | string   | yes      | Min level emitted by this logger. |
+| `level`    | level string   | yes      | Min level emitted by this logger. |
 | `appenders`| string[] | yes      | Names referencing `appenders[i].name`. Must be non-empty. |
 
 A `root` entry is required. Any other key becomes a named category accessible via `getLogger(name, '<key>')`.
@@ -184,7 +194,7 @@ Because resolution is per-write, a logger captured in a constructor still switch
 
 ### `getPinoLogger(name: string, category?: string): PinoLogger`
 
-The escape hatch. Returns the raw pino child logger bound to `{ module: name }`, with pino specifics — `level`, `child()`, `bindings()` — intact. Reach for it only when you genuinely need them, and accept the coupling.
+The escape hatch. Returns the raw pino child logger — bound to `{ module: name, category }`, or just `{ module: name }` when no category is given — with pino specifics (`level`, `child()`, `bindings()`) intact. Reach for it only when you genuinely need them, and accept the coupling.
 
 - If `category` matches a configured logger, the child's parent is that category logger (its level + appender set); otherwise the parent is `root`.
 - Cache key is `${category ?? ''}::${name}`, so the same name under different categories returns distinct loggers.

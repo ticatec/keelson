@@ -14,7 +14,8 @@
 - **同时支持 ESM 与 CommonJS**：原生支持 ES Modules 和 CommonJS 产物。
 - **配置驱动初始化**：一次 `initialize(config)` 调用即可根据类型化对象构建出所有 pino logger，无需手动设置 pino。
 - **每个 logger 支持多 appender**：每个 logger 通过 `pino.multistream` 串联自己声明的 appender（例如 `console` + `file` + `errorFile`，各自独立级别）。
-- **命名分类**：可配置 `root`、`controller`、`service`、`repository`、`dao` 等，通过 `getLogger(name, category)` 路由调用。
+- **命名分类**：可配置 `root`、`controller`、`service`、`repository`、`dao` 等，通过 `getLogger(name, category)` 路由调用。分类同时会写入日志记录，便于下游按它聚合。
+- **每个 appender 一条流**：appender 只构建一次并被共享，因此多个 logger 引用同一个 `file` appender 时，走的是同一个文件句柄和同一个缓冲区，而不是每个 logger 各开一份。
 - **单次初始化拦截**：二次调用 `initialize()` 会抛错；但初始化前调用 `getLogger()` **不会** —— 在 pino 装上之前，记录直接走 console。
 - **自注册为进程级 provider**：一次 `initialize()` 即可把所有 Keelson 包接入 pino，无论它们在依赖树里嵌套多深。
 
@@ -88,6 +89,13 @@ export class AppConf {
 
 > 应用代码可以从这里 import `getLogger`，但库代码应当从 `@ticatec/logger-api` 导入 —— 同一个函数，而且 pino 不会进入你的依赖图。
 
+`module` 与 `category` 都会落入日志记录：
+
+```json
+{"level":30,"time":1789694519706,"pid":5,"hostname":"app","module":"UserController","category":"controller","msg":"Updating user"}
+{"level":30,"time":1789694519706,"pid":5,"hostname":"app","module":"AppConf","msg":"Loaded"}
+```
+
 ---
 
 ## 📄 配置 Schema
@@ -148,7 +156,7 @@ loggers:
 |-----------|-------------------------------|------|------|
 | `name`    | string                        | 是   | 被 `loggers.*.appenders` 引用。 |
 | `type`    | `'console'` \| `'file'`       | 是   | |
-| `level`   | string                        | 否   | 该 appender 输出的最低级别，默认 `'info'`。 |
+| `level`   | 级别字符串                     | 否   | 该 appender 输出的最低级别，默认 `'info'`。 |
 | `options` | object                        | 否   | 与 type 相关的选项（见下）。 |
 
 **Appender 选项**
@@ -159,11 +167,13 @@ loggers:
 | `file`    | `filename`| —      | **必填**。日志文件路径。 |
 | `file`    | `sync`    | `false` | `true` 同步写入（更慢）；`false` 使用异步 SonicBoom。 |
 
+级别取值必须是 `trace`、`debug`、`info`、`warn`、`error`、`fatal`、`silent` 之一。其它值会被 `initialize()` 拒绝 —— 像 `'warning'`、`'inf'` 这类拼写错误会在校验阶段报出清晰的错误，而不是等到 pino 内部才抛。
+
 **`loggers[name]`**
 
 | 字段       | 类型     | 必填 | 说明 |
 |------------|----------|------|------|
-| `level`    | string   | 是   | 该 logger 输出的最低级别。 |
+| `level`    | 级别字符串   | 是   | 该 logger 输出的最低级别。 |
 | `appenders`| string[] | 是   | 引用 `appenders[i].name`，不能为空。 |
 
 `root` 条目为必填。其它任意键都会成为命名分类，可通过 `getLogger(name, '<键名>')` 访问。
@@ -184,7 +194,7 @@ loggers:
 
 ### `getPinoLogger(name: string, category?: string): PinoLogger`
 
-逃生口。返回绑定了 `{ module: name }` 的原始 pino child logger，保留 `level`、`child()`、`bindings()` 等 pino 专有能力。只在确实需要它们时使用，并接受由此带来的耦合。
+逃生口。返回原始 pino child logger —— 绑定 `{ module: name, category }`，未传 category 时为 `{ module: name }` —— 保留 `level`、`child()`、`bindings()` 等 pino 专有能力。只在确实需要它们时使用，并接受由此带来的耦合。
 
 - 当 `category` 匹配某个已配置的 logger 时，child 的父级就是该分类 logger（继承其 level + appender 集合）；否则父级为 `root`。
 - 缓存 key 为 `${category ?? ''}::${name}`，因此同名 + 不同分类会返回不同的 logger。

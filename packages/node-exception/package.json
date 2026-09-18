@@ -65,7 +65,8 @@
     "version:minor": "npm version minor",
     "version:major": "npm version major",
     "test": "echo \"@ticatec/node-exception has no test suite yet\"",
-    "lint": "echo \"No linting configured\"",
+    "prebuild": "pnpm lint",
+    "lint": "eslint 'src/**/*.ts'",
     "typecheck": "tsc -p tsconfig.cjs.json --noEmit && tsc -p tsconfig.esm.json --noEmit"
   },
   "keywords": [
@@ -138,6 +139,9 @@
     "registry": "https://registry.npmjs.org/"
   },
   "devDependencies": {
+    "eslint": "^8.57.0",
+    "@typescript-eslint/parser": "^7.18.0",
+    "@typescript-eslint/eslint-plugin": "^7.18.0",
     "@types/node": "^22.8.6",
     "typescript": "^5.6.0"
   }

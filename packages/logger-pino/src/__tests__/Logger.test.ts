@@ -1,3 +1,4 @@
+import pino from 'pino';
 import { getLogger, initialize, resetForTest, fallbackLoggingConf, getPinoLogger } from '../Logger.js';
 import { hasLoggerProvider } from '@ticatec/logger-api';
 import type { LoggingConfig } from '../types.js';
@@ -81,12 +82,7 @@ describe('Logger Wrapper', () => {
         // with its own sonic-boom buffer — wasted descriptors and interleaved
         // writes under load.
         test('calls pino.destination once per appender, however many loggers use it', () => {
-            const pinoMod = require('pino');
-            const pino = pinoMod.default ?? pinoMod;
-            const original = pino.destination;
-            const targets: unknown[] = [];
-            pino.destination = (opts: any) => { targets.push(opts?.dest); return original(opts); };
-
+            const spy = jest.spyOn(pino, 'destination');
             try {
                 initialize({
                     appenders: [{ name: 'file', type: 'file', level: 'info', options: { filename: '/tmp/logger-pino-test.log' } }],
@@ -96,9 +92,9 @@ describe('Logger Wrapper', () => {
                         service: { level: 'info', appenders: ['file'] }
                     }
                 });
-                expect(targets).toHaveLength(1);
+                expect(spy).toHaveBeenCalledTimes(1);
             } finally {
-                pino.destination = original;
+                spy.mockRestore();
             }
         });
     });

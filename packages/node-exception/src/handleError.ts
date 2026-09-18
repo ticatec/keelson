@@ -36,9 +36,11 @@ const sendApplicationError = (req: any, res: any, err: any): void => {
  * @param err - The error object that was thrown or passed to next()
  * @param req - Express request object
  * @param res - Express response object
- * @param next - Express next function (required for error middleware signature)
+ * @param _next - Express next function. Unused, but the parameter must stay:
+ *   Express identifies error-handling middleware by arity (`fn.length === 4`),
+ *   so dropping it would turn this into ordinary middleware.
  */
-const handleError = (err: any, req: any, res: any, next?: any): void => {
+const handleError = (err: any, req: any, res: any, _next?: any): void => {
     sendApplicationError(req, res, err);
 }
 
