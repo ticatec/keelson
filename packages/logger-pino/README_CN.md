@@ -22,15 +22,13 @@
 
 ### 终端业务应用（"最终的菜"）
 
-安装一次即可 —— `pino` 已作为封装库的常规 `dependency` 打包，会自动随之安装：
+`pino` 与 [`@ticatec/logger-api`](https://github.com/ticatec/keelson/tree/main/packages/logger-api) 都是 **peer dependency** —— 由应用与本适配器一同安装，因此 pino 9.x 的具体版本由应用决定：
 
 ```bash
-pnpm add @ticatec/logger-pino
+pnpm add @ticatec/logger-pino @ticatec/logger-api pino
 # 或 npm
-npm install @ticatec/logger-pino
+npm install @ticatec/logger-pino @ticatec/logger-api pino
 ```
-
-本包将 [`@ticatec/logger-api`](https://github.com/ticatec/keelson/tree/main/packages/logger-api) 声明为 peer dependency —— 依赖树里若还没有，请一并安装。
 
 ### 基础库不应依赖本包
 

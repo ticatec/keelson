@@ -54,7 +54,7 @@ describe('Logger Wrapper', () => {
 
         test('getPinoLogger throws before initialize', () => {
             expect(() => getPinoLogger('TooEarly'))
-                .toThrow('LoggerWrapper is not initialized');
+                .toThrow('logger-pino is not initialized');
         });
 
         test('a logger captured before initialize still reaches pino afterwards', () => {
@@ -67,11 +67,68 @@ describe('Logger Wrapper', () => {
         test('throws when initialize is called more than once explicitly', () => {
             initialize(SILENT_CONFIG);
             expect(() => initialize(SILENT_CONFIG))
-                .toThrow('LoggerWrapper has already been initialized');
+                .toThrow('logger-pino has already been initialized');
         });
 
         test('throws on invalid config without touching singleton state if uninitialized', () => {
             expect(() => initialize({ appenders: [], loggers: {} } as any)).toThrow();
+        });
+    });
+
+    describe('appender destinations are shared, not rebuilt per logger', () => {
+        // root, controller and service all name the same file appender. Building
+        // the destination per logger entry would open that file three times, each
+        // with its own sonic-boom buffer — wasted descriptors and interleaved
+        // writes under load.
+        test('calls pino.destination once per appender, however many loggers use it', () => {
+            const pinoMod = require('pino');
+            const pino = pinoMod.default ?? pinoMod;
+            const original = pino.destination;
+            const targets: unknown[] = [];
+            pino.destination = (opts: any) => { targets.push(opts?.dest); return original(opts); };
+
+            try {
+                initialize({
+                    appenders: [{ name: 'file', type: 'file', level: 'info', options: { filename: '/tmp/logger-pino-test.log' } }],
+                    loggers: {
+                        root: { level: 'info', appenders: ['file'] },
+                        controller: { level: 'info', appenders: ['file'] },
+                        service: { level: 'info', appenders: ['file'] }
+                    }
+                });
+                expect(targets).toHaveLength(1);
+            } finally {
+                pino.destination = original;
+            }
+        });
+    });
+
+    describe('category reaches the log payload', () => {
+        test('binds category alongside module on the child logger', () => {
+            initialize(MULTI_CATEGORY_CONFIG);
+            expect(getPinoLogger('UserController', 'controller').bindings())
+                .toEqual({ module: 'UserController', category: 'controller' });
+        });
+
+        test('omits category when none was given', () => {
+            initialize(MULTI_CATEGORY_CONFIG);
+            expect(getPinoLogger('AppConf').bindings()).toEqual({ module: 'AppConf' });
+        });
+    });
+
+    describe('dual package hazard', () => {
+        // The CJS and ESM builds of this package are two module instances.
+        // Module-scoped state would leave initialize() in one invisible to the
+        // other, and getPinoLogger() there would throw.
+        const KEY = Symbol.for('@ticatec/logger-pino.state');
+
+        test('anchors its state on Symbol.for(), not on module scope', () => {
+            initialize(INFO_CONFIG);
+            const shared = (globalThis as any)[KEY];
+            expect(shared).toBeDefined();
+            expect(shared.root).not.toBeNull();
+            expect(shared.categories).toBeInstanceOf(Map);
+            expect(shared.children).toBeInstanceOf(Map);
         });
     });
 

@@ -13,12 +13,32 @@ export type { Logger, PinoLogger };
 export { getLogger };
 
 const DEFAULT_APPENDER_LEVEL = 'info';
-let prettyWarningEmitted = false;
 
-let rootLoggerInstance: PinoLogger | null = null;
-let isFallbackInitialized = false;
-const cache: Map<string, PinoLogger> = new Map();
-const categoryLoggers: Map<string, PinoLogger> = new Map();
+/**
+ * Adapter state, anchored on a well-known global symbol.
+ *
+ * This package ships both a CommonJS and an ESM build, and a process can load
+ * both — an application importing the ESM entry while some transitive
+ * dependency `require()`s the CommonJS one. Those are two module instances with
+ * two sets of module-scoped variables, so `initialize()` through one would leave
+ * the other believing it was never initialised, and `getPinoLogger()` there
+ * would throw. `@ticatec/logger-api` anchors its registry the same way.
+ */
+interface AdapterState {
+    root: PinoLogger | null;
+    categories: Map<string, PinoLogger>;
+    children: Map<string, PinoLogger>;
+    prettyWarningEmitted: boolean;
+}
+
+const STATE_KEY = Symbol.for('@ticatec/logger-pino.state');
+
+const state: AdapterState = ((globalThis as any)[STATE_KEY] ??= {
+    root: null,
+    categories: new Map<string, PinoLogger>(),
+    children: new Map<string, PinoLogger>(),
+    prettyWarningEmitted: false
+}) as AdapterState;
 
 /**
  * Constructs a fallback LoggingConfig with a single console appender and root logger.
@@ -44,19 +64,18 @@ export const fallbackLoggingConf = (level: string = 'info'): LoggingConfig => ({
  * @throws When called more than once explicitly, or when the config is invalid.
  */
 export function initialize(config: LoggingConfig | PinoLogger): void {
-    if (rootLoggerInstance !== null && !isFallbackInitialized) {
-        throw new Error('LoggerWrapper has already been initialized. initialize() can only be called once.');
+    if (state.root !== null) {
+        throw new Error('logger-pino has already been initialized. initialize() can only be called once.');
     }
 
     if (!config) {
-        throw new Error('Invalid logger config or instance provided to LoggerWrapper.initialize().');
+        throw new Error('Invalid logger config or instance provided to logger-pino initialize().');
     }
 
     if (typeof (config as any).child === 'function') {
-        rootLoggerInstance = config as PinoLogger;
-        isFallbackInitialized = false;
-        cache.clear();
-        categoryLoggers.clear();
+        state.root = config as PinoLogger;
+        state.children.clear();
+        state.categories.clear();
         installProvider();
         return;
     }
@@ -66,14 +85,21 @@ export function initialize(config: LoggingConfig | PinoLogger): void {
         validated.appenders.map((a) => [a.name, a])
     );
 
-    rootLoggerInstance = buildLogger(validated.loggers.root, appenderByName);
-    isFallbackInitialized = false;
-    cache.clear();
-    categoryLoggers.clear();
+    // One physical destination per appender, built once and shared by every
+    // logger that references it. Building per logger entry would open the same
+    // file several times over, each with its own sonic-boom buffer — wasted
+    // descriptors, and interleaved writes under load.
+    const destinationByName = new Map<string, DestinationStream>(
+        validated.appenders.map((a) => [a.name, createDestination(a)])
+    );
+
+    state.children.clear();
+    state.categories.clear();
+    state.root = buildLogger(validated.loggers.root, appenderByName, destinationByName);
 
     for (const [name, entry] of Object.entries(validated.loggers)) {
         if (name === 'root') continue;
-        categoryLoggers.set(name, buildLogger(entry, appenderByName));
+        state.categories.set(name, buildLogger(entry, appenderByName, destinationByName));
     }
 
     installProvider();
@@ -85,16 +111,27 @@ export function initialize(config: LoggingConfig | PinoLogger): void {
  * so this single call is what routes the whole framework into pino.
  */
 function installProvider(): void {
-    setLoggerProvider((name: string, category?: string): Logger => {
-        const cacheKey = `${category ?? ''}::${name}`;
-        const hit = cache.get(cacheKey);
-        if (hit) return hit as unknown as Logger;
+    setLoggerProvider((name: string, category?: string): Logger =>
+        resolveChild(name, category) as unknown as Logger);
+}
 
-        const parent = (category && categoryLoggers.get(category)) || rootLoggerInstance!;
-        const child = parent.child({ module: name });
-        cache.set(cacheKey, child);
-        return child as unknown as Logger;
-    });
+/**
+ * Resolves — and caches — the pino child logger for a source.
+ *
+ * `category` selects the parent logger (its level and appender set) *and* is
+ * bound onto the child, so it reaches the log payload and downstream systems can
+ * aggregate on it. Binding only `module` would make the category invisible
+ * everywhere except in the choice of destination.
+ */
+function resolveChild(name: string, category?: string): PinoLogger {
+    const cacheKey = `${category ?? ''}::${name}`;
+    const hit = state.children.get(cacheKey);
+    if (hit) return hit;
+
+    const parent = (category && state.categories.get(category)) || state.root!;
+    const child = parent.child(category ? { module: name, category } : { module: name });
+    state.children.set(cacheKey, child);
+    return child;
 }
 
 /**
@@ -102,11 +139,10 @@ function installProvider(): void {
  */
 export function resetForTest(): void {
     resetLoggerProvider();
-    rootLoggerInstance = null;
-    isFallbackInitialized = false;
-    cache.clear();
-    categoryLoggers.clear();
-    prettyWarningEmitted = false;
+    state.root = null;
+    state.children.clear();
+    state.categories.clear();
+    state.prettyWarningEmitted = false;
 }
 
 /**
@@ -122,18 +158,10 @@ export function resetForTest(): void {
  * @throws When {@link initialize} has not been called yet.
  */
 export function getPinoLogger(name: string, category?: string): PinoLogger {
-    if (rootLoggerInstance === null) {
-        throw new Error('LoggerWrapper is not initialized. Call initialize(config) before getPinoLogger().');
+    if (state.root === null) {
+        throw new Error('logger-pino is not initialized. Call initialize(config) before getPinoLogger().');
     }
-
-    const cacheKey = `${category ?? ''}::${name}`;
-    const hit = cache.get(cacheKey);
-    if (hit) return hit;
-
-    const parent = (category && categoryLoggers.get(category)) || rootLoggerInstance;
-    const child = parent.child({ module: name });
-    cache.set(cacheKey, child);
-    return child;
+    return resolveChild(name, category);
 }
 
 // ---------------------------------------------------------------------------
@@ -142,8 +170,8 @@ export function getPinoLogger(name: string, category?: string): PinoLogger {
 
 function createDestination(appender: AppenderConfig): DestinationStream {
     if (appender.type === 'console') {
-        if (appender.options?.pretty && !prettyWarningEmitted) {
-            prettyWarningEmitted = true;
+        if (appender.options?.pretty && !state.prettyWarningEmitted) {
+            state.prettyWarningEmitted = true;
             process.stderr.write(
                 '[logger-pino] "pretty: true" on console appender is not yet supported; emitting raw JSON to stdout.\n'
             );
@@ -160,13 +188,14 @@ function createDestination(appender: AppenderConfig): DestinationStream {
     throw new Error(`Unsupported appender type "${appender.type}".`);
 }
 
-function buildLogger(entry: LoggerEntry, appenderByName: Map<string, AppenderConfig>): PinoLogger {
-    const streams: StreamEntry[] = entry.appenders.map((name) => {
-        const appender = appenderByName.get(name)!;
-        return {
-            stream: createDestination(appender),
-            level: (appender.level ?? DEFAULT_APPENDER_LEVEL) as Level
-        };
-    });
+function buildLogger(
+    entry: LoggerEntry,
+    appenderByName: Map<string, AppenderConfig>,
+    destinationByName: Map<string, DestinationStream>
+): PinoLogger {
+    const streams: StreamEntry[] = entry.appenders.map((name) => ({
+        stream: destinationByName.get(name)!,
+        level: (appenderByName.get(name)!.level ?? DEFAULT_APPENDER_LEVEL) as Level
+    }));
     return pino({ level: entry.level as Level }, pino.multistream(streams));
 }

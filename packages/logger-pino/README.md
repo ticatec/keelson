@@ -22,15 +22,13 @@ A complete [Pino](https://getpino.io) facade driven by a parsed configuration ob
 
 ### Host applications (the "final dish")
 
-Install once — `pino` is bundled as a regular `dependency` of the wrapper, so it comes along automatically:
+`pino` and [`@ticatec/logger-api`](https://github.com/ticatec/keelson/tree/main/packages/logger-api) are **peer dependencies** — the application installs them alongside this adapter, and so decides which pino 9.x it runs:
 
 ```bash
-pnpm add @ticatec/logger-pino
+pnpm add @ticatec/logger-pino @ticatec/logger-api pino
 # or npm
-npm install @ticatec/logger-pino
+npm install @ticatec/logger-pino @ticatec/logger-api pino
 ```
-
-It declares [`@ticatec/logger-api`](https://github.com/ticatec/keelson/tree/main/packages/logger-api) as a peer dependency — install that too if it is not already in your tree.
 
 ### Libraries should not depend on this package
 

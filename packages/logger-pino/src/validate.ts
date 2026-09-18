@@ -3,6 +3,22 @@ import type { AppenderConfig, AppenderType, LoggingConfig, LoggerEntry } from '.
 const DEFAULT_APPENDER_LEVEL = 'info';
 
 /**
+ * Levels pino accepts. Validating against this list here means a typo such as
+ * `'warning'` or `'inf'` fails at config-validation time with a clear message,
+ * rather than surfacing later as an opaque error from inside pino.
+ */
+const VALID_LEVELS = new Set(['trace', 'debug', 'info', 'warn', 'error', 'fatal', 'silent']);
+
+const assertLevel = (level: string, subject: string): string => {
+    if (!VALID_LEVELS.has(level)) {
+        throw new Error(
+            `${subject} has an invalid level "${level}". Expected one of: ${[...VALID_LEVELS].join(', ')}.`
+        );
+    }
+    return level;
+};
+
+/**
  * Validates and normalises a raw parsed config object.
  *
  * @throws When the structure is invalid or appender references don't resolve.
@@ -46,7 +62,10 @@ export function validateConfig(parsed: unknown): LoggingConfig {
         return {
             name,
             type,
-            level: typeof raw.level === 'string' ? raw.level : DEFAULT_APPENDER_LEVEL,
+            level: assertLevel(
+                typeof raw.level === 'string' ? raw.level : DEFAULT_APPENDER_LEVEL,
+                `Appender "${name}"`
+            ),
             options: raw.options && typeof raw.options === 'object' ? { ...raw.options } : {}
         };
     });
@@ -72,7 +91,10 @@ export function validateConfig(parsed: unknown): LoggingConfig {
                 throw new Error(`Logger "${loggerName}" references unknown appender "${ref}".`);
             }
         }
-        normalisedLoggers[loggerName] = { level: entry.level, appenders: [...entry.appenders] };
+        normalisedLoggers[loggerName] = {
+            level: assertLevel(entry.level, `Logger "${loggerName}"`),
+            appenders: [...entry.appenders]
+        };
     }
 
     return { appenders: normalisedAppenders, loggers: normalisedLoggers };
