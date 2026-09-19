@@ -95,3 +95,47 @@ describe('DBConnection.sanitizeParams', () => {
         expect(first).toEqual({ userName: null, memo: null });
     });
 });
+
+describe('DBConnection.getBoolean', () => {
+    let conn: any;
+
+    beforeEach(() => {
+        conn = new MockConnection();
+    });
+
+    test('reads the string forms of false as false, in any case', () => {
+        // 这是修复前最容易伤人的一组：'false' 走到末尾的 !!value，非空字符串一律为真，
+        // 于是文本列里的 'false' 被读成 true——不是读不出来，是读反了。
+        ['false', 'FALSE', 'False', ' false ', 'f', 'F', '0', ' 0 '].forEach(v => {
+            expect(conn.getBoolean(v)).toBe(false);
+        });
+    });
+
+    test('reads the string forms of true as true, in any case', () => {
+        ['true', 'TRUE', 'True', ' true ', 't', 'T', '1', ' 1 '].forEach(v => {
+            expect(conn.getBoolean(v)).toBe(true);
+        });
+    });
+
+    test('passes booleans and 1/0 straight through', () => {
+        expect(conn.getBoolean(true)).toBe(true);
+        expect(conn.getBoolean(false)).toBe(false);
+        expect(conn.getBoolean(1)).toBe(true);
+        expect(conn.getBoolean(0)).toBe(false);
+    });
+
+    test('falls back to truthiness for anything it does not recognise', () => {
+        expect(conn.getBoolean(null)).toBe(false);
+        expect(conn.getBoolean(undefined)).toBe(false);
+        expect(conn.getBoolean('')).toBe(false);
+        expect(conn.getBoolean('yes')).toBe(true);
+        expect(conn.getBoolean(2)).toBe(true);
+        expect(conn.getBoolean({})).toBe(true);
+    });
+
+    test('convertBooleanFields applies the same rule to a mapped row', () => {
+        const row: any = { active: 'false', admin: 'TRUE', deleted: 'f' };
+        conn.convertBooleanFields(row, ['active', 'admin', 'deleted']);
+        expect(row).toEqual({ active: false, admin: true, deleted: false });
+    });
+});

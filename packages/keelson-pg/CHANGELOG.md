@@ -30,8 +30,6 @@ To migrate, change the dependency and the import specifier - nothing else:
 Every export keeps its name and signature. The old package will be deprecated on
 npm with a pointer here.
 
-## [Unreleased]
-
 ### Fixed
 
 - **An idle connection dying no longer kills the process.** `pg` registers an
@@ -66,9 +64,27 @@ npm with a pointer here.
   `connectionString` are reduced to a single `authenticated` boolean, and a test
   asserts the serialized metadata contains neither the password nor the URL.
 
+### Removed
+
+- **The `buildFieldsMap()` override**, which was line-for-line the base implementation.
+
+- **The `getBoolean()` override.** It existed only to add `'true'` and `'false'` to the
+  strings the base class recognised. That is not a PostgreSQL dialect detail - any
+  driver can read those words out of a text column - so the rule moved into
+  `@ticatec/keelson-core`, where it is now also case-insensitive. The override had not
+  handled `'TRUE'` / `'FALSE'` either.
+
 ### Changed
 
 - `prepublishOnly` now runs the test suite, matching the other two drivers.
+
+- The four transaction-lifecycle log calls pass a context object first
+  (`logger.debug({}, '...')`), matching `@ticatec/keelson-mysql` and
+  `@ticatec/keelson-dm`. Both shapes are part of the `@ticatec/logger-api` contract, so
+  this is consistency across the driver family rather than a fix.
+
+- `pino` is gone from `devDependencies`; nothing in the source or the tests referenced
+  it. The tests drive logging through a `@ticatec/logger-api` provider.
 
 - **`strict` is on.** The build configs (`tsconfig.cjs.json` / `tsconfig.esm.json`)
   did not extend `tsconfig.json` - they were standalone - so nothing in the base

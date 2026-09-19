@@ -229,6 +229,27 @@ describe('MysqlDBFactory & MysqlDBConnection Test Suite', () => {
         expect(clause).toBe(' limit 10 offset 20');
     });
 
+    test("a text column holding 'false' is no longer read as true", async () => {
+        const factory = initializeMySQL({});
+        const conn = await factory.createDBConnection();
+
+        mockConnection.execute.mockResolvedValue([
+            [
+                { id: 1, is_active: 'false' },
+                { id: 2, is_active: 'TRUE' },
+                { id: 3, is_active: 'f' },
+                { id: 4, is_active: 1 }
+            ],
+            [{ name: 'id' }, { name: 'is_active' }]
+        ]);
+
+        const rows = await conn.listQuery('SELECT id, is_active FROM users', [], null, ['isActive']);
+
+        // MySQL 没有原生布尔类型，布尔值常常以 VARCHAR / ENUM 存成 'true' / 'false'。
+        // 基类此前只认单字母 't' / 'f'，'false' 落到 !!value 上被读成 true。
+        expect(rows.map((r: any) => r.isActive)).toEqual([false, true, false, true]);
+    });
+
     test('never logs the password or uri when the pool is created', () => {
         const infos: Array<any> = [];
         setLoggerProvider(() => ({ ...SILENT, info: (...args: Array<any>) => { infos.push(args); } } as any));

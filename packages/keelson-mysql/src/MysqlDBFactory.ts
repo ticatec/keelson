@@ -155,24 +155,6 @@ class MysqlDBConnection extends DBConnection {
     }
 
     /**
-     * 构建字段名映射表
-     * @param fields 字段数组
-     * @returns Map<string, string> 字段名映射表
-     */
-    protected override buildFieldsMap(fields: Array<any>): Map<string, string> {
-        const map: Map<string, string> = new Map<string, string>();
-        if (Array.isArray(fields)) {
-            fields.forEach(field => {
-                const name = typeof field === 'string' ? field : field?.name;
-                if (name) {
-                    map.set(name, this.toCamel(name));
-                }
-            });
-        }
-        return map;
-    }
-
-    /**
      * 获取查询结果的第一行数据
      * @param result 查询结果对象
      * @returns any 第一行数据对象或null

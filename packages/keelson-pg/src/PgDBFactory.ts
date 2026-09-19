@@ -44,32 +44,10 @@ class PgDBConnection extends DBConnection {
     }
 
     /**
-     * Evaluates whether a value represents boolean truth in PostgreSQL (supports true/false, t/f, 1/0).
-     * @param value - Target value.
-     * @protected
-     * @returns True if value represents boolean truth.
-     */
-    protected override getBoolean(value: any): boolean {
-        if (value === true || value === 't' || value === 'true') {
-            return true;
-        }
-        if (value === false || value === 'f' || value === 'false') {
-            return false;
-        }
-        if (value === 1 || value === '1') {
-            return true;
-        }
-        if (value === 0 || value === '0') {
-            return false;
-        }
-        return !!value;
-    }
-
-    /**
      * Begins a PostgreSQL database transaction.
      */
     async beginTransaction(): Promise<void> {
-        this.logger.debug('Beginning PostgreSQL transaction');
+        this.logger.debug({}, 'Beginning PostgreSQL transaction');
         await this.#client.query('BEGIN');
     }
 
@@ -77,7 +55,7 @@ class PgDBConnection extends DBConnection {
      * Closes the database connection and releases it back to the connection pool.
      */
     async close(): Promise<void> {
-        this.logger.debug('Releasing PostgreSQL connection to pool');
+        this.logger.debug({}, 'Releasing PostgreSQL connection to pool');
         this.#client.release();
     }
 
@@ -85,7 +63,7 @@ class PgDBConnection extends DBConnection {
      * Commits the current PostgreSQL database transaction.
      */
     async commit(): Promise<void> {
-        this.logger.debug('Committing PostgreSQL transaction');
+        this.logger.debug({}, 'Committing PostgreSQL transaction');
         await this.#client.query('COMMIT');
     }
 
@@ -94,7 +72,7 @@ class PgDBConnection extends DBConnection {
      */
     async rollback(): Promise<void> {
         try {
-            this.logger.debug('Rolling back PostgreSQL transaction');
+            this.logger.debug({}, 'Rolling back PostgreSQL transaction');
             await this.#client.query('ROLLBACK');
         } catch (e: any) {
             this.logger.error({ error: e?.message || e }, 'Failed to rollback PostgreSQL transaction');
@@ -165,24 +143,6 @@ class PgDBConnection extends DBConnection {
      */
     override getRowSetLimitClause(rowCount: number, offset: number): string {
         return ` limit ${rowCount} offset ${offset}`;
-    }
-
-    /**
-     * Builds field name mapping map (converting column names to camelCase).
-     * @param fields - Array of field metadata objects.
-     * @protected
-     */
-    protected override buildFieldsMap(fields: Array<any>): Map<string, string> {
-        const map = new Map<string, string>();
-        if (Array.isArray(fields)) {
-            fields.forEach(field => {
-                const rawName = typeof field === 'string' ? field : field?.name;
-                if (rawName) {
-                    map.set(rawName, this.toCamel(rawName));
-                }
-            });
-        }
-        return map;
     }
 
     /**

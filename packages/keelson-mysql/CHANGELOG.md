@@ -30,18 +30,26 @@ To migrate, change the dependency and the import specifier - nothing else:
 Every export keeps its name and signature. The old package will be deprecated on
 npm with a pointer here.
 
-## [Unreleased]
-
 ### Fixed
 
 - **The published tarball carried no licence text.** `package.json` declares
   `"license": "MIT"` and lists `LICENSE` in `files`, but the file did not exist in the
   package - every other package in the repository has one. Added.
 
+- **A text column holding `'false'` was read as `true`.** Fixed in
+  `@ticatec/keelson-core` - see its changelog. MySQL has no native boolean type, so
+  booleans stored as `'true'` / `'false'` in a `VARCHAR` or `ENUM` column are common,
+  and the `booleanFields` argument of `listQuery()` / `find()` inverted them.
+
 - **`getFields()` no longer reports every column as `Text`.** The type was hard-coded,
   which is a value that happens to be right for string columns and wrong for everything
   else. It now reads `columnType`, the MySQL protocol column-type code that `mysql2`
   puts on each field, and maps the numeric and temporal codes.
+
+### Removed
+
+- **The `buildFieldsMap()` override**, which was the base implementation with a
+  different local variable name.
 
 ### Added
 

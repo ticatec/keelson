@@ -152,17 +152,36 @@ export default abstract class DBConnection {
 
     /**
      * Evaluates whether a value represents a boolean true.
-     * Supports 1/0, '1'/'0', 'T'/'F', 't'/'f', true/false.
+     * Supports `true`/`false`, `1`/`0`, and the strings `'1'`, `'0'`, `'t'`, `'f'`,
+     * `'true'`, `'false'` in any case, with surrounding whitespace ignored.
+     *
+     * 字符串形式此前只认单字母 't'/'f'，`'true'` / `'false'` 落到末尾的 `!!value`：
+     * 非空字符串一律为真，于是文本列里的 `'false'` 被判成 `true`——不是读不出来，
+     * 是读反了。PostgreSQL 驱动曾自行覆写这个方法补上两个小写字面量，
+     * 但这跟方言无关（任何驱动都可能从 VARCHAR / ENUM 列里读到这两个词），
+     * 所以规则收归基类，且不分大小写。
      * @param value - Target value.
      * @protected
      * @returns True if value represents boolean truth.
      */
     protected getBoolean(value: any): boolean {
-        if (value === 1 || value === '1' || value === 'T' || value === 't' || value === true) {
+        if (typeof value === 'boolean') {
+            return value;
+        }
+        if (value === 1) {
             return true;
         }
-        if (value === 0 || value === '0' || value === 'F' || value === 'f' || value === false) {
+        if (value === 0) {
             return false;
+        }
+        if (typeof value === 'string') {
+            const normalized = value.trim().toLowerCase();
+            if (normalized === '1' || normalized === 't' || normalized === 'true') {
+                return true;
+            }
+            if (normalized === '0' || normalized === 'f' || normalized === 'false') {
+                return false;
+            }
         }
         return !!value;
     }

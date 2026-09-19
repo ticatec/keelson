@@ -432,6 +432,22 @@ describe('DMDBFactory & DMDBConnection Test Suite', () => {
         });
     });
 
+    test("a text column holding 'false' is no longer read as true", async () => {
+        const factory = initializeDmDB({});
+        const conn = await factory.createDBConnection();
+
+        mockConnection.execute.mockResolvedValue({
+            metaData: [{ name: 'ID', dbTypeName: 'INT' }, { name: 'IS_ACTIVE', dbTypeName: 'VARCHAR' }],
+            rows: [[1, 'false'], [2, 'TRUE'], [3, 'f'], [4, 1]]
+        });
+
+        const rows = await conn.listQuery('SELECT ID, IS_ACTIVE FROM users', [], null, ['isActive']);
+
+        // 达梦同样没有原生布尔类型，'true' / 'false' 存进 VARCHAR 很常见。
+        // 基类此前只认单字母 't' / 'f'，'false' 落到 !!value 上被读成 true。
+        expect(rows.map((r: any) => r.isActive)).toEqual([false, true, false, true]);
+    });
+
     test('never logs the password when the pool is created', async () => {
         const infos: Array<any> = [];
         setLoggerProvider(() => ({ ...SILENT, info: (...args: Array<any>) => { infos.push(args); } } as any));

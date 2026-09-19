@@ -29,6 +29,17 @@ npm with a pointer here.
 
 ### Fixed
 
+- **`getBoolean()` read the string `'false'` as `true`.** The string forms it recognised
+  were the single letters `'t'` and `'f'`; `'true'` and `'false'` fell through to the
+  closing `!!value`, where every non-empty string is truthy. A `VARCHAR` or `ENUM`
+  column holding `'false'` therefore came back as `true` through the `booleanFields`
+  argument of `listQuery()` / `find()` - not missing, inverted. MySQL and Dameng have no
+  native boolean type, so storing the words is common there; `@ticatec/keelson-pg` had
+  worked around it with its own override. The rule now lives in the base class and is
+  case-insensitive, trimming surrounding whitespace: `true`/`false`, `1`/`0`, and the
+  strings `'1'`, `'0'`, `'t'`, `'f'`, `'true'`, `'false'` in any case. Anything else
+  still falls back to truthiness.
+
 - **The singleton registries split between the CommonJS and ESM builds.**
   `DBManager.instance`, `TransactionManager.threadLocal`, `beanFactory` and
   `Beans.instance` were class statics, and this package ships both builds - so a
@@ -74,8 +85,6 @@ npm with a pointer here.
 - The `pino` dev dependency; nothing imported it.
 - The `./lib/db/Field` subpath export. `Field` and `FieldType` are already part of
   the root export, and the subpath exposed an internal build path.
-
-## [Unreleased]
 
 ### Added
 

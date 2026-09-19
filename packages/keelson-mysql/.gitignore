@@ -6,3 +6,4 @@
 src/**/*.js
 src/**/*.d.ts
 src/**/*.map
+*.iml

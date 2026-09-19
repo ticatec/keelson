@@ -30,9 +30,12 @@ To migrate, change the dependency and the import specifier - nothing else:
 Every export keeps its name and signature. The old package will be deprecated on
 npm with a pointer here.
 
-## [Unreleased]
-
 ### Fixed
+
+- **A text column holding `'false'` was read as `true`.** Fixed in
+  `@ticatec/keelson-core` - see its changelog. Dameng has no native boolean type, so
+  booleans stored as `'true'` / `'false'` are common, and the `booleanFields` argument
+  of `listQuery()` / `find()` inverted them.
 
 - **Column aliases can no longer crash result mapping.** `setNestObj()` was overridden
   here to support `__` as a path separator, and the override replaced the base
