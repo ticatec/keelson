@@ -569,6 +569,34 @@ log.info({ userId }, 'user logged in');
 
 框架的每个基类都已暴露以具体子类名命名的 `logger`，因此很少需要直接调用 `getLogger()`。驱动通过 `safeLogMeta()` 记录 SQL —— 只记录语句文本和参数个数，**绝不**记录参数值。
 
+### 日志与敏感数据
+
+各层都通过 `@ticatec/logger-api` 契约输出日志。有两类内容是刻意不写进记录的：
+
+**SQL 绑定参数。** 参数里装的是每条查询真正流动的数据——邮箱、密码散列、身份证号、
+卡号。DAO 的查询日志只记语句与参数**个数**，不记值：
+
+```
+DEBUG [dao/OrderDAO] Executing find query {"sql":"select * from users where email=$1 and pwd=$2","paramCount":2}
+```
+
+本地排查时可设 `KEELSON_LOG_SQL_PARAMS=true` 把值一并记录。该变量每次调用时读取，
+可在运行期随时开关；且只有恰好等于 `true` 才生效，`1` 或 `yes` 都不行。
+生产环境请勿开启：否则一旦把日志级别调到 debug，整个数据库的流量就被复制进了日志系统
+——而那通常是你手上权限最宽、留存最久、最容易被导出的地方。
+
+**连接工厂。** `DBManager.init(factory)` 只记录工厂的类名。`DBFactory` 持有完整的连接
+配置，其中包含数据库口令。
+
+在自己的驱动或 DAO 里打语句日志时，请使用 `sqlContext(sql, params)`，它遵循同一套规则。
+
+```typescript
+import { getLogger, sqlContext } from '@ticatec/node-common-library';
+
+const logger = getLogger('MyDriver', 'db');
+logger.debug(sqlContext(sql, params), 'Executing statement');
+```
+
 ## 📋 API 参考
 
 ### 类
@@ -590,7 +618,8 @@ log.info({ userId }, 'user logged in');
 
 ### 函数
 
-- **`getLogger(name: string, category?: string): Logger`** —— 转出自 `@ticatec/logger-api`，返回的 logger 在每次写入时解析已注入的 provider，未注入时回落到 console。`name` 通常取类名或模块名；`category` 用于分组（框架内部使用 `'db'`、`'service'`、`'repository'`、`'controller'`）。不会抛错，也不要求预先初始化。
+- **`sqlContext(sql: string, params?: any[]): object`** —— 为 SQL 语句构造日志上下文：语句与 `paramCount`；只有在 `KEELSON_LOG_SQL_PARAMS=true` 时才带上参数值。打语句日志时请使用它。
+- **`getLogger(name: string, category?: string): Logger`** —— 转出自 `@ticatec/logger-api`，返回的 logger 在每次写入时解析已注入的 provider，未注入时回落到 console。`name` 通常取类名或模块名；`category` 用于分组（框架内部使用 `'db'`、`'dao'`、`'service'`、`'repository'`）。不会抛错，也不要求预先初始化。
 
 ### 接口（仅类型）
 
@@ -643,6 +672,9 @@ try {
 | 日志 | `@ticatec/logger-wrapper`（pino）作为 peer dependency | 改为 `@ticatec/logger-api` —— 零依赖契约。pino 变为可选，需要时才装 `@ticatec/logger-pino`（适配器的新名字） |
 | `StringUtils.genID()` / `uuid()` | UUID v4（`crypto.randomUUID()`） | **UUID v7** —— 时间有序且单调递增，适合直接做主键 |
 | `NULL` 列 | 从映射对象中被丢弃 | 保留为 `null`，且 `find()` 与 `listQuery()` 行为一致 |
+| DAO 查询日志 | `{ sql, params }` —— 每个绑定参数的值 | `{ sql, paramCount }`；仅在 `KEELSON_LOG_SQL_PARAMS=true` 时带值 |
+| DAO 的 logger category | `'controller'` | `'dao'` —— 请在日志配置里补一个 `dao` 分类，否则会回落到 root |
+| `DBManager.init()` 的日志 | 整个 factory 对象，含口令 | 只记工厂类名 |
 
 另有两处行为变更没有改变签名，如果你依赖它们请重新确认：
 

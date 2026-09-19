@@ -1,6 +1,7 @@
 import Field from "./Field.js";
 import fs from "fs";
-import {getLogger, Logger} from "../Logger.js";
+import {getLogger} from "../Logger.js";
+import type {Logger} from "../Logger.js";
 import PaginationList from "./PaginationList.js";
 import CommonSearchCriteria from "./CommonSearchCriteria.js";
 

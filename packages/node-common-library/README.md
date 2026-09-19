@@ -569,6 +569,40 @@ log.info({ userId }, 'user logged in');
 
 Every framework base class exposes a `logger` already scoped to the concrete subclass name, so you rarely need `getLogger()` directly. SQL is logged by the drivers through `safeLogMeta()`, which records the statement text and the parameter count but **never** the parameter values.
 
+### Logging and sensitive data
+
+Every layer logs through the `@ticatec/logger-api` contract. Two things are
+deliberately kept out of the records:
+
+**SQL bind parameters.** The parameters carry the real data flowing through every
+query - email addresses, password hashes, national IDs, card numbers. A DAO query
+logs the statement and the parameter *count*, never the values:
+
+```
+DEBUG [dao/OrderDAO] Executing find query {"sql":"select * from users where email=$1 and pwd=$2","paramCount":2}
+```
+
+Set `KEELSON_LOG_SQL_PARAMS=true` to include the values while debugging locally.
+It is read on every call, so it can be toggled at runtime, and only the exact
+string `true` enables it - `1` or `yes` will not. Never enable it in production:
+turning on debug logging would otherwise copy your entire database traffic into
+the log store, which is usually the most widely readable, longest-retained and
+most easily exported system you own.
+
+**The connection factory.** `DBManager.init(factory)` records the factory's class
+name only. A `DBFactory` holds the full connection configuration, database
+password included.
+
+Use `sqlContext(sql, params)` when you log a statement from your own driver or DAO;
+it applies the same rule.
+
+```typescript
+import { getLogger, sqlContext } from '@ticatec/node-common-library';
+
+const logger = getLogger('MyDriver', 'db');
+logger.debug(sqlContext(sql, params), 'Executing statement');
+```
+
 ## 📋 API Reference
 
 ### Classes
@@ -590,7 +624,8 @@ Every framework base class exposes a `logger` already scoped to the concrete sub
 
 ### Functions
 
-- **`getLogger(name: string, category?: string): Logger`** — re-exported from `@ticatec/logger-api`. Returns a logger that resolves the installed provider on every write, falling back to the console when there is none. `name` is conventionally the class or module name; `category` groups related loggers (the framework uses `'db'`, `'service'`, `'repository'` and `'controller'`). Never throws, and never requires prior initialisation.
+- **`sqlContext(sql: string, params?: any[]): object`** — builds the log context for a SQL statement: the statement and `paramCount`, with the parameter values included only when `KEELSON_LOG_SQL_PARAMS=true`. Use it whenever you log a statement.
+- **`getLogger(name: string, category?: string): Logger`** — re-exported from `@ticatec/logger-api`. Returns a logger that resolves the installed provider on every write, falling back to the console when there is none. `name` is conventionally the class or module name; `category` groups related loggers (the framework uses `'db'`, `'dao'`, `'service'` and `'repository'`). Never throws, and never requires prior initialisation.
 
 ### Interfaces (type-only)
 
@@ -643,6 +678,9 @@ try {
 | Logging | `@ticatec/logger-wrapper` (pino) as a peer dependency | `@ticatec/logger-api` — a zero-dependency contract. pino is now optional; install `@ticatec/logger-pino` (the renamed adapter) only if you want it |
 | `StringUtils.genID()` / `uuid()` | UUID v4 (`crypto.randomUUID()`) | **UUID v7** — time-ordered and monotonic, suitable as a primary key |
 | `NULL` columns | dropped from mapped objects | preserved as `null`, consistently across `find()` and `listQuery()` |
+| DAO query logs | `{ sql, params }` — every bind parameter value | `{ sql, paramCount }`; values only with `KEELSON_LOG_SQL_PARAMS=true` |
+| DAO logger category | `'controller'` | `'dao'` — add a `dao` category to your logger config, or it falls back to root |
+| `DBManager.init()` log | the whole factory object, password included | the factory class name |
 
 Two more behaviours changed without changing a signature — worth re-reading if you depend on them:
 

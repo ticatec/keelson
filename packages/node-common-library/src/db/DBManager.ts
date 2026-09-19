@@ -1,4 +1,5 @@
-import {getLogger, Logger} from "../Logger.js";
+import {getLogger} from "../Logger.js";
+import type {Logger} from "../Logger.js";
 import DBConnection from "./DBConnection.js";
 import DBFactory from "./DBFactory.js";
 
@@ -27,7 +28,12 @@ export default class DBManager {
      */
     static init(factory: DBFactory): DBManager {
         if (DBManager.instance == null) {
-            DBManager.logger.debug({factory}, 'Initializing database manager factory');
+            // 只记工厂的类名。DBFactory 持有完整的连接配置，其中包含数据库口令，
+            // 整个对象丢进日志等于把口令写进日志系统。
+            DBManager.logger.debug(
+                { factory: factory?.constructor?.name ?? 'unknown' },
+                'Initializing database manager factory'
+            );
             DBManager.instance = new DBManager(factory);
         }
         return DBManager.instance;

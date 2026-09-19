@@ -18,7 +18,7 @@ import BaseDAO from "./biz/BaseDAO.js";
 import BaseCRUDDAO from "./biz/BaseCRUDDAO.js";
 import BatchRecord, {BatchRecords} from "./biz/BatchRecord.js";
 import {PostConstructionFun, UpdateResult, InsertResult} from "./db/DBConnection.js";
-import {getLogger} from "./Logger.js";
+import {getLogger, sqlContext, SQL_PARAMS_ENV} from "./Logger.js";
 import type {Logger} from "./Logger.js";
 import Beans from "./Beans.js";
 
@@ -34,5 +34,8 @@ export {
     TransactionManager, Transaction, Propagation,
     BaseDAO, BaseCRUDDAO, BatchRecord, BatchRecords,
     PostConstructionFun, UpdateResult, InsertResult, QuickSearchResult,
-    getLogger, Logger
+    getLogger, sqlContext, SQL_PARAMS_ENV
 };
+
+/** 类型以 export type 导出，兼容 isolatedModules / 仅转译的工具链。 */
+export type { Logger };

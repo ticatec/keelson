@@ -117,6 +117,12 @@ All members below are `protected` — they are the DAO's toolkit, not part of it
 | `getBoolean(val)` | `string` | Converts a boolean to `'T'` / `'F'` |
 | `logger` | `Logger` | Logger scoped to the concrete DAO class name |
 
+> **Logging.** These helpers log the statement and the parameter count, never the
+> parameter values - the parameters carry the real data of every query. Set
+> `KEELSON_LOG_SQL_PARAMS=true` to include the values while debugging locally, and
+> never in production. DAO records use the `dao` logger category.
+
+
 ---
 
 ## Write Results: InsertResult and UpdateResult

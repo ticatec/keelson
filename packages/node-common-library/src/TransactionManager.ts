@@ -2,7 +2,8 @@ import DBConnection from './db/DBConnection.js';
 import DBManager from './db/DBManager.js';
 import ThreadLocal from './ThreadLocal.js';
 import {Propagation} from "./db/Transaction.js";
-import { getLogger, Logger } from './Logger.js';
+import { getLogger } from './Logger.js';
+import type { Logger } from './Logger.js';
 
 interface TransactionContext {
     connection: DBConnection;

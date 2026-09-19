@@ -117,6 +117,11 @@ export class UserDAO extends CommonDAO {
 | `getBoolean(val)` | `string` | 将布尔值转换为 `'T'` / `'F'` |
 | `logger` | `Logger` | 以具体 DAO 类名命名的日志器 |
 
+> **日志说明。** 这些方法只记录语句与参数个数，不记录参数的值——参数里装的是每条
+> 查询真正流动的数据。本地排查时可设 `KEELSON_LOG_SQL_PARAMS=true` 把值一并记录，
+> 生产环境请勿开启。DAO 的日志使用 `dao` 这个 category。
+
+
 ---
 
 ## 写入结果：InsertResult 与 UpdateResult

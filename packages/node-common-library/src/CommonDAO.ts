@@ -1,6 +1,7 @@
 import StringUtils from "./StringUtils.js";
 import DBConnection, {UpdateResult, InsertResult} from "./db/DBConnection.js";
-import {getLogger, Logger} from "./Logger.js";
+import {getLogger, sqlContext} from "./Logger.js";
+import type {Logger} from "./Logger.js";
 import TransactionManager from "./TransactionManager.js";
 import CommonSearchCriteria from "./db/CommonSearchCriteria.js";
 import PaginationList from "./db/PaginationList.js";
@@ -25,7 +26,7 @@ export default abstract class CommonDAO {
     protected readonly logger: Logger;
 
     protected constructor() {
-        this.logger = getLogger(this.constructor.name, "controller");
+        this.logger = getLogger(this.constructor.name, "dao");
         this.logger.debug(`Created DAO instance: ${this.constructor.name}`);
     }
 
@@ -121,7 +122,7 @@ export default abstract class CommonDAO {
      */
     protected async findFirst(sql: string, params: Array<any> = []): Promise<any> {
         const conn = await this.getDBConnection();
-        this.logger.debug({sql, params}, 'Executing find query');
+        this.logger.debug(sqlContext(sql, params), 'Executing find query');
         return await conn.find(sql, params);
     }
 
@@ -138,7 +139,7 @@ export default abstract class CommonDAO {
      */
     protected async listQuery(sql: string, params: Array<any> = []): Promise<any> {
         const conn = await this.getDBConnection();
-        this.logger.debug({sql, params}, 'Executing list query');
+        this.logger.debug(sqlContext(sql, params), 'Executing list query');
         const list = await conn.listQuery(sql, params);
         this.logger.debug(`List query returned ${Array.isArray(list) ? list.length : 0} rows`);
         return list;
@@ -154,7 +155,7 @@ export default abstract class CommonDAO {
      */
     protected async executeInsertQuery<T = any>(sql: string, params: Array<any> = []): Promise<InsertResult<T>> {
         const conn = await this.getDBConnection();
-        this.logger.debug({sql, params}, 'Executing insert query');
+        this.logger.debug(sqlContext(sql, params), 'Executing insert query');
         return conn.insertRecord<T>(sql, params);
     }
 
@@ -168,7 +169,7 @@ export default abstract class CommonDAO {
      */
     protected async executeUpdateQuery<T = any>(sql: string, params: Array<any> = []): Promise<UpdateResult<T>> {
         const conn = await this.getDBConnection();
-        this.logger.debug({sql, params}, 'Executing update query');
+        this.logger.debug(sqlContext(sql, params), 'Executing update query');
         return conn.updateRecord<T>(sql, params);
     }
 
@@ -181,7 +182,7 @@ export default abstract class CommonDAO {
      */
     protected async executeDeleteQuery(sql: string, params: Array<any> = []): Promise<number> {
         const conn = await this.getDBConnection();
-        this.logger.debug({sql, params}, 'Executing delete query');
+        this.logger.debug(sqlContext(sql, params), 'Executing delete query');
         const affected = await conn.deleteRecord(sql, params);
         this.logger.debug(`Delete query affected ${affected} rows`);
         return affected;

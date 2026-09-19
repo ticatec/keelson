@@ -1,4 +1,5 @@
-import {getLogger, Logger} from "./Logger.js";
+import {getLogger} from "./Logger.js";
+import type {Logger} from "./Logger.js";
 import beanFactory from "./BeanFactory.js";
 import stringUtils from "./StringUtils.js";
 

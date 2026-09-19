@@ -1,5 +1,52 @@
 # Changelog
 
+All notable changes to `@ticatec/node-common-library` are documented in this file.
+
+## [4.1.0] - 2026-09-19
+
+### Security
+
+- **Every SQL bind parameter was written to the log.** `CommonDAO` logged
+  `{ sql, params }` on find, list, insert, update and delete - and the parameters
+  are the real data flowing through each query. A service with debug logging
+  enabled copied its entire database traffic into the log store; the reproduction
+  used for this fix showed an email address, an Argon2 password hash and a card
+  number all landing in a record verbatim. Queries now log the statement and the
+  parameter *count*.
+
+  The values remain available for local debugging behind an explicit opt-in,
+  `KEELSON_LOG_SQL_PARAMS=true`. It is read on every call so it can be toggled at
+  runtime, and only the exact string `true` enables it - `1` and `yes` do not.
+
+  Drivers and DAOs outside this package should build their SQL log context with
+  the exported `sqlContext(sql, params)` so the same rule applies to them.
+
+- **`DBManager.init()` logged the whole connection factory**, and a `DBFactory`
+  holds the full connection configuration - database password included. It now
+  records the factory's class name.
+
+- `Beans.load()` passed the internal loader map as the log context. It now logs
+  the registered bean names and their count.
+
+### Changed
+
+- **A DAO's logger category is `'dao'`, was `'controller'`.** The layers are
+  Controller -> Service -> Repository -> DAO, so a DAO reporting itself as a
+  controller made category-based routing and filtering actively misleading. If
+  your logger configuration defines categories, add a `dao` entry - without one
+  these records fall back to the root logger.
+- `CommonSearchCriteria` now logs under the `'db'` category; it previously had none.
+- `Logger` is re-exported with `export type`, and every internal import of it uses
+  `import type`. Exporting a type in the value list breaks transpile-only
+  toolchains.
+
+### Added
+
+- `sqlContext()` and `SQL_PARAMS_ENV` are exported from the package entry point.
+- 15 new tests (44 -> 59), including one asserting that no bind parameter value and
+  no factory password can reach the log.
+
+
 All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),

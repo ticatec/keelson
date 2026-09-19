@@ -1,4 +1,5 @@
-import {getLogger, Logger} from "./Logger.js";
+import {getLogger} from "./Logger.js";
+import type {Logger} from "./Logger.js";
 import beanFactory from "./BeanFactory.js";
 
 export type BeanLoader = () => Promise<any>;
@@ -39,7 +40,8 @@ export default class Beans {
      * @returns Promise resolving when loading completes.
      */
     async load(): Promise<void> {
-        this.logger.debug(this._types, 'Loading registered bean types');
+        const names = Object.keys(this._types);
+        this.logger.debug({ count: names.length, beans: names }, 'Loading registered bean types');
         for (const t in this._types) {
             const v = this._types[t];
             if (v.loader != null) {

@@ -1,7 +1,8 @@
 import DBConnection from './DBConnection.js';
 import PaginationList from "./PaginationList.js";
 import StringUtils from "../StringUtils.js";
-import {getLogger, Logger} from "../Logger.js";
+import {getLogger} from "../Logger.js";
+import type {Logger} from "../Logger.js";
 
 const DEFAULT_PAGE_SIZE = 25;
 const FIRST_PAGE = 1;
@@ -19,7 +20,7 @@ export default abstract class CommonSearchCriteria {
     protected booleanFields?: Array<string>;
 
     protected constructor(criteria?: any) {
-        this.logger = getLogger(this.constructor.name);
+        this.logger = getLogger(this.constructor.name, "db");
         const rawPage = StringUtils.parseNumber(criteria?.page, FIRST_PAGE);
         this.page = rawPage < 1 ? FIRST_PAGE : rawPage;
         const rawPageSize = StringUtils.parseNumber(criteria?.pageSize, DEFAULT_PAGE_SIZE);

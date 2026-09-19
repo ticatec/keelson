@@ -1,6 +1,7 @@
 import DBConnection from "./db/DBConnection.js";
 import beanFactory from "./BeanFactory.js";
-import { getLogger, Logger } from "./Logger.js";
+import { getLogger } from "./Logger.js";
+import type { Logger } from "./Logger.js";
 import TransactionManager from './TransactionManager.js';
 import {Propagation} from "./db/Transaction.js";
 
