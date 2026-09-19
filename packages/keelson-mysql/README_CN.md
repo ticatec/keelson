@@ -113,6 +113,7 @@ async function performDatabaseOperations() {
 #### 方法
 
 - `createDBConnection(): Promise<DBConnection>` - 从连接池创建新的数据库连接
+- `close(): Promise<void>` - 关闭连接池，释放全部资源。可重复调用，第二次起为空操作
 
 ### `MysqlDBConnection`
 
@@ -129,8 +130,8 @@ async function performDatabaseOperations() {
 
 - `fetchData(sql: string, params?: any[]): Promise<{rows: any[], fields: any[]}>` - 执行 SELECT 查询
 - `executeUpdate(sql: string, params: any[]): Promise<number>` - 执行 UPDATE/DELETE 查询，返回受影响行数
-- `insertRecord(sql: string, params: any[]): Promise<any>` - 执行 INSERT 查询
-- `updateRecord(sql: string, params: any[]): Promise<any>` - 执行 UPDATE 查询并返回结果数据
+- `insertRecord<T>(sql: string, params: any[]): Promise<InsertResult<T>>` - 执行 INSERT，返回 `{ affectedRows, record: null, insertId }`
+- `updateRecord<T>(sql: string, params: any[]): Promise<UpdateResult<T>>` - 执行 UPDATE，返回 `{ affectedRows, record: null }`
 - `deleteRecord(sql: string, params: any[]): Promise<number>` - 执行 DELETE 查询
 
 #### 工具方法
@@ -184,9 +185,19 @@ try {
 }
 ```
 
+## 日志
+
+日志走 [`@ticatec/logger-api`](https://www.npmjs.com/package/@ticatec/logger-api) 契约。
+未注入实现时回退到 console，按 `LOG_LEVEL` 过滤。
+
+取连接、事务生命周期与每条语句记在 `debug`，建池与关池记在 `info`。
+**绑定参数一律不写入日志**，只有 SQL 文本与参数个数。确需排查时设置
+`KEELSON_LOG_SQL_PARAMS=true`；默认关闭，不应出现在生产环境。
+连接池配置摘要不含 `password` 与 `uri`。
+
 ## 已知问题和限制
 
-1. **插入/更新返回值**: `insertRecord` 和 `updateRecord` 方法目前调用 `getFirstRow()`，但 INSERT/UPDATE 操作通常不返回行数据。建议对这些操作使用 `executeUpdate()` 方法。
+1. **插入/更新不回传记录行**: MySQL 没有 PostgreSQL 的 `RETURNING` 子句，所以 `insertRecord` 与 `updateRecord` 的 `record` 恒为 `null`；新记录的主键通过 `insertId` 取得。只关心影响行数时用 `executeUpdate()` 更直接。
 
 2. **类型安全**: 一些内部方法使用 `any` 类型。建议添加更具体的类型定义以提高类型安全性。
 
@@ -207,8 +218,8 @@ try {
 ## 支持
 
 - 📧 邮箱: huili.f@gmail.com
-- 🐛 问题反馈: [GitHub Issues](https://github.com/ticatec/keelson-mysql/issues)
-- 📖 文档: [GitHub 仓库](https://github.com/ticatec/keelson-mysql)
+- 🐛 问题反馈: [GitHub Issues](https://github.com/ticatec/keelson/issues)
+- 📖 文档: [GitHub 仓库](https://github.com/ticatec/keelson/tree/main/packages/keelson-mysql)
 
 ## 相关包
 
@@ -221,7 +232,7 @@ try {
 
 ```bash
 # 克隆仓库
-git clone https://github.com/ticatec/keelson-mysql.git
+git clone https://github.com/ticatec/keelson/tree/main/packages/keelson-mysql.git
 cd keelson-mysql
 
 # 安装依赖

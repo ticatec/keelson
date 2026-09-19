@@ -33,7 +33,7 @@
     "copy:pkg": "node -e \"const fs=require('fs');fs.copyFileSync('assets/cjs-package.json','lib/cjs/package.json');fs.copyFileSync('assets/esm-package.json','lib/esm/package.json')\"",
     "build": "pnpm clean && pnpm build:cjs && pnpm build:esm && pnpm copy:pkg",
     "prebuild": "pnpm lint",
-    "prepublishOnly": "pnpm typecheck && pnpm build",
+    "prepublishOnly": "pnpm typecheck && pnpm test && pnpm build",
     "publish:public": "pnpm publish --access public --no-git-checks",
     "test": "jest",
     "lint": "eslint 'src/**/*.ts'",

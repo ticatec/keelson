@@ -77,7 +77,22 @@ npm with a pointer here.
 
 ## [Unreleased]
 
+### Added
+
+- **`DBConnection.splitFieldPath()`.** A `protected` hook that turns a column alias
+  into the object path it maps to; the default splits on `.`. It exists so a driver
+  whose SQL cannot carry a dot in an alias can change the separator without
+  reimplementing `setNestObj()` - `@ticatec/keelson-dm` did reimplement it, and lost
+  the prototype-chain guard and the primitive-intermediate check along the way.
+
 ### Changed
+
+- **`DBConnection.safeLogMeta()` delegates to `sqlContext()`.** It was a second,
+  independent implementation, so `KEELSON_LOG_SQL_PARAMS=true` only ever affected
+  `CommonDAO`: the driver layer, which is where the statement is actually executed and
+  the layer you most want to see when tracing a production problem, could not print
+  bind parameters no matter what the variable was set to. The default is unchanged -
+  parameters stay out of logs unless the variable is explicitly `true`.
 
 - **`strict` is on.** The build configs (`tsconfig.cjs.json` / `tsconfig.esm.json`)
   did not extend `tsconfig.json` - they were standalone - so nothing in the base

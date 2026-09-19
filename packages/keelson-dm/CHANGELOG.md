@@ -32,6 +32,42 @@ npm with a pointer here.
 
 ## [Unreleased]
 
+### Fixed
+
+- **Column aliases can no longer crash result mapping.** `setNestObj()` was overridden
+  here to support `__` as a path separator, and the override replaced the base
+  implementation wholesale - including the two guards the base class has. A result set
+  carrying an alias like `constructor.prototype.x` threw
+  `Cannot assign to read only property 'prototype'`, and one carrying both `a` and
+  `a.b` threw `Cannot create property 'b' on number '5'`; either way the whole batch of
+  rows failed to map. Both reproduced. The driver now overrides only the new
+  `splitFieldPath()` hook, so the guards stay where they belong - in the base class.
+
+- **`__` is only a separator when it actually separates.** The old test was
+  `field.includes('__')`, so a column whose name merely begins or ends with a double
+  underscore was split into empty segments: `__proto__` mapped to
+  `{"": {proto: {".polluted2": true}}}`. A double underscore now has to sit between two
+  non-empty segments.
+
+### Removed
+
+- **The `toCamel()` override.** `@ticatec/keelson-core` 1.0.0 moved the
+  all-caps normalisation (`USER_NAME` → `userName`, `"itemCount"` preserved) into the
+  base class; this copy was byte-for-byte equivalent in behaviour, verified over the
+  full range of inputs the suite exercises. A test now asserts the two agree, so the
+  copy cannot silently come back.
+
+### Added
+
+- **Transaction and statement logging through `@ticatec/logger-api`.**
+  `beginTransaction()`, `commit()`, `rollback()`, `close()` and `executeSQL()` were
+  silent while `@ticatec/keelson-pg` logged all of them.
+
+- **Pool lifecycle logging.** Pool creation, creation failure and shutdown are logged.
+  The configuration summary never carries credentials: `password` and `connectString`
+  are reduced to booleans, and a test asserts the serialized metadata contains neither
+  the password nor the connect string.
+
 ### Changed
 
 - **`strict` is on.** The build configs (`tsconfig.cjs.json` / `tsconfig.esm.json`)

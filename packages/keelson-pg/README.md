@@ -3,7 +3,7 @@
 [![Version](https://img.shields.io/npm/v/@ticatec/keelson-pg)](https://www.npmjs.com/package/@ticatec/keelson-pg)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-A production-ready PostgreSQL database driver implementation for Node.js applications, built on the `pg` driver with connection pooling and dual CommonJS / ESM support. Integrates seamlessly with [`@ticatec/keelson-core`](https://www.npmjs.com/package/@ticatec/keelson-core) database abstractions and `@ticatec/logger-pino`.
+A production-ready PostgreSQL database driver implementation for Node.js applications, built on the `pg` driver with connection pooling and dual CommonJS / ESM support. Integrates seamlessly with the [`@ticatec/keelson-core`](https://www.npmjs.com/package/@ticatec/keelson-core) database abstractions.
 
 [中文](./README_CN.md) ｜ English
 
@@ -14,12 +14,13 @@ A production-ready PostgreSQL database driver implementation for Node.js applica
 - **CRUD Operations**: Complete support for SQL queries, inserts, updates, and deletes with generic typing
 - **Interface Compliance**: Implements standard `DBConnection` and `DBFactory` interfaces for system decoupling
 - **Connection Pooling**: Built-in connection pool management using `pg.Pool`
-- **Logger Wrapper Integration**: Uses `@ticatec/logger-pino` for high-performance structured logging
+- **Structured Logging**: Logs through the `@ticatec/logger-api` contract. Bind parameters are never written to the log - only the statement and the parameter count - unless `KEELSON_LOG_SQL_PARAMS=true` is set explicitly. Pool configuration is logged without the password or connection string.
+- **Fails Loudly, Not Fatally**: An idle pooled connection that dies is logged and removed; it does not take the process down with it
 
 ## Installation
 
 ```bash
-pnpm add @ticatec/keelson-pg @ticatec/keelson-core @ticatec/logger-pino pg pino
+pnpm add @ticatec/keelson-pg @ticatec/keelson-core pg
 ```
 
 ### Peer Dependencies
@@ -27,26 +28,23 @@ pnpm add @ticatec/keelson-pg @ticatec/keelson-core @ticatec/logger-pino pg pino
 ```json
 {
   "peerDependencies": {
-    "@ticatec/logger-pino": "^0.1.0",
-    "@ticatec/keelson-core": "^3.1.0",
-    "pg": "^8.8.0",
-    "pino": ">=8.0.0"
+    "@ticatec/keelson-core": ">=1.0.0",
+    "pg": "^8.8.0"
   }
 }
 ```
 
+A logging provider is optional. With none installed, `@ticatec/logger-api` falls back to
+the console, filtered by `LOG_LEVEL`. To route logs through pino, add
+`@ticatec/logger-pino` and `pino` and install the provider at your composition root.
+
 ## Quick Start
 
 ```typescript
-import pino from 'pino';
-import { initialize as initLogger } from '@ticatec/logger-pino';
 import { initializePg } from '@ticatec/keelson-pg';
 import { DBManager } from '@ticatec/keelson-core';
 
-// 1. Initialize Logger
-initLogger(pino({ level: 'info' }));
-
-// 2. Initialize PostgreSQL Factory & DBManager
+// 1. Initialize PostgreSQL Factory & DBManager
 const pgFactory = initializePg({
   host: 'localhost',
   user: 'postgres',
@@ -58,7 +56,7 @@ const pgFactory = initializePg({
 
 DBManager.init(pgFactory);
 
-// 3. Connect and execute
+// 2. Connect and execute
 const conn = await DBManager.getInstance().connect();
 try {
   await conn.beginTransaction();
@@ -73,6 +71,15 @@ try {
   await conn.close();
 }
 ```
+
+## Exports
+
+| Export | Kind | Notes |
+| --- | --- | --- |
+| `initializePg(config, postConnection?)` | function | Creates the factory. `postConnection` runs once per new physical connection; if it throws, the socket is destroyed and `createDBConnection()` rejects with the original error as `cause`. |
+| `PgDBFactory` | class | `createDBConnection()`, `close()`. `close()` is idempotent. |
+| `PgDBConnection` | class | Extend it to adjust a dialect detail. |
+| `PostConnection` | type | `((client: PoolClient) => Promise<void>) | null` |
 
 ## License
 

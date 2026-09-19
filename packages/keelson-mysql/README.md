@@ -113,6 +113,7 @@ Factory class that implements the `DBFactory` interface.
 #### Methods
 
 - `createDBConnection(): Promise<DBConnection>` - Creates a new database connection from the pool
+- `close(): Promise<void>` - Closes the pool and releases every resource. Idempotent - later calls are no-ops
 
 ### `MysqlDBConnection`
 
@@ -129,8 +130,8 @@ Database connection class that implements the `DBConnection` interface.
 
 - `fetchData(sql: string, params?: any[]): Promise<{rows: any[], fields: any[]}>` - Executes SELECT queries
 - `executeUpdate(sql: string, params: any[]): Promise<number>` - Executes UPDATE/DELETE queries, returns affected row count
-- `insertRecord(sql: string, params: any[]): Promise<any>` - Executes INSERT queries
-- `updateRecord(sql: string, params: any[]): Promise<any>` - Executes UPDATE queries with result data
+- `insertRecord<T>(sql: string, params: any[]): Promise<InsertResult<T>>` - Executes INSERT, returning `{ affectedRows, record: null, insertId }`
+- `updateRecord<T>(sql: string, params: any[]): Promise<UpdateResult<T>>` - Executes UPDATE, returning `{ affectedRows, record: null }`
 - `deleteRecord(sql: string, params: any[]): Promise<number>` - Executes DELETE queries
 
 #### Utility Methods
@@ -184,9 +185,20 @@ try {
 }
 ```
 
+## Logging
+
+Logging goes through the [`@ticatec/logger-api`](https://www.npmjs.com/package/@ticatec/logger-api)
+contract. With no provider installed it falls back to the console, filtered by `LOG_LEVEL`.
+
+Connection acquisition, the transaction lifecycle and every statement are logged at `debug`;
+pool creation and shutdown at `info`. **Bind parameters are never written to the log** - only
+the statement text and the parameter count. When tracing a problem needs the values, set
+`KEELSON_LOG_SQL_PARAMS=true`; it is off by default and belongs nowhere near production.
+The pool configuration summary never carries `password` or `uri`.
+
 ## Known Issues & Limitations
 
-1. **Insert/Update Return Values**: The `insertRecord` and `updateRecord` methods currently call `getFirstRow()`, but INSERT/UPDATE operations typically don't return row data. Consider using `executeUpdate()` for these operations instead.
+1. **Insert/update do not return the row**: MySQL has no `RETURNING` clause, so `record` is always `null` on `insertRecord` and `updateRecord`; the new primary key comes back as `insertId`. When only the affected-row count matters, `executeUpdate()` is the more direct call.
 
 2. **Type Safety**: Some internal methods use `any` types. Consider adding more specific type definitions for better type safety.
 
@@ -207,8 +219,8 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ## Support
 
 - 📧 Email: huili.f@gmail.com
-- 🐛 Issues: [GitHub Issues](https://github.com/ticatec/keelson-mysql/issues)
-- 📖 Documentation: [GitHub Repository](https://github.com/ticatec/keelson-mysql)
+- 🐛 Issues: [GitHub Issues](https://github.com/ticatec/keelson/issues)
+- 📖 Documentation: [GitHub Repository](https://github.com/ticatec/keelson/tree/main/packages/keelson-mysql)
 
 ## Related Packages
 

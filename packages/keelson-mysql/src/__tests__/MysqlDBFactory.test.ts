@@ -169,6 +169,30 @@ describe('MysqlDBFactory & MysqlDBConnection Test Suite', () => {
         expect(conn.getFields({ fields: null })).toEqual([]);
     });
 
+    test('should map mysql2 columnType onto the framework field type', async () => {
+        const factory = initializeMySQL({});
+        const conn = await factory.createDBConnection();
+
+        // columnType 取自 MySQL 协议的列类型编号：LONG(3) NEWDECIMAL(246) DATETIME(12) VARCHAR(15)。
+        const fields = conn.getFields({
+            fields: [
+                { name: 'user_id', columnType: 3 },
+                { name: 'amount', columnType: 246 },
+                { name: 'created_at', columnType: 12 },
+                { name: 'user_name', columnType: 15 },
+                { name: 'legacy_col' }
+            ]
+        });
+
+        expect(fields).toEqual([
+            { name: 'userId', type: 'Number' },
+            { name: 'amount', type: 'Number' },
+            { name: 'createdAt', type: 'Date' },
+            { name: 'userName', type: 'Text' },
+            { name: 'legacyCol', type: 'Text' }
+        ]);
+    });
+
     test('should extract row set defensively', async () => {
         const factory = initializeMySQL({});
         const conn = await factory.createDBConnection();
@@ -203,5 +227,99 @@ describe('MysqlDBFactory & MysqlDBConnection Test Suite', () => {
 
         const clause = conn.getRowSetLimitClause(10, 20);
         expect(clause).toBe(' limit 10 offset 20');
+    });
+
+    test('never logs the password or uri when the pool is created', () => {
+        const infos: Array<any> = [];
+        setLoggerProvider(() => ({ ...SILENT, info: (...args: Array<any>) => { infos.push(args); } } as any));
+        try {
+            initializeMySQL({
+                host: 'db.internal',
+                port: 3306,
+                database: 'app',
+                user: 'app_rw',
+                password: 'super-secret',
+                uri: 'mysql://app_rw:super-secret@db.internal/app',
+                connectionLimit: 10
+            });
+
+            const created = infos.find(entry => String(entry[1]).includes('MySQL connection pool created'));
+            expect(created).toBeDefined();
+            expect(created[0]).toMatchObject({
+                host: 'db.internal', port: 3306, database: 'app', connectionLimit: 10, authenticated: true
+            });
+            const serialized = JSON.stringify(created[0]);
+            expect(serialized).not.toContain('super-secret');
+            expect(serialized).not.toContain('mysql://');
+        } finally {
+            setLoggerProvider(() => SILENT);
+        }
+    });
+
+    test('close() is idempotent and only ends the pool once', async () => {
+        const factory = initializeMySQL({ host: 'localhost' });
+
+        await factory.close();
+        await factory.close();
+
+        expect(mockPool.end).toHaveBeenCalledTimes(1);
+    });
+
+    test('logs the transaction lifecycle without leaking bind parameters', async () => {
+        const debugs: Array<any> = [];
+        setLoggerProvider(() => ({ ...SILENT, debug: (...args: Array<any>) => { debugs.push(args); } } as any));
+        try {
+            const factory = initializeMySQL({ host: 'localhost' });
+            const conn = await factory.createDBConnection();
+            mockConnection.execute.mockResolvedValue([{ affectedRows: 1 }, []]);
+
+            await conn.beginTransaction();
+            await conn.executeUpdate('UPDATE users SET pwd = ? WHERE id = ?', ['super-secret', 1]);
+            await conn.commit();
+            await conn.close();
+
+            const messages = debugs.map(entry => String(entry[1]));
+            expect(messages).toEqual(expect.arrayContaining([
+                'Beginning MySQL transaction',
+                'Executing SQL update',
+                'Committing MySQL transaction',
+                'Releasing MySQL connection to pool'
+            ]));
+            const update = debugs.find(entry => String(entry[1]) === 'Executing SQL update');
+            expect(update[0]).toEqual({ sql: 'UPDATE users SET pwd = ? WHERE id = ?', paramCount: 2 });
+            expect(JSON.stringify(debugs)).not.toContain('super-secret');
+        } finally {
+            setLoggerProvider(() => SILENT);
+        }
+    });
+
+    test('KEELSON_LOG_SQL_PARAMS reaches the driver layer, not just CommonDAO', async () => {
+        const debugs: Array<any> = [];
+        const previous = process.env.KEELSON_LOG_SQL_PARAMS;
+        setLoggerProvider(() => ({ ...SILENT, debug: (...args: Array<any>) => { debugs.push(args); } } as any));
+        process.env.KEELSON_LOG_SQL_PARAMS = 'true';
+        try {
+            const factory = initializeMySQL({ host: 'localhost' });
+            const conn = await factory.createDBConnection();
+            mockConnection.execute.mockResolvedValue([{ affectedRows: 1 }, []]);
+
+            await conn.executeUpdate('UPDATE users SET name = ? WHERE id = ?', ['alice', 1]);
+
+            // 驱动层此前走的是 DBConnection 里另写的一份 safeLogMeta，这个开关对它无效，
+            // 而排查线上问题时最需要的恰恰是真正执行 SQL 的这一层。
+            const update = debugs.find(entry => String(entry[1]) === 'Executing SQL update');
+            expect(update[0]).toEqual({
+                sql: 'UPDATE users SET name = ? WHERE id = ?',
+                paramCount: 2,
+                params: ['alice', 1]
+            });
+        } finally {
+            if (previous === undefined) {
+                delete process.env.KEELSON_LOG_SQL_PARAMS;
+            } else {
+                process.env.KEELSON_LOG_SQL_PARAMS = previous;
+            }
+            setLoggerProvider(() => SILENT);
+        }
     });
 });

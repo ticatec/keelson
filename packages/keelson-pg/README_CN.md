@@ -3,7 +3,7 @@
 [![Version](https://img.shields.io/npm/v/@ticatec/keelson-pg)](https://www.npmjs.com/package/@ticatec/keelson-pg)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-基于 `pg` 驱动构建的 PostgreSQL 数据库连接与连接池实现，专为配合 [`@ticatec/keelson-core`](https://www.npmjs.com/package/@ticatec/keelson-core) 和 `@ticatec/logger-pino` 使用而设计。支持 CommonJS 与 ESM 双模块导出。
+基于 `pg` 驱动构建的 PostgreSQL 数据库连接与连接池实现，专为配合 [`@ticatec/keelson-core`](https://www.npmjs.com/package/@ticatec/keelson-core) 使用而设计。支持 CommonJS 与 ESM 双模块导出。
 
 中文 ｜ [English](./README.md)
 
@@ -14,26 +14,36 @@
 - **标准接口实现**：实现 `DBConnection` 与 `DBFactory` 抽象接口
 - **自动布尔值转换**：原生支持 PostgreSQL 布尔类型及 `1/0`、`t/f` 转换
 - **连接池管理**：基于 `pg.Pool` 提供高效连接池管理
-- **日志抽象集成**：使用 `@ticatec/logger-pino` 提供高性能结构化日志
+- **结构化日志**：通过 `@ticatec/logger-api` 契约输出。日志里只有 SQL 语句与参数个数，绑定参数一律不写入；确需排查时显式设置 `KEELSON_LOG_SQL_PARAMS=true`。连接池配置摘要不含口令与连接串。
+- **空闲连接断开不再拖垮进程**：空闲连接出错会被记录并移出连接池，而不是让 Node 以 `uncaughtException` 退出
 
 ## 安装
 
 ```bash
-pnpm add @ticatec/keelson-pg @ticatec/keelson-core @ticatec/logger-pino pg pino
+pnpm add @ticatec/keelson-pg @ticatec/keelson-core pg
 ```
+
+### 对等依赖
+
+```json
+{
+  "peerDependencies": {
+    "@ticatec/keelson-core": ">=1.0.0",
+    "pg": "^8.8.0"
+  }
+}
+```
+
+日志实现是可选的。不装任何实现时，`@ticatec/logger-api` 回退到 console，按 `LOG_LEVEL` 过滤。
+需要走 pino，就再装 `@ticatec/logger-pino` 与 `pino`，并在应用入口注入实现。
 
 ## 快速上手
 
 ```typescript
-import pino from 'pino';
-import { initialize as initLogger } from '@ticatec/logger-pino';
 import { initializePg } from '@ticatec/keelson-pg';
 import { DBManager } from '@ticatec/keelson-core';
 
-// 1. 初始化日志组件
-initLogger(pino({ level: 'info' }));
-
-// 2. 初始化 PostgreSQL 数据库工厂与 DBManager
+// 1. 初始化 PostgreSQL 数据库工厂与 DBManager
 const pgFactory = initializePg({
   host: 'localhost',
   user: 'postgres',
@@ -45,7 +55,7 @@ const pgFactory = initializePg({
 
 DBManager.init(pgFactory);
 
-// 3. 获取连接并执行数据库操作
+// 2. 获取连接并执行数据库操作
 const conn = await DBManager.getInstance().connect();
 try {
   await conn.beginTransaction();
@@ -60,6 +70,15 @@ try {
   await conn.close();
 }
 ```
+
+## 导出
+
+| 导出 | 类型 | 说明 |
+| --- | --- | --- |
+| `initializePg(config, postConnection?)` | 函数 | 创建工厂。`postConnection` 对每个新建立的物理连接执行一次；抛错时销毁该 socket，`createDBConnection()` 以原异常作为 `cause` 拒绝。 |
+| `PgDBFactory` | 类 | `createDBConnection()`、`close()`。`close()` 可重复调用。 |
+| `PgDBConnection` | 类 | 需要改写某个方言细节时继承它。 |
+| `PostConnection` | 类型 | `((client: PoolClient) => Promise<void>) | null` |
 
 ## 开源协议
 

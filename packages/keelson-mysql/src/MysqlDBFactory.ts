@@ -1,5 +1,39 @@
-import {DBConnection, DBFactory, Field, FieldType, InsertResult, UpdateResult} from '@ticatec/keelson-core';
+import {DBConnection, DBFactory, Field, FieldType, InsertResult, UpdateResult, getLogger} from '@ticatec/keelson-core';
+import type {Logger} from '@ticatec/logger-api';
 import mysql, {Pool, PoolConnection} from "mysql2/promise";
+
+/**
+ * mysql2 在每个 field 上带着 columnType（MySQL 协议的列类型编号）。
+ * 数值类：DECIMAL(0) TINY(1) SHORT(2) LONG(3) FLOAT(4) DOUBLE(5) LONGLONG(8) INT24(9) NEWDECIMAL(246)。
+ */
+const NUMERIC_COLUMN_TYPES = new Set([0, 1, 2, 3, 4, 5, 8, 9, 246]);
+
+/**
+ * 时间类：TIMESTAMP(7) DATE(10) TIME(11) DATETIME(12) YEAR(13) NEWDATE(14)。
+ */
+const TEMPORAL_COLUMN_TYPES = new Set([7, 10, 11, 12, 13, 14]);
+
+/**
+ * 按 mysql2 的列类型编号映射到框架的字段类型。
+ *
+ * 此前 getFields() 对所有列一律返回 Text，是个对谁都成立的假值。
+ * 编号取不到时仍退回 Text——宁可保守，也不要猜错类型。
+ * @param field mysql2 字段元数据
+ * @returns 字段类型
+ */
+const resolveFieldType = (field: any): FieldType => {
+    const columnType = field?.columnType;
+    if (typeof columnType !== 'number') {
+        return FieldType.Text;
+    }
+    if (NUMERIC_COLUMN_TYPES.has(columnType)) {
+        return FieldType.Number;
+    }
+    if (TEMPORAL_COLUMN_TYPES.has(columnType)) {
+        return FieldType.Date;
+    }
+    return FieldType.Text;
+};
 
 /**
  * MySQL数据库连接实现类，继承自DBConnection
@@ -32,6 +66,7 @@ class MysqlDBConnection extends DBConnection {
      * @returns Promise<void>
      */
     async beginTransaction(): Promise<void> {
+        this.logger.debug({}, 'Beginning MySQL transaction');
         await this.#client.beginTransaction();
     }
 
@@ -40,6 +75,7 @@ class MysqlDBConnection extends DBConnection {
      * @returns Promise<void>
      */
     async close(): Promise<void> {
+        this.logger.debug({}, 'Releasing MySQL connection to pool');
         this.#client.release();
     }
 
@@ -48,6 +84,7 @@ class MysqlDBConnection extends DBConnection {
      * @returns Promise<void>
      */
     async commit(): Promise<void> {
+        this.logger.debug({}, 'Committing MySQL transaction');
         await this.#client.commit();
     }
 
@@ -57,6 +94,7 @@ class MysqlDBConnection extends DBConnection {
      */
     async rollback(): Promise<void> {
         try {
+            this.logger.debug({}, 'Rolling back MySQL transaction');
             await this.#client.rollback();
         } catch (e: any) {
             this.logger.error({ error: e?.message || e }, 'Cannot rollback the database.');
@@ -87,7 +125,7 @@ class MysqlDBConnection extends DBConnection {
         if (Array.isArray(fields)) {
             fields.forEach(field => {
                 if (field && field.name) {
-                    list.push({ name: this.toCamel(field.name), type: FieldType.Text });
+                    list.push({ name: this.toCamel(field.name), type: resolveFieldType(field) });
                 }
             });
         }
@@ -180,6 +218,7 @@ class MysqlDBConnection extends DBConnection {
      * @returns Promise<any> 执行结果
      */
     protected async executeSQL(sql: string): Promise<any> {
+        this.logger.debug({sql}, 'Executing raw SQL statement');
         return this.#client.query(sql);
     }
     
@@ -239,10 +278,19 @@ class MysqlDBFactory implements DBFactory {
     #pool: Pool;
 
     /**
+     * 关停标记。mysql2 的 pool.end() 重复调用本身不报错，这里仍然记住状态，
+     * 避免重复打出关池日志，也与 pg / 达梦两个驱动的行为保持一致。
+     */
+    #closed: boolean = false;
+
+    #logger: Logger;
+
+    /**
      * 构造函数
      * @param pool MySQL连接池对象
      */
     constructor(pool: Pool) {
+        this.#logger = getLogger('MysqlDBFactory', 'db');
         this.#pool = pool;
     }
 
@@ -259,10 +307,35 @@ class MysqlDBFactory implements DBFactory {
      * @returns Promise<void>
      */
     async close(): Promise<void> {
+        if (this.#closed) {
+            return;
+        }
+        this.#closed = true;
+        this.#logger.info({}, 'Closing MySQL connection pool');
         await this.#pool.end();
     }
 
 }
+
+/**
+ * 汇总连接配置用于日志。绝不返回任何凭据：password 与 uri 都携带口令，
+ * 只降级成一个布尔值。
+ * @param config MySQL连接配置对象
+ * @returns 可安全写入日志的摘要
+ */
+const describePool = (config: any): Record<string, unknown> => {
+    if (config == null || typeof config !== 'object') {
+        return {configured: false};
+    }
+    return {
+        host: config.host ?? null,
+        port: config.port ?? null,
+        database: config.database ?? null,
+        connectionLimit: config.connectionLimit ?? null,
+        ssl: config.ssl != null && config.ssl !== false,
+        authenticated: config.password != null || config.uri != null
+    };
+};
 
 /**
  * 初始化MySQL数据库工厂
@@ -270,7 +343,9 @@ class MysqlDBFactory implements DBFactory {
  * @returns DBFactory MySQL数据库工厂实例
  */
 export const initializeMySQL = (config: any): DBFactory => {
-    return new MysqlDBFactory(mysql.createPool(config));
+    const factory = new MysqlDBFactory(mysql.createPool(config));
+    getLogger('MysqlDBFactory', 'db').info(describePool(config), 'MySQL connection pool created');
+    return factory;
 }
 
 export { MysqlDBConnection, MysqlDBFactory };

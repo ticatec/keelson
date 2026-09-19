@@ -14,7 +14,7 @@
 - ⚡ **现代化异步支持**：完整的 Promise / async / await 编程模型
 - 🛡️ **强类型约束**：`insertRecord` 与 `updateRecord` 返回统一的类型化结构 (`InsertResult<T>`, `UpdateResult<T>`)
 - 🔍 **参数绑定**：标准达梦 `?` 占位符绑定
-- 📊 **自动映射转化**：支持下划线列名转驼峰、保留加引号的显式驼峰别名、`__` 双下划线多级对象映射、兼容数组与对象行结构，并安全保留 `null` 值
+- 📊 **自动映射转化**：支持下划线列名转驼峰、保留加引号的显式驼峰别名、`__` 与 `.` 多级对象映射（带原型链防御）、兼容数组与对象行结构，并安全保留 `null` 值
 - 🏗️ **双格式导出**：同时支持 CommonJS 和 ESM
 
 ## 安装
@@ -108,7 +108,7 @@ async function performDatabaseOperations() {
 实现 `DBFactory` 接口的达梦工厂类。
 
 - `createDBConnection(): Promise<DBConnection>` - 从连接池检出连接（首次调用时懒加载创建连接池，内置并发安全与建池失败清缓存重试机制）。
-- `close(): Promise<void>` - 关闭底层的 `dmdb` 连接池并重置工厂状态。
+- `close(): Promise<void>` - 关闭底层的 `dmdb` 连接池并重置工厂状态。从未建池时调用也是安全的。
 
 ### `DMDBConnection`
 
@@ -129,6 +129,28 @@ async function performDatabaseOperations() {
 - `updateRecord<T>(sql: string, params: any[]): Promise<UpdateResult<T>>` - 执行 UPDATE 并返回 `{ affectedRows, record }`。
 - `deleteRecord(sql: string, params: any[]): Promise<number>` - 执行 DELETE 并返回受影响行数。
 - `getPlaceholder(index: number): string` - 返回达梦方言占位符 `?`。
+
+## 列别名映射
+
+列名统一转驼峰：全大写标识符先整体转小写，`USER_NAME` 得到 `userName`；SQL 里显式加引号的
+别名（如 `"itemCount"`）保持原样。
+
+别名中的点号与双下划线都表示层级，`DEPT__USER_NAME` 与 `DEPT.USER_NAME` 同样映射为
+`{ dept: { userName } }`。双下划线只有真正夹在两段非空文本之间时才算分隔符，
+因此 `__internal` 这类列名保持为单个键，不会被切成空段。
+
+会写到原型链上的别名（`__proto__`、`constructor`、`prototype`，不分大小写）直接丢弃；
+路径中间层若已经是基本类型值，则整条路径跳过，不覆盖原值。
+
+## 日志
+
+日志走 [`@ticatec/logger-api`](https://www.npmjs.com/package/@ticatec/logger-api) 契约。
+未注入实现时回退到 console，按 `LOG_LEVEL` 过滤。
+
+事务生命周期与每条语句记在 `debug`，建池与关池记在 `info`。
+**绑定参数一律不写入日志**，只有 SQL 文本与参数个数。确需排查时设置
+`KEELSON_LOG_SQL_PARAMS=true`；默认关闭，不应出现在生产环境。
+连接池配置摘要不含 `password` 与 `connectString`。
 
 ## 授权协议
 

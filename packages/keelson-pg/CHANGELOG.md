@@ -32,7 +32,43 @@ npm with a pointer here.
 
 ## [Unreleased]
 
+### Fixed
+
+- **An idle connection dying no longer kills the process.** `pg` registers an
+  `idleListener` on every pooled client's socket; when the connection is cut - a
+  database restart, an idle reaper on the server, a firewall timeout - that listener
+  calls `pool.emit('error', ...)`. An `EventEmitter` with no `'error'` listener
+  throws, and this throw happens inside a socket event callback where no `try`/`catch`
+  of yours can reach it, so Node exits with an `uncaughtException`. Reproduced: the
+  process exited with code 1 and the statement after the emit never ran. The factory
+  now attaches the listener that the `pg` documentation requires and logs the error.
+
+- **`close()` is idempotent.** `pg` rejects a second `pool.end()` with
+  `Called end on pool more than once`, so two shutdown paths - or a shutdown hook that
+  runs twice - turned an orderly shutdown into a failure. Repeated calls are now no-ops.
+
+- **`getFields()` no longer reports every column as `Text`.** `getFieldType()` ignored
+  its argument and returned a constant, which is a value that happens to be right for
+  text columns and wrong for everything else. It now reads `dataTypeID`, the type OID
+  that `pg` puts on each field, and maps the built-in numeric and temporal types.
+  `FieldType` has no boolean member, so `bool` still maps to `Text`; boolean coercion
+  goes through the `booleanFields` argument of `listQuery()` / `find()`, not through
+  this metadata.
+
+### Added
+
+- **`PgDBConnection` and `PgDBFactory` are exported.** Only `initializePg()` was
+  reachable, so there was no way to subclass the connection to adjust a dialect
+  detail - `@ticatec/keelson-mysql` and `@ticatec/keelson-dm` both export theirs.
+
+- **Pool lifecycle logging through `@ticatec/logger-api`.** Creation and shutdown are
+  logged. The configuration summary never carries credentials: `password` and
+  `connectionString` are reduced to a single `authenticated` boolean, and a test
+  asserts the serialized metadata contains neither the password nor the URL.
+
 ### Changed
+
+- `prepublishOnly` now runs the test suite, matching the other two drivers.
 
 - **`strict` is on.** The build configs (`tsconfig.cjs.json` / `tsconfig.esm.json`)
   did not extend `tsconfig.json` - they were standalone - so nothing in the base

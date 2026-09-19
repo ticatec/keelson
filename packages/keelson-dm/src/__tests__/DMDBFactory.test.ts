@@ -377,4 +377,81 @@ describe('DMDBFactory & DMDBConnection Test Suite', () => {
         const clause = conn.getRowSetLimitClause(10, 20);
         expect(clause).toBe(' limit 10 offset 20');
     });
+
+    describe('column alias to object path mapping', () => {
+
+        const newConn = async (): Promise<any> => {
+            const factory = initializeDmDB({});
+            return await factory.createDBConnection() as any;
+        };
+
+        test('keeps the double-underscore separator working', async () => {
+            const conn = await newConn();
+            const target: any = {};
+            conn.setNestObj(target, 'DEPT__USER_NAME', 'alice');
+            expect(target).toEqual({ dept: { userName: 'alice' } });
+        });
+
+        test('a column name that merely starts or ends with __ is not a path', async () => {
+            const conn = await newConn();
+            const target: any = {};
+            // 之前的实现只判断 field.includes('__')，于是 __proto__ 被切成
+            // ['', 'proto', ''] 这样的空段，映射出 {"": {proto: {...}}} 的垃圾结构。
+            conn.setNestObj(target, 'SOME__', 'v');
+            expect(target).toEqual({ some_: 'v' });
+        });
+
+        test('refuses prototype-chain keys instead of throwing', async () => {
+            const conn = await newConn();
+            const target: any = {};
+            expect(() => conn.setNestObj(target, 'constructor.prototype.isAdmin', true)).not.toThrow();
+            expect(target).toEqual({});
+            expect(({} as any).isAdmin).toBeUndefined();
+            expect(() => conn.setNestObj(target, '__proto__.injected', true)).not.toThrow();
+            expect(({} as any).injected).toBeUndefined();
+        });
+
+        test('stops instead of throwing when an intermediate segment is a primitive', async () => {
+            const conn = await newConn();
+            const target: any = { a: 5 };
+            // 同一个结果集里同时出现 a 与 a.b 两个别名时，旧实现会抛
+            // "Cannot create property 'b' on number '5'"，整批结果映射随之中断。
+            expect(() => conn.setNestObj(target, 'a.b', 1)).not.toThrow();
+            expect(target).toEqual({ a: 5 });
+        });
+
+        test('toCamel behaves exactly as the base class does', async () => {
+            const conn = await newConn();
+            const base = (name: string) => {
+                const normalized = /^[A-Z0-9_]+$/.test(name) ? name.toLowerCase() : name;
+                return normalized.replace(/_(\w)/g, (_a: string, l: string) => l.toUpperCase());
+            };
+            ['USER_NAME', 'STATUS', 'itemCount', 'user_name', 'A_B_C', 'ID'].forEach(n => {
+                expect(conn.toCamel(n)).toBe(base(n));
+            });
+        });
+    });
+
+    test('never logs the password when the pool is created', async () => {
+        const infos: Array<any> = [];
+        setLoggerProvider(() => ({ ...SILENT, info: (...args: Array<any>) => { infos.push(args); } } as any));
+        try {
+            const factory = initializeDmDB({
+                connectString: 'dm://SYSDBA:SYSDBA@localhost:5236',
+                user: 'SYSDBA',
+                password: 'super-secret',
+                poolMax: 8
+            });
+            await factory.createDBConnection();
+
+            const created = infos.find(entry => String(entry[1]).includes('Creating DM connection pool'));
+            expect(created).toBeDefined();
+            expect(created[0]).toMatchObject({ user: 'SYSDBA', poolMax: 8, authenticated: true, hasConnectString: true });
+            const serialized = JSON.stringify(created[0]);
+            expect(serialized).not.toContain('super-secret');
+            expect(serialized).not.toContain('dm://');
+        } finally {
+            setLoggerProvider(() => SILENT);
+        }
+    });
 });

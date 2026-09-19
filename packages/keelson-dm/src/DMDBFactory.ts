@@ -1,4 +1,5 @@
-import { DBConnection, DBFactory, Field, FieldType, InsertResult, UpdateResult } from "@ticatec/keelson-core";
+import { DBConnection, DBFactory, Field, FieldType, InsertResult, UpdateResult, getLogger } from "@ticatec/keelson-core";
+import type { Logger } from "@ticatec/logger-api";
 import dmdb, { Pool, Connection, Result, ExecuteOptions } from "dmdb";
 
 /**
@@ -49,6 +50,7 @@ class DMDBConnection extends DBConnection {
      * 开始数据库事务
      */
     async beginTransaction(): Promise<void> {
+        this.logger.debug({}, 'Beginning DM transaction');
         this.#inTransaction = true;
     }
 
@@ -56,6 +58,7 @@ class DMDBConnection extends DBConnection {
      * 关闭连接
      */
     async close(): Promise<void> {
+        this.logger.debug({}, 'Releasing DM connection to pool');
         this.#inTransaction = false;
         await this.#connection.close();
     }
@@ -65,6 +68,7 @@ class DMDBConnection extends DBConnection {
      */
     async commit(): Promise<void> {
         try {
+            this.logger.debug({}, 'Committing DM transaction');
             await this.#connection.commit();
         } finally {
             this.#inTransaction = false;
@@ -76,6 +80,7 @@ class DMDBConnection extends DBConnection {
      */
     async rollback(): Promise<void> {
         try {
+            this.logger.debug({}, 'Rolling back DM transaction');
             await this.#connection.rollback();
         } catch (e: any) {
             this.logger.error({ error: e?.message || e }, 'Cannot rollback the database.');
@@ -147,6 +152,7 @@ class DMDBConnection extends DBConnection {
      * @returns 执行结果
      */
     protected async executeSQL(sql: string): Promise<any> {
+        this.logger.debug({ sql }, 'Executing raw SQL statement');
         return await this.#connection.execute(sql, [], this.execOptions);
     }
 
@@ -201,36 +207,28 @@ class DMDBConnection extends DBConnection {
     }
 
     /**
-     * 将列名转换为驼峰命名。
-     * 只对全大写+下划线的标识符（如 USER_NAME -> userName）做预处理，
-     * 避免破坏 SQL 中显式加引号的驼峰别名（如 "itemCount"）。
-     * @param name 字段名
-     * @returns 驼峰字符串
-     */
-    protected override toCamel(name: string): string {
-        const s = /^[A-Z0-9_]+$/.test(name) ? name.toLowerCase() : name;
-        return s.replace(/_(\w)/g, (_a, c) => c.toUpperCase());
-    }
-
-    /**
-     * 设置嵌套属性值，支持点号与双下划线作为层级分隔符
-     * @param obj 目标对象
+     * 拆分列别名的层级路径。达梦的 SQL 别名里不便直接写点号，因此额外支持双下划线。
+     *
+     * 只覆写分隔符，不再整段重写 `setNestObj()`：基类里的原型链防御
+     * （`constructor` / `prototype` / `__proto__`）与中间层基本类型检查因此保留。
+     * 之前的覆写把这两道防御一起丢掉了，`constructor.prototype.x` 这类别名会抛
+     * TypeError 直接中断整个结果集映射。
+     *
+     * 分隔符只在真正构成层级时才认双下划线：`__` 必须出现在两段非空文本之间，
+     * 否则 `__proto__` 这种以双下划线开头/结尾的列名会被切成空段，映射出
+     * `{"": {proto: {...}}}` 这样的垃圾结构。
      * @param field 字段路径
-     * @param value 属性值
+     * @returns 路径分段
      */
-    protected override setNestObj(obj: any, field: string, value: any): void {
-        if (value !== undefined) {
-            const separator = field.includes('__') ? '__' : '.';
-            const attrs = field.split(separator);
-            let attr = this.toCamel(attrs[0]);
-            let nestObj = obj;
-            for (let i = 0; i < attrs.length - 1; i++) {
-                nestObj[attr] = nestObj[attr] ?? {};
-                nestObj = nestObj[attr];
-                attr = this.toCamel(attrs[i + 1]);
-            }
-            nestObj[attr] = value;
+    protected override splitFieldPath(field: string): Array<string> {
+        if (field.includes('.')) {
+            return field.split('.');
         }
+        const segments = field.split('__');
+        if (segments.length > 1 && segments.every(seg => seg.length > 0)) {
+            return segments;
+        }
+        return [field];
     }
 
     /**
@@ -326,12 +324,14 @@ class DMDBFactory implements DBFactory {
 
     #poolPromise?: Promise<Pool>;
     #config: any;
+    #logger: Logger;
 
     /**
      * 构造函数
      * @param config 达梦数据库连接配置
      */
     constructor(config: any) {
+        this.#logger = getLogger('DMDBFactory', 'db');
         this.#config = config;
     }
 
@@ -340,12 +340,34 @@ class DMDBFactory implements DBFactory {
      */
     private getPool(): Promise<Pool> {
         if (!this.#poolPromise) {
+            this.#logger.info(DMDBFactory.describePool(this.#config), 'Creating DM connection pool');
             this.#poolPromise = dmdb.createPool(this.#config).catch(err => {
                 this.#poolPromise = undefined;
+                // 建池失败时一并清掉缓存，允许后续重试；配置里带着口令，只能记异常本身。
+                this.#logger.error(err, 'Failed to create DM connection pool');
                 throw err;
             });
         }
         return this.#poolPromise;
+    }
+
+    /**
+     * 汇总连接配置用于日志。绝不返回任何凭据：password 与 connectString 都携带口令，
+     * 只降级成一个布尔值。
+     * @param config 达梦数据库连接配置
+     * @returns 可安全写入日志的摘要
+     */
+    private static describePool(config: any): Record<string, unknown> {
+        if (config == null || typeof config !== 'object') {
+            return { configured: false };
+        }
+        return {
+            user: config.user ?? null,
+            poolMax: config.poolMax ?? null,
+            poolMin: config.poolMin ?? null,
+            authenticated: config.password != null,
+            hasConnectString: config.connectString != null
+        };
     }
 
     /**
@@ -365,6 +387,7 @@ class DMDBFactory implements DBFactory {
         if (this.#poolPromise) {
             const poolPromise = this.#poolPromise;
             this.#poolPromise = undefined;
+            this.#logger.info({}, 'Closing DM connection pool');
             const pool = await poolPromise;
             await pool.close();
         }

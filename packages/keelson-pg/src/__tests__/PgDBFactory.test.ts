@@ -46,22 +46,42 @@ jest.mock('pg', () => {
         release: mockRelease
     };
 
+    // 用真正的 EventEmitter 作为连接池替身。此前的替身把 on() 换成了 jest.fn()，
+    // 于是“没有 error 监听器的 EventEmitter 会 throw”这一关键行为在测试里被抹掉了，
+    // 空闲连接出错崩进程的缺陷才能长期潜伏。
+    // jest.mock 的工厂函数会被提升到 import 之前执行，无法引用模块顶部的导入绑定，
+    // 只能在工厂内部 require。
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    const { EventEmitter } = require('events');
+    let lastPool: any = null;
+    let endCalls = 0;
+
+    class MockPool extends EventEmitter {
+        async connect() {
+            this.emit('connect', mockClient);
+            if (lastConnectHandler) {
+                lastConnectHandler(mockClient);
+            }
+            return mockClient;
+        }
+        async end() {
+            endCalls += 1;
+            if (endCalls > 1) {
+                throw new Error('Called end on pool more than once');
+            }
+        }
+    }
+
     return {
-        Pool: jest.fn().mockImplementation(() => ({
-            connect: jest.fn().mockImplementation(async () => {
-                if (lastConnectHandler) {
-                    lastConnectHandler(mockClient);
-                }
-                return mockClient;
-            }),
-            on: jest.fn().mockImplementation((event: string, handler: any) => {
-                if (event === 'connect') {
-                    lastConnectHandler = handler;
-                }
-            }),
-            end: jest.fn().mockResolvedValue(undefined)
-        })),
-        __getMockRelease: () => mockRelease
+        Pool: jest.fn().mockImplementation(function (this: any) {
+            const pool = new MockPool();
+            lastPool = pool;
+            return pool;
+        }),
+        __getMockRelease: () => mockRelease,
+        __getLastPool: () => lastPool,
+        __getEndCalls: () => endCalls,
+        __resetEndCalls: () => { endCalls = 0; }
     };
 });
 
@@ -71,6 +91,7 @@ describe('PgDBFactory & PgDBConnection Comprehensive Test Suite', () => {
         shouldFailRollback = false;
         currentMockRelease = (pg as any).__getMockRelease();
         currentMockRelease.mockReset();
+        (pg as any).__resetEndCalls();
         resetLoggerProvider();
         setLoggerProvider(() => SILENT);
     });
@@ -131,6 +152,35 @@ describe('PgDBFactory & PgDBConnection Comprehensive Test Suite', () => {
 
         expect(conn.getFields(null)).toEqual([]);
         expect(conn.getFields({})).toEqual([]);
+    });
+
+    test('should map the PostgreSQL type OID onto the framework field type', async () => {
+        const factory = initializePg({ host: 'localhost' });
+        const conn = await factory.createDBConnection();
+
+        // dataTypeID 是 PostgreSQL 内置类型的固定 OID：int4=23 numeric=1700
+        // timestamptz=1184 text=25 bool=16。
+        const fields = conn.getFields({
+            fields: [
+                { name: 'user_id', dataTypeID: 23 },
+                { name: 'amount', dataTypeID: 1700 },
+                { name: 'created_at', dataTypeID: 1184 },
+                { name: 'user_name', dataTypeID: 25 },
+                { name: 'is_active', dataTypeID: 16 },
+                { name: 'legacy_col' }
+            ]
+        });
+
+        expect(fields).toEqual([
+            { name: 'userId', type: FieldType.Number },
+            { name: 'amount', type: FieldType.Number },
+            { name: 'createdAt', type: FieldType.Date },
+            { name: 'userName', type: FieldType.Text },
+            // FieldType 里没有布尔类型，bool 只能落到 Text；布尔值的转换走
+            // listQuery/find 的 booleanFields 参数，与这里的元数据无关。
+            { name: 'isActive', type: FieldType.Text },
+            { name: 'legacyCol', type: FieldType.Text }
+        ]);
     });
 
     test('should handle NULL fields and preserve explicit null in getFirstRow', async () => {
@@ -220,5 +270,53 @@ describe('PgDBFactory & PgDBConnection Comprehensive Test Suite', () => {
         expect(conn.getPlaceholder(5)).toBe('$5');
 
         await (factory as any).close();
+    });
+
+    test('survives an idle client error instead of crashing the process', async () => {
+        const errors: Array<any> = [];
+        setLoggerProvider(() => ({ ...SILENT, error: (...args: Array<any>) => { errors.push(args); } } as any));
+
+        initializePg({ host: 'localhost', database: 'app' });
+        const pool = (pg as any).__getLastPool();
+
+        // pg-pool 的 idleListener 就是这样把空闲连接的 socket 错误转发到连接池上的。
+        // 没有 'error' 监听器时，EventEmitter 会在这一行同步 throw；那一行跑在 socket
+        // 的事件回调里，进程只能以 uncaughtException 退出。
+        expect(() => pool.emit('error', new Error('Connection terminated unexpectedly'), {})).not.toThrow();
+        expect(errors).toHaveLength(1);
+        expect(errors[0][0]).toBeInstanceOf(Error);
+        expect(errors[0][1]).toContain('Idle PostgreSQL client errored');
+    });
+
+    test('never logs the password or connection string when the pool is created', () => {
+        const infos: Array<any> = [];
+        setLoggerProvider(() => ({ ...SILENT, info: (...args: Array<any>) => { infos.push(args); } } as any));
+
+        initializePg({
+            host: 'db.internal',
+            port: 5432,
+            database: 'app',
+            user: 'app_rw',
+            password: 'super-secret',
+            connectionString: 'postgres://app_rw:super-secret@db.internal/app',
+            max: 10
+        });
+
+        expect(infos).toHaveLength(1);
+        const meta = infos[0][0];
+        expect(meta).toMatchObject({ host: 'db.internal', port: 5432, database: 'app', max: 10, authenticated: true });
+        const serialized = JSON.stringify(meta);
+        expect(serialized).not.toContain('super-secret');
+        expect(serialized).not.toContain('postgres://');
+    });
+
+    test('close() is idempotent', async () => {
+        const factory = initializePg({ host: 'localhost' });
+
+        await expect(factory.close()).resolves.toBeUndefined();
+        // pg 的 pool.end() 第二次调用会 reject（Called end on pool more than once），
+        // 两条关停路径或重复的 shutdown hook 都会踩到。
+        await expect(factory.close()).resolves.toBeUndefined();
+        expect((pg as any).__getEndCalls()).toBe(1);
     });
 });

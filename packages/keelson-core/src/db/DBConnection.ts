@@ -1,6 +1,6 @@
 import Field from "./Field.js";
 import fs from "fs";
-import {getLogger} from "../Logger.js";
+import {getLogger, sqlContext} from "../Logger.js";
 import type {Logger} from "../Logger.js";
 import PaginationList from "./PaginationList.js";
 import CommonSearchCriteria from "./CommonSearchCriteria.js";
@@ -442,6 +442,21 @@ export default abstract class DBConnection {
     }
 
     /**
+     * Splits a column alias into the object path it maps to. The default dialect uses
+     * a dot (`profile.name`); drivers whose SQL cannot carry a dot in an alias override
+     * this to recognise their own separator.
+     *
+     * 这个钩子存在的唯一理由，是让驱动只改分隔符，而不是整段重写 `setNestObj()`：
+     * 一旦重写，原型链防御与中间层类型检查就会被一起丢掉，达梦驱动此前正是如此。
+     * @param field - Field path string as it appears in the result metadata.
+     * @protected
+     * @returns Path segments, outermost first. Never empty.
+     */
+    protected splitFieldPath(field: string): Array<string> {
+        return field.split('.');
+    }
+
+    /**
      * Sets property value on a nested object path (supports dot-separated fields like 'profile.name').
      * Preserves explicit null values returned by database queries.
      * @param obj - Target object.
@@ -451,7 +466,7 @@ export default abstract class DBConnection {
      */
     protected setNestObj(obj: any, field: string, value: any): void {
         if (value !== undefined) {
-            const attrs = field.split('.');
+            const attrs = this.splitFieldPath(field);
             // 列别名可能来自动态拼接的 SQL，因此路径上的每一段都要挡住原型链的保留字。
             // 此前 '__proto__' 侥幸没造成污染，只是因为 toCamel 把它改写成了 _proto_；
             // 而 'constructor.prototype.x' 会在赋值时直接抛 TypeError，让整个结果映射崩掉。
@@ -481,15 +496,16 @@ export default abstract class DBConnection {
 
     /**
      * Helper to format SQL statements and parameter count for safe logging without leaking parameter values.
+     *
+     * 直接委托给 `sqlContext()`，不再自己拼对象。此前这里是一份独立实现，于是
+     * `KEELSON_LOG_SQL_PARAMS=true` 只对 `CommonDAO` 生效，驱动层（真正执行 SQL 的那一层）
+     * 无论如何都打不出绑定参数——排查线上问题时最需要的恰恰是驱动层这几条。
      * @param sql - SQL query string.
      * @param params - Parameter array or null/undefined.
      * @protected
      */
-    protected safeLogMeta(sql: string, params?: Array<any> | null) {
-        return {
-            sql,
-            paramCount: params ? params.length : 0
-        };
+    protected safeLogMeta(sql: string, params?: Array<any> | null): Record<string, unknown> {
+        return sqlContext(sql, params ?? []);
     }
 
     /**

@@ -32,6 +32,33 @@ npm with a pointer here.
 
 ## [Unreleased]
 
+### Fixed
+
+- **The published tarball carried no licence text.** `package.json` declares
+  `"license": "MIT"` and lists `LICENSE` in `files`, but the file did not exist in the
+  package - every other package in the repository has one. Added.
+
+- **`getFields()` no longer reports every column as `Text`.** The type was hard-coded,
+  which is a value that happens to be right for string columns and wrong for everything
+  else. It now reads `columnType`, the MySQL protocol column-type code that `mysql2`
+  puts on each field, and maps the numeric and temporal codes.
+
+### Added
+
+- **Transaction and statement logging through `@ticatec/logger-api`.**
+  `beginTransaction()`, `commit()`, `rollback()`, `close()` and `executeSQL()` were
+  silent while `@ticatec/keelson-pg` logged all of them, so the same application
+  produced a different trace depending on which database it ran against. Bind
+  parameters are never in the message - only the statement and the parameter count.
+
+- **Pool lifecycle logging.** Creation and shutdown are logged. The configuration
+  summary never carries credentials: `password` and `uri` are reduced to a single
+  `authenticated` boolean, and a test asserts the serialized metadata contains neither
+  the password nor the URL.
+
+- **`close()` is idempotent.** `mysql2` tolerates a second `end()`, but the factory now
+  ends the pool once and logs once, matching the other two drivers.
+
 ### Changed
 
 - **`strict` is on.** The build configs (`tsconfig.cjs.json` / `tsconfig.esm.json`)

@@ -1,5 +1,17 @@
-import { DBConnection, DBFactory, Field, FieldType, InsertResult, UpdateResult } from "@ticatec/keelson-core";
+import { DBConnection, DBFactory, Field, FieldType, InsertResult, UpdateResult, getLogger } from "@ticatec/keelson-core";
+import type { Logger } from "@ticatec/logger-api";
 import { Pool, PoolClient, QueryResult } from 'pg';
+
+/**
+ * PostgreSQL 内置数值类型的 OID：int2 / int4 / int8 / float4 / float8 / numeric / money。
+ */
+const NUMERIC_OIDS = new Set([21, 23, 20, 700, 701, 1700, 790]);
+
+/**
+ * PostgreSQL 内置时间类型的 OID：date / time / timetz / timestamp / timestamptz。
+ */
+const TEMPORAL_OIDS = new Set([1082, 1083, 1266, 1114, 1184]);
+
 
 /**
  * PostgreSQL database connection implementation.
@@ -213,11 +225,26 @@ class PgDBConnection extends DBConnection {
     }
 
     /**
-     * Retrieves the field type definition.
-     * @param _field - Database field metadata.
+     * Maps a PostgreSQL type OID onto the framework's field type.
+     *
+     * 此前这个方法忽略入参、恒返回 Text，于是 `getFields()` 给出的 type 是一个
+     * 对所有列都成立的假值。pg 在每个 field 上都带了 `dataTypeID`（类型 OID），
+     * 按它判断即可；OID 是 PostgreSQL 内置类型的固定值，不随数据库实例变化。
+     * 枚举、数组、JSON 等类型没有对应的框架类型，仍落到 Text。
+     * @param field - Database field metadata.
      * @private
      */
-    private getFieldType(_field: any): FieldType {
+    private getFieldType(field: any): FieldType {
+        const oid = field?.dataTypeID;
+        if (typeof oid !== 'number') {
+            return FieldType.Text;
+        }
+        if (NUMERIC_OIDS.has(oid)) {
+            return FieldType.Number;
+        }
+        if (TEMPORAL_OIDS.has(oid)) {
+            return FieldType.Date;
+        }
         return FieldType.Text;
     }
 
@@ -286,12 +313,35 @@ class PgDBFactory implements DBFactory {
     #initPromises = new WeakMap<PoolClient, Promise<void>>();
 
     /**
+     * Guards against `pool.end()` being called twice: pg rejects the second call with
+     * "Called end on pool more than once", which would turn an idempotent shutdown hook
+     * into a failing one.
+     * @private
+     */
+    #closed = false;
+
+    /**
+     * @private
+     */
+    #logger: Logger;
+
+    /**
      * Creates a new PostgreSQL database factory.
      * @param config - PostgreSQL connection configuration object.
      * @param postConnection - Optional post-connection hook callback.
      */
     constructor(config: any, postConnection: PostConnection = null) {
+        this.#logger = getLogger('PgDBFactory', 'db');
         this.#pool = new Pool(config);
+        // pg 在空闲连接的 socket 上挂了 idleListener，连接被数据库或中间设备切断时
+        // 它会调用 pool.emit('error', ...)。EventEmitter 对没有监听器的 'error'
+        // 事件直接 throw，而这一句跑在 socket 的事件回调里，没有任何 try/catch 能接住，
+        // 于是数据库重启、空闲连接被回收、网络抖动都会让整个 Node 进程以
+        // uncaughtException 退出。挂上监听器是 pg 官方文档明确要求的。
+        this.#pool.on('error', (err: Error, client?: PoolClient) => {
+            this.#logger.error(err, `Idle PostgreSQL client errored and was removed from the pool${client ? '' : ' (no client attached)'}`);
+        });
+        this.#logger.info(PgDBFactory.describePool(config), 'PostgreSQL connection pool created');
         if (postConnection) {
             this.#pool.on('connect', (client: PoolClient) => {
                 const initPromise = Promise.resolve().then(() => postConnection(client));
@@ -323,9 +373,35 @@ class PgDBFactory implements DBFactory {
 
     /**
      * Closes the PostgreSQL connection pool and releases all resources.
+     * Safe to call more than once.
      */
     async close(): Promise<void> {
+        if (this.#closed) {
+            return;
+        }
+        this.#closed = true;
+        this.#logger.info({}, 'Closing PostgreSQL connection pool');
         await this.#pool.end();
+    }
+
+    /**
+     * Summarises the pool configuration for logging. Never returns credentials:
+     * `password` and `connectionString` both carry secrets and are reduced to a boolean.
+     * @param config - PostgreSQL connection configuration object.
+     * @private
+     */
+    private static describePool(config: any): Record<string, unknown> {
+        if (config == null || typeof config !== 'object') {
+            return { configured: false };
+        }
+        return {
+            host: config.host ?? null,
+            port: config.port ?? null,
+            database: config.database ?? null,
+            max: config.max ?? null,
+            ssl: config.ssl != null && config.ssl !== false,
+            authenticated: config.password != null || config.connectionString != null
+        };
     }
 }
 
@@ -338,3 +414,5 @@ class PgDBFactory implements DBFactory {
 export const initializePg = (config: any, postConnection: PostConnection = null): DBFactory => {
     return new PgDBFactory(config, postConnection);
 };
+
+export { PgDBConnection, PgDBFactory };
