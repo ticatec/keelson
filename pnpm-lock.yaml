@@ -29,9 +29,6 @@ importers:
       '@typescript-eslint/parser':
         specifier: ^7.18.0
         version: 7.18.0(eslint@8.57.1)(typescript@5.9.3)
-      dayjs:
-        specifier: ^1.11.13
-        version: 1.11.23
       eslint:
         specifier: ^8.57.0
         version: 8.57.1
@@ -395,21 +392,30 @@ importers:
       '@ticatec/logger-api':
         specifier: workspace:*
         version: link:../logger-api
+      '@types/ioredis-mock':
+        specifier: ^8.2.5
+        version: 8.2.8(ioredis@5.11.1)
       '@types/jest':
         specifier: ^29.5.14
         version: 29.5.14
       '@types/node':
         specifier: ^20.11.17
         version: 20.19.43
+      '@typescript-eslint/eslint-plugin':
+        specifier: ^7.18.0
+        version: 7.18.0(@typescript-eslint/parser@7.18.0(eslint@8.57.1)(typescript@5.9.3))(eslint@8.57.1)(typescript@5.9.3)
+      '@typescript-eslint/parser':
+        specifier: ^7.18.0
+        version: 7.18.0(eslint@8.57.1)(typescript@5.9.3)
+      eslint:
+        specifier: ^8.57.0
+        version: 8.57.1
       ioredis:
         specifier: ^5.11.1
         version: 5.11.1
       jest:
         specifier: ^29.7.0
         version: 29.7.0(@types/node@20.19.43)
-      pino:
-        specifier: ^9.5.0
-        version: 9.14.0
       ts-jest:
         specifier: ^29.2.5
         version: 29.4.12(@babel/core@7.29.7)(@jest/transform@29.7.0)(@jest/types@29.6.3)(babel-jest@29.7.0(@babel/core@7.29.7))(jest-util@29.7.0)(jest@29.7.0(@types/node@20.19.43))(typescript@5.9.3)
@@ -1143,9 +1149,6 @@ packages:
   cross-spawn@7.0.6:
     resolution: {integrity: sha512-uV2QOWP2nWzsy2aMp8aRibhi9dlzF5Hgh5SHaB9OiTGEyDTiJJyx0uy51QXdyWbtAHNua4XJzUKca3OzKUd3vA==}
     engines: {node: '>= 8'}
-
-  dayjs@1.11.23:
-    resolution: {integrity: sha512-QDTCU0M0MxR3hQfnlDJfwekQiaanm1ubOD231u73WBckQ/fsamwRLiE2GBz6D3a/xF1NgfiDLJjXBa1hYOYTtQ==}
 
   debug@2.6.9:
     resolution: {integrity: sha512-bC7ElrdJaJnPbAP+1EotYvqZsb3ecl5wi6Bfi6BJTUcNowp6cvspg0jXznRTKDjm/E7AdgFBVeAPVMNcKGsHMA==}
@@ -3641,8 +3644,6 @@ snapshots:
       path-key: 3.1.1
       shebang-command: 2.0.0
       which: 2.0.2
-
-  dayjs@1.11.23: {}
 
   debug@2.6.9:
     dependencies:

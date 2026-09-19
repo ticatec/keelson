@@ -373,11 +373,11 @@ beanValidator.validate({ age: '' }, [new NumberValidator('age', {})]).valid;
 // true - an optional field left blank is simply absent
 ```
 
-`StringValidator` is the exception, because for a string an empty value is still
-a value: `''` goes through `minLen`, `maxLen` and `format` as usual. With the
-default `trim: true` a whitespace-only string trims to `''` and a required field
-still reports `cannot be empty`; with `trim: false` the whitespace is preserved
-and counts toward the length.
+For `StringValidator`, leaving an optional field blank (`''`, or whitespace with
+the default `trim: true`) skips `minLen`, `maxLen`, and `format` as well. If the
+field is required, a blank string reports `cannot be empty`. With `trim: false`,
+whitespace is preserved and treated as a non-empty value that counts toward the
+length.
 
 ```typescript
 // An optional field left blank is not held to minLen or format

@@ -5,14 +5,14 @@
 [![Version](https://img.shields.io/npm/v/@ticatec/redis-client)](https://www.npmjs.com/package/@ticatec/redis-client)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-A lightweight TypeScript wrapper around ioredis, providing convenient methods for Redis operations with singleton and multi-instance pattern support, Pino logger integration, mock Redis for testing, and an abstract caching framework with Cache-Aside (`getOrSet`) support.
+A lightweight TypeScript wrapper around ioredis, providing convenient methods for Redis operations with singleton and multi-instance pattern support, logging through the `@ticatec/logger-api` contract, mock Redis for testing, and an abstract caching framework with Cache-Aside (`getOrSet`) support.
 
 ## Features
 
 - ✅ **Dual Module Support**: Full ES Module (ESM) & CommonJS (CJS) compatibility
 - ✅ **Singleton & Multi-Instance**: Supports named singletons (`getInstance('session')`) and standalone instances
 - ✅ **Mock Redis Support**: Built-in mock Redis via `ioredis-mock` for testing environments
-- ✅ **Pino Logger Integration**: Structured logging via `@ticatec/logger-pino` (Pino)
+- ✅ **Pluggable Logging**: Writes through the `@ticatec/logger-api` contract, with credentials and cached values kept out of the log
 - ✅ **Cache-Aside Pattern (`getOrSet`)**: Built-in `getOrSet` method to fetch or populate cache automatically
 - ✅ **JSON Serialization**: Automatic JSON serialization/deserialization for objects
 - ✅ **Comprehensive Operations**: High-level wrapper for Strings, Hashes, Sets, Lists, and Pub/Sub
@@ -21,9 +21,17 @@ A lightweight TypeScript wrapper around ioredis, providing convenient methods fo
 ## Installation
 
 ```bash
-pnpm add @ticatec/redis-client @ticatec/logger-pino ioredis pino
+pnpm add @ticatec/redis-client @ticatec/logger-api ioredis
 # or npm
-npm install @ticatec/redis-client @ticatec/logger-pino ioredis pino
+npm install @ticatec/redis-client @ticatec/logger-api ioredis
+```
+
+`ioredis` and `@ticatec/logger-api` are peer dependencies. `@ticatec/logger-api`
+is a zero-dependency contract: with no provider registered it writes to the
+console, so nothing else is required. Add a concrete logger only if you want one:
+
+```bash
+pnpm add @ticatec/logger-pino pino
 ```
 
 ## Quick Start
@@ -102,7 +110,54 @@ console.log(value); // 'testValue'
 - **`getInstance(name?)`** throws an `Error` if no instance was `init()`-ed under that name, instead of silently returning `undefined`.
 - **`hset` / `sadd` / `rpush`** with a `seconds` TTL run inside an ioredis pipeline; command errors inside the pipeline are now surfaced (thrown), matching the non-TTL code path.
 - **`subscribe` / `unsubscribe`** match handlers by function reference — pass the exact same function reference to `unsubscribe` that you passed to `subscribe`, not a new inline/anonymous function.
+- **`init(conf, name?)`** called a second time for a name that already exists returns the existing instance and **ignores the new `conf`**, with a `warn` in the log.
+- **`resetInstances()`** clears the registry without closing the connections - call `close()` on each instance first when you need them shut down.
 - **`conf`** on `RedisClient.create()` / `RedisClient.init()` / `new RedisClient()` is typed as ioredis's `RedisOptions | null` (pass `null` to use Mock Redis).
+
+## Logging
+
+The client logs through [`@ticatec/logger-api`](https://www.npmjs.com/package/@ticatec/logger-api),
+a zero-dependency contract rather than a concrete logging library. With no
+provider registered it falls back to the console, filtered by `LOG_LEVEL`.
+
+| Event | Level | Payload |
+|---|---|---|
+| Connecting to Redis | `debug` | host, port, db, whether TLS and auth are configured |
+| connect / ready / end / reconnecting | `info` | message only |
+| ioredis client error | `error` | the error |
+| `init()` called again for an existing name | `warn` | the instance name |
+| Cache miss / joined an in-flight fetch | `debug` | the key |
+| Cached value or list element is not JSON | `debug` / `warn` | key, index, byte length |
+| Re-registering a cached data class | `warn` | the class name |
+| Client closed | `info` | message only |
+
+Two things are deliberately kept out of the log:
+
+- **Credentials and TLS material.** `RedisOptions` carries `password`, `username`,
+  `sentinelPassword` and TLS keys. The connection record is built from an
+  allow-list of safe fields, so it reports *whether* auth and TLS are configured,
+  never the values:
+
+  ```json
+  { "host": "redis.prod.internal", "port": 6379, "db": 2, "tls": true, "authenticated": true }
+  ```
+
+- **Cached values.** A cache holds user records, tokens and sessions. When an
+  entry fails to parse, the record carries the key and the byte length - not the
+  payload.
+
+To route the records into a real logger, register a provider once at startup:
+
+```typescript
+import { setLoggerProvider } from '@ticatec/logger-api';
+import { initialize, getPinoLogger } from '@ticatec/logger-pino';
+
+initialize({
+    appenders: [{ name: 'out', type: 'console', level: 'info' }],
+    loggers: { root: { level: 'info', appenders: ['out'] } }
+});
+setLoggerProvider(getPinoLogger);
+```
 
 ## API Reference
 

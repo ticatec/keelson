@@ -5,14 +5,14 @@
 [![Version](https://img.shields.io/npm/v/@ticatec/redis-client)](https://www.npmjs.com/package/@ticatec/redis-client)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-一个基于 ioredis 的轻量级 TypeScript 工具库，提供便捷的 Redis 操作、单例与多实例连接管理、Pino 日志集成、测试 Mock Redis 支持以及包含 Cache-Aside (`getOrSet`) 模式的抽象缓存框架。
+一个基于 ioredis 的轻量级 TypeScript 工具库，提供便捷的 Redis 操作、单例与多实例连接管理、通过 `@ticatec/logger-api` 契约输出日志、测试 Mock Redis 支持以及包含 Cache-Aside (`getOrSet`) 模式的抽象缓存框架。
 
 ## 特性
 
 - ✅ **双模式支持**：完整支持 ES Modules (ESM) 与 CommonJS (CJS)
 - ✅ **单例与多实例**：支持命名单例（`getInstance('session')`）与独立实例创建
 - ✅ **Mock Redis 支持**：内置基于 `ioredis-mock` 的模拟环境
-- ✅ **Pino 日志集成**：集成 `@ticatec/logger-pino` Pino 结构化日志输出
+- ✅ **可插拔日志**：通过 `@ticatec/logger-api` 契约输出，凭据与缓存值不会进入日志
 - ✅ **Cache-Aside 模式 (`getOrSet`)**：内置 `getOrSet` 自动查询与回填缓存
 - ✅ **JSON 自动序列化**：针对对象类型提供自动序列化与反序列化
 - ✅ **丰富操作接口**：高阶封装 String、Hash、Set、List 与 Pub/Sub
@@ -21,9 +21,17 @@
 ## 安装
 
 ```bash
-pnpm add @ticatec/redis-client @ticatec/logger-pino ioredis pino
+pnpm add @ticatec/redis-client @ticatec/logger-api ioredis
 # 或 npm
-npm install @ticatec/redis-client @ticatec/logger-pino ioredis pino
+npm install @ticatec/redis-client @ticatec/logger-api ioredis
+```
+
+`ioredis` 与 `@ticatec/logger-api` 是 peer dependency。`@ticatec/logger-api` 本身
+零依赖：未注入 provider 时退回写控制台，因此不需要再装别的东西。只有当你想接入具体
+日志库时才需要：
+
+```bash
+pnpm add @ticatec/logger-pino pino
 ```
 
 ## 快速开始
@@ -102,7 +110,52 @@ console.log(value); // 'testValue'
 - **`getInstance(name?)`**：如果对应名字的实例从未 `init()` 过，会抛出 `Error`，不再静默返回 `undefined`。
 - **`hset` / `sadd` / `rpush`** 在带 `seconds` TTL 时走 ioredis pipeline；pipeline 内命令出错现在会被抛出，与不带 TTL 的分支行为保持一致。
 - **`subscribe` / `unsubscribe`** 按函数引用匹配 handler —— `unsubscribe` 时必须传入与 `subscribe` 时完全相同的函数引用，不能是新的匿名/内联函数。
+- **`init(conf, name?)`** 对已存在的名字再次调用时，返回已有实例并**忽略新的 `conf`**，同时记一条 `warn` 日志。
+- **`resetInstances()`** 只清空注册表，不会关闭连接——需要真正断开时请先对各实例调用 `close()`。
 - **`conf`** 参数（`RedisClient.create()` / `RedisClient.init()` / `new RedisClient()`）类型为 ioredis 的 `RedisOptions | null`（传 `null` 使用 Mock Redis）。
+
+## 日志
+
+本客户端通过 [`@ticatec/logger-api`](https://www.npmjs.com/package/@ticatec/logger-api)
+记录日志——那是一份零依赖的契约，而非某个具体的日志库。未注入 provider 时退回写
+控制台，并按 `LOG_LEVEL` 过滤。
+
+| 事件 | 级别 | 内容 |
+|---|---|---|
+| 正在连接 Redis | `debug` | host、port、db，以及是否配置了 TLS 与认证 |
+| connect / ready / end / reconnecting | `info` | 仅消息 |
+| ioredis 客户端错误 | `error` | 错误对象 |
+| 同名实例重复 `init()` | `warn` | 实例名 |
+| 缓存未命中 / 搭上进行中的取数 | `debug` | key |
+| 缓存值或列表元素不是 JSON | `debug` / `warn` | key、下标、字节长度 |
+| 缓存数据类重复注册 | `warn` | 类名 |
+| 客户端已关闭 | `info` | 仅消息 |
+
+有两类内容是刻意不写进日志的：
+
+- **凭据与 TLS 材料。** `RedisOptions` 里带着 `password`、`username`、
+  `sentinelPassword` 以及 TLS 密钥。连接日志按白名单构造，只报告*是否*配置了认证
+  与 TLS，绝不报告其取值：
+
+  ```json
+  { "host": "redis.prod.internal", "port": 6379, "db": 2, "tls": true, "authenticated": true }
+  ```
+
+- **缓存值本身。** 缓存里放的往往是用户记录、令牌、会话。某条记录解析失败时，
+  日志只带 key 与字节长度，不带内容。
+
+若要接入真正的日志库，在启动时注册一次 provider：
+
+```typescript
+import { setLoggerProvider } from '@ticatec/logger-api';
+import { initialize, getPinoLogger } from '@ticatec/logger-pino';
+
+initialize({
+    appenders: [{ name: 'out', type: 'console', level: 'info' }],
+    loggers: { root: { level: 'info', appenders: ['out'] } }
+});
+setLoggerProvider(getPinoLogger);
+```
 
 ## API 指南
 

@@ -364,9 +364,10 @@ beanValidator.validate({ age: '' }, [new NumberValidator('age', {})]).valid;
 // true —— 非必填字段留空，就是没填
 ```
 
-`StringValidator` 是例外：对字符串而言空值本身也是一个值，`''` 照常经过
-`minLen`、`maxLen`、`format`。默认 `trim: true` 时纯空白串会被 trim 成 `''`，
-必填仍报 `cannot be empty`；`trim: false` 时空白被保留并计入长度。
+对于 `StringValidator`，非必填字段留空（`''`，或在默认 `trim: true` 下的纯空白
+字符串）同样会跳过 `minLen`、`maxLen` 与 `format` 约束；必填字段留空则报
+`cannot be empty`。当设置 `trim: false` 时，空白将被保留并作为非空值计入字符
+长度。
 
 ```typescript
 // 非必填字段留空，不受 minLen / format 约束

@@ -47,8 +47,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   the user nothing about what to do. A value that is empty - or, for the non-string
   validators, whitespace-only - is now treated as not filled in: required fields
   report `cannot be empty`, optional fields are skipped entirely instead of failing.
-  `StringValidator` is unchanged: an empty string is a real value there, so
-  `minLen` and `format` still apply, and `trim: false` still preserves whitespace.
+  For `StringValidator`, empty optional strings skip length and pattern checks
+  (see above), while with `trim: false` whitespace is preserved.
 
 - **`maxDaysBefore` / `maxDaysAfter` produced non-deterministic results.** The
   boundary was computed in milliseconds from a `now` read at validation time, so a

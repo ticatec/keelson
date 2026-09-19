@@ -1,3 +1,5 @@
+import { getLogger } from "@ticatec/logger-api";
+import type { Logger } from "@ticatec/logger-api";
 import AbstractCachedData from "./AbstractCachedData.js";
 
 export interface CachedDataConstructor {
@@ -10,6 +12,12 @@ export interface CachedDataConstructor {
  * @since 0.1.3
  */
 export default class CachedDataManager {
+
+    /**
+     * `getLogger` 返回惰性解析的代理，因此放在模块作用域是安全的。
+     * @private
+     */
+    private static readonly logger: Logger = getLogger('CachedDataManager');
 
     /**
      * Map storing constructor-to-instance mappings.
@@ -58,6 +66,14 @@ export default class CachedDataManager {
      * @param {AbstractCachedData<any>} instance - Cached data instance.
      */
     register(ctor: CachedDataConstructor, instance: AbstractCachedData<any>): void {
+        if (this.map.has(ctor)) {
+            // 重复注册会静默替换掉先前那个实例，而两处注册方多半都以为自己的那个
+            // 还在生效——这类问题在运行期极难定位。
+            CachedDataManager.logger.warn(
+                { cachedData: ctor.name },
+                'Re-registering a cached data class; the previous instance is replaced'
+            );
+        }
         this.map.set(ctor, instance);
     }
 

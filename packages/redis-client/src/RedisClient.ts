@@ -14,6 +14,16 @@ export type MessageHandler = (channel: string, data: any) => void;
 export default class RedisClient {
 
     private static instances: Map<string, RedisClient> = new Map();
+    private static staticLogger: Logger | null = null;
+
+    /**
+     * 静态方法用的 logger。惰性取得，避免在模块求值阶段就固定下来。
+     * @private
+     */
+    private static getStaticLogger(): Logger {
+        RedisClient.staticLogger ??= getLogger('RedisClient');
+        return RedisClient.staticLogger;
+    }
 
     protected readonly logger: Logger = getLogger('RedisClient');
     private handlers: Map<string, MessageHandler[]> = new Map();
@@ -23,9 +33,39 @@ export default class RedisClient {
     private subClient: Redis | null = null;
     private isClosed = false;
 
+    /**
+     * 构造一条可安全写入日志的连接参数摘要。
+     *
+     * RedisOptions 里带着 `password`、`username`、`sentinelPassword` 以及 TLS 的
+     * 密钥material，整个对象直接丢进日志等于把生产库口令写进日志系统。这里采用
+     * 白名单而非黑名单：只挑出确定安全的字段，将来 ioredis 新增了什么敏感选项也
+     * 不会悄悄泄露出去。
+     *
+     * @param conf - 连接参数
+     * @returns 仅含非敏感字段的摘要
+     * @private
+     */
+    private static describeConnection(conf: RedisOptions): Record<string, unknown> {
+        const summary: Record<string, unknown> = {
+            host: conf.host ?? '127.0.0.1',
+            port: conf.port ?? 6379,
+            db: conf.db ?? 0,
+            tls: conf.tls != null,
+            // 只报告「是否配置了凭据」，绝不报告凭据本身
+            authenticated: conf.password != null || conf.username != null
+        };
+        if (Array.isArray(conf.sentinels)) {
+            summary.sentinels = conf.sentinels.length;
+        }
+        if (conf.name != null) {
+            summary.name = conf.name;
+        }
+        return summary;
+    }
+
     public constructor(conf: RedisOptions | null) {
         if (conf != null) {
-            this.logger.debug({ conf }, 'Redis connection parameters');
+            this.logger.debug(RedisClient.describeConnection(conf), 'Connecting to Redis');
             this._client = new Redis(conf);
             this._client.on('error', (err) => this.logger.error({ err }, 'Redis Client Error'));
             this._client.on('connect', () => this.logger.info('Connecting to Redis server...'));
@@ -78,10 +118,18 @@ export default class RedisClient {
      * @returns Promise resolving to RedisClient singleton instance.
      */
     public static async init(conf: RedisOptions | null, name: string = 'default'): Promise<RedisClient> {
-        if (!RedisClient.instances.has(name)) {
-            RedisClient.instances.set(name, new RedisClient(conf));
+        const existing = RedisClient.instances.get(name);
+        if (existing) {
+            // 第二次调用的 conf 会被静默丢弃，而调用方多半以为自己重新配置了连接。
+            RedisClient.getStaticLogger().warn(
+                { name },
+                'RedisClient.init() called again for an already initialized instance; the new options are ignored'
+            );
+            return existing;
         }
-        return RedisClient.instances.get(name)!;
+        const instance = new RedisClient(conf);
+        RedisClient.instances.set(name, instance);
+        return instance;
     }
 
     /**
@@ -159,13 +207,15 @@ export default class RedisClient {
      * @returns Promise resolving to parsed object or null if invalid / non-existent.
      */
     async getObject<T = any>(key: string): Promise<T | null> {
-        let text = await this.get(key);
+        const text = await this.get(key);
         let result: T | null = null;
         if (text != null && typeof text === "string") {
             try {
                 result = JSON.parse(text);
-            } catch (ex) {
-                this.logger.debug({ text }, 'Value is not a JSON string');
+            } catch {
+                // 记 key 与长度，不记内容：缓存里放的往往是用户记录、令牌、会话，
+                // 把值本身写进日志等于把它们复制进日志系统。
+                this.logger.debug({ key, length: text.length }, 'Cached value is not JSON; returning null');
             }
         }
         return result;
@@ -183,15 +233,18 @@ export default class RedisClient {
      * @returns Promise resolving to the data payload.
      */
     async getOrSet<T>(key: string, fetchFn: () => Promise<T>, seconds: number = 0): Promise<T> {
-        let data = await this.getObject<T>(key);
+        const data = await this.getObject<T>(key);
         if (data !== null && data !== undefined) {
             return data;
         }
 
-        let existingPromise = this.inflight.get(key);
+        const existingPromise = this.inflight.get(key);
         if (existingPromise) {
+            // 缓存击穿保护生效：本次请求搭上了正在进行中的那次取数。
+            this.logger.debug({ key }, 'Joined an in-flight fetch for the same key');
             return await existingPromise;
         }
+        this.logger.debug({ key }, 'Cache miss; fetching');
 
         const fetchPromise = (async () => {
             try {
@@ -364,19 +417,20 @@ export default class RedisClient {
      * @returns Array of parsed objects.
      */
     async lrangeObject(key: string, start: number, end: number): Promise<Array<any>> {
-        let arr = await this._client.lrange(key, start, end);
-        let list: any[] = [];
-        for (let item of arr) {
+        const arr = await this._client.lrange(key, start, end);
+        const list: any[] = [];
+        arr.forEach((item, index) => {
             if (typeof item === "string") {
                 try {
                     list.push(JSON.parse(item));
-                } catch (ex) {
-                    this.logger.warn({ item }, 'Value is not a JSON string');
+                } catch {
+                    // 同上：只记位置与长度，不记内容。
+                    this.logger.warn({ key, index, length: item.length }, 'List element is not JSON; skipped');
                 }
             } else {
                 list.push(item);
             }
-        }
+        });
         return list;
     }
 
