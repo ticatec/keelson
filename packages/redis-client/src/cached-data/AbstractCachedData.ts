@@ -90,6 +90,8 @@ export default abstract class AbstractCachedData<T> {
      * @param data - Entity object to save.
      */
     async save(data: T): Promise<void> {
-        await this.redisClient.set(this.getKey(data), data, this.ttl);
+        // load() 读的是 getObject，因此写入必须走对称的 setObject——用 set() 时，
+        // 字符串型的 T 会被原样存入，再也读不回来。
+        await this.redisClient.setObject(this.getKey(data), data, this.ttl);
     }
 }

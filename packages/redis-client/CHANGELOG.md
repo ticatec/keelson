@@ -7,6 +7,49 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [1.2.0] - 2026-09-19
 
+### Fixed
+
+- **A dropped subscription connection took the process down.** `createSubClient`
+  derives the subscriber with `duplicate()`, which clones the connection options
+  but never the listeners - so the subscriber had a `message` handler and no
+  `error` handler. A Node `EventEmitter` with no `'error'` listener throws
+  `Unhandled 'error' event` and terminates the process, and a server reload, a
+  network blip or an evicted subscription all raise one. The subscriber now has
+  its own error listener that logs instead.
+
+- **The singleton registry split between the CommonJS and ESM builds.**
+  `RedisClient.instances` and `CachedDataManager.instance` were class statics, so
+  a process that called `init()` through `import` and `getInstance()` through
+  `require()` got two separate registries - the second threw "has not been
+  initialized", and the cache manager became two independent pools. Both are now
+  anchored to `globalThis` under `Symbol.for('@ticatec/redis-client.instances')`
+  and `Symbol.for('@ticatec/redis-client.cached-data-manager')`, matching the
+  other packages in the monorepo.
+
+- **`getOrSet` could not read back its own writes.** It stored through `set()`,
+  which serialises objects but stores a string verbatim, and read through
+  `getObject()`, which always `JSON.parse`s. So a cached `'active'` never parsed:
+  every call was a miss that re-ran `fetchFn`. Worse, a string that happens to be
+  a JSON literal came back as a different type - a cached `'123'` was returned as
+  the number `123` on the second call. `getOrSet` now writes through a new
+  `setObject()`, symmetric with `getObject()`. `AbstractCachedData.save()` had the
+  same asymmetry against its own `load()` and was changed with it. `set()` and
+  `get()` keep their existing behaviour.
+
+- **A closed client stayed in the registry.** After `close()`, `getInstance(name)`
+  kept handing out the dead client and `init(conf, name)` returned it rather than
+  reconnecting, so every subsequent command failed while the caller believed it
+  had a fresh connection. `close()` now unregisters the instance, `init()` replaces
+  a closed one, and `closeInstance(name)` does both in a step. `subscribe()` on a
+  closed client throws instead of deriving a subscriber that `close()` would never
+  clean up, and `close()` now tears the subscriber down before the main
+  connection, so a failing `quit()` cannot leak it.
+
+- **`hsetnx` discarded the Redis answer.** `HSETNX` returns 1 or 0 and is normally
+  used as a lightweight lock or an idempotency marker; the wrapper returned
+  `Promise<void>`, leaving the caller no way to know whether it won. It now returns
+  `Promise<boolean>`.
+
 ### Security
 
 - **The Redis password was written into the log.** The constructor logged the
@@ -25,6 +68,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **Connection URLs.** `create()` and `init()` accept a `redis://` / `rediss://`
+  string as well as a `RedisOptions` object, which is what `REDIS_URL` holds in
+  most container and PaaS setups. Credentials embedded in the URL are redacted in
+  the log the same way as those in an options object, and a string that is not a
+  redis URL is reported as `{ connection: 'url', parsed: false }` rather than
+  having its contents echoed.
+- `CachedDataConstructor` accepts an abstract constructor, so an abstract base
+  class can be used as the registration token for a concrete implementation - the
+  common pattern, which previously failed to compile.
+- `MessageHandler`, `RedisConnection`, `GetKey` and `CachedDataConstructor` are
+  exported as types.
 - `init()` warns when it is called a second time for a name that already exists.
   The new `conf` was silently discarded while the caller had every reason to think
   the connection had been reconfigured.
@@ -34,7 +88,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `getOrSet` logs a cache miss and an in-flight join at `debug`, by key. Cache
   stampede protection is one of this package's jobs; until now there was no way to
   see it working.
-- 10 new tests (14 -> 24), including a regression test for each item above.
+- 36 new tests (14 -> 50), including a regression test for each item above.
 - `lint` script and an `.eslintrc.json`. Without them the monorepo's `pnpm verify`
   never linted this package.
 - `CHANGELOG.md`.

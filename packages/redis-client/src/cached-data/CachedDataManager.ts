@@ -2,15 +2,31 @@ import { getLogger } from "@ticatec/logger-api";
 import type { Logger } from "@ticatec/logger-api";
 import AbstractCachedData from "./AbstractCachedData.js";
 
-export interface CachedDataConstructor {
-    new (...args: any[]): AbstractCachedData<any>;
-}
+/**
+ * 用作注册键的类。
+ *
+ * 允许抽象构造签名：业务里常见的做法是定义一个抽象基类（如 `UserCache`）当 token，
+ * 注册其派生实现——此前只接受具体构造函数，这种写法会直接编译报错。
+ */
+export type CachedDataConstructor = abstract new (...args: any[]) => AbstractCachedData<any>;
 
 /**
  * Cache Data Manager singleton managing different types of cached data instances.
  * @class CachedDataManager
  * @since 0.1.3
  */
+/**
+ * 单例挂在 globalThis 上，理由与 RedisClient 的注册表相同：CJS 与 ESM 两份构建是
+ * 两个模块实例，类静态属性会分裂成两个互不相干的管理池。
+ */
+interface ManagerState {
+    instance?: CachedDataManager;
+}
+
+const MANAGER_KEY = Symbol.for('@ticatec/redis-client.cached-data-manager');
+
+const managerState: ManagerState = ((globalThis as any)[MANAGER_KEY] ??= {});
+
 export default class CachedDataManager {
 
     /**
@@ -30,7 +46,13 @@ export default class CachedDataManager {
      * @private
      * @static
      */
-    private static instance?: CachedDataManager;
+    private static get instance(): CachedDataManager | undefined {
+        return managerState.instance;
+    }
+
+    private static set instance(value: CachedDataManager | undefined) {
+        managerState.instance = value;
+    }
 
     /**
      * Gets the CachedDataManager singleton instance.
@@ -84,9 +106,7 @@ export default class CachedDataManager {
      * @param ctor - Class constructor.
      * @returns Instance of T or undefined if not registered.
      */
-    get<T extends AbstractCachedData<any>>(
-        ctor: (abstract new (...args: any[]) => T) | CachedDataConstructor
-    ): T | undefined {
+    get<T extends AbstractCachedData<any>>(ctor: abstract new (...args: any[]) => T): T | undefined {
         return this.map.get(ctor as CachedDataConstructor) as T | undefined;
     }
 }

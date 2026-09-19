@@ -6,14 +6,41 @@ import { getLogger, Logger } from "@ticatec/logger-api";
 export type MessageHandler = (channel: string, data: any) => void;
 
 /**
+ * Accepted connection input.
+ *
+ * - `RedisOptions` - ioredis options object.
+ * - `string` - a connection URL (`redis://`, `rediss://`), which is what
+ *   `REDIS_URL` holds in most container and PaaS setups.
+ * - `null` - use the in-memory mock client.
+ */
+export type RedisConnection = RedisOptions | string | null;
+
+/**
  * Redis client wrapper powered by ioredis.
  * Provides singleton and multi-instance management, Mock Redis switching,
  * atomic TTL pipelines, in-flight Cache Stampede protection, and Pub/Sub support.
  * @class RedisClient
  */
+/**
+ * 单例注册表挂在 globalThis 上，键为一个众所周知的 Symbol。
+ *
+ * 本包同时发布 CommonJS 与 ESM 两份构建，Node 把它们当作两个互不相干的模块实例，
+ * 因此类静态属性会一分为二：主程序用 import 调 init()，某个第三方模块用 require
+ * 调 getInstance()，后者会直接抛「尚未初始化」。锚到全局注册表后，无论以哪种方式
+ * 加载，整个进程共享同一份注册表。
+ */
+interface RegistryState {
+    instances: Map<string, RedisClient>;
+}
+
+const REGISTRY_KEY = Symbol.for('@ticatec/redis-client.instances');
+
+const registry: RegistryState = ((globalThis as any)[REGISTRY_KEY] ??= {
+    instances: new Map<string, RedisClient>()
+});
+
 export default class RedisClient {
 
-    private static instances: Map<string, RedisClient> = new Map();
     private static staticLogger: Logger | null = null;
 
     /**
@@ -32,6 +59,8 @@ export default class RedisClient {
     private readonly _client: Redis;
     private subClient: Redis | null = null;
     private isClosed = false;
+    /** 本实例在单例注册表中的名字；通过 create() 构造的独立实例为 null。 */
+    private registeredName: string | null = null;
 
     /**
      * 构造一条可安全写入日志的连接参数摘要。
@@ -45,7 +74,29 @@ export default class RedisClient {
      * @returns 仅含非敏感字段的摘要
      * @private
      */
-    private static describeConnection(conf: RedisOptions): Record<string, unknown> {
+    private static describeConnection(conf: RedisOptions | string): Record<string, unknown> {
+        if (typeof conf === 'string') {
+            // URL 里的 user:pass@ 同样是凭据，绝不能原样写进日志。
+            try {
+                const url = new URL(conf);
+                // 必须确认是 redis 连接串再拆解。new URL('anything:whatever') 也能
+                // 解析成功，此时 pathname 就是原串的后半段——直接当 db 报出去等于
+                // 把内容回显进日志。
+                if ((url.protocol !== 'redis:' && url.protocol !== 'rediss:') || url.hostname === '') {
+                    return { connection: 'url', parsed: false };
+                }
+                return {
+                    host: url.hostname,
+                    port: url.port === '' ? 6379 : Number(url.port),
+                    db: url.pathname.length > 1 ? url.pathname.slice(1) : 0,
+                    tls: url.protocol === 'rediss:',
+                    authenticated: url.username !== '' || url.password !== ''
+                };
+            } catch {
+                // 连 URL 都解析不出来时，只报告「给的是一个连接串」，不回显内容。
+                return { connection: 'url', parsed: false };
+            }
+        }
         const summary: Record<string, unknown> = {
             host: conf.host ?? '127.0.0.1',
             port: conf.port ?? 6379,
@@ -63,10 +114,10 @@ export default class RedisClient {
         return summary;
     }
 
-    public constructor(conf: RedisOptions | null) {
+    public constructor(conf: RedisConnection) {
         if (conf != null) {
             this.logger.debug(RedisClient.describeConnection(conf), 'Connecting to Redis');
-            this._client = new Redis(conf);
+            this._client = typeof conf === 'string' ? new Redis(conf) : new Redis(conf);
             this._client.on('error', (err) => this.logger.error({ err }, 'Redis Client Error'));
             this._client.on('connect', () => this.logger.info('Connecting to Redis server...'));
             this._client.on('ready', () => this.logger.info('Connected to Redis server.'));
@@ -102,10 +153,10 @@ export default class RedisClient {
     /**
      * Creates an independent, non-singleton RedisClient instance.
      * @static
-     * @param conf - Redis connection options.
+     * @param conf - Redis connection options, a `redis://` / `rediss://` URL, or `null` for the mock client.
      * @returns RedisClient instance.
      */
-    public static create(conf: RedisOptions | null): RedisClient {
+    public static create(conf: RedisConnection): RedisClient {
         return new RedisClient(conf);
     }
 
@@ -113,13 +164,13 @@ export default class RedisClient {
      * Initializes a named RedisClient singleton instance.
      * In Node.js single-threaded event loop without yield points, checking and creating instance is naturally atomic.
      * @static
-     * @param conf - Redis connection options (pass null for Mock Redis).
+     * @param conf - Redis connection options, a `redis://` / `rediss://` URL, or `null` for Mock Redis.
      * @param name - Singleton instance identifier (defaults to 'default').
      * @returns Promise resolving to RedisClient singleton instance.
      */
-    public static async init(conf: RedisOptions | null, name: string = 'default'): Promise<RedisClient> {
-        const existing = RedisClient.instances.get(name);
-        if (existing) {
+    public static async init(conf: RedisConnection, name: string = 'default'): Promise<RedisClient> {
+        const existing = registry.instances.get(name);
+        if (existing && !existing.isClosed) {
             // 第二次调用的 conf 会被静默丢弃，而调用方多半以为自己重新配置了连接。
             RedisClient.getStaticLogger().warn(
                 { name },
@@ -127,8 +178,14 @@ export default class RedisClient {
             );
             return existing;
         }
+        if (existing) {
+            // 已关闭的实例不该继续占着名字：此前 init() 会把这个死连接原样返回，
+            // 之后每一次命令都失败，而调用方以为自己刚刚建立了一条新连接。
+            RedisClient.getStaticLogger().debug({ name }, 'Replacing a closed RedisClient instance');
+        }
         const instance = new RedisClient(conf);
-        RedisClient.instances.set(name, instance);
+        instance.registeredName = name;
+        registry.instances.set(name, instance);
         return instance;
     }
 
@@ -139,7 +196,7 @@ export default class RedisClient {
      * @returns RedisClient singleton instance.
      */
     public static getInstance(name: string = 'default'): RedisClient {
-        const instance = RedisClient.instances.get(name);
+        const instance = registry.instances.get(name);
         if (!instance) {
             throw new Error(`RedisClient instance '${name}' has not been initialized. Call RedisClient.init() first.`);
         }
@@ -147,11 +204,23 @@ export default class RedisClient {
     }
 
     /**
+     * 关闭并注销指定的单例实例。
+     * @static
+     * @param name - 实例名（默认 'default'）
+     */
+    public static async closeInstance(name: string = 'default'): Promise<void> {
+        const instance = registry.instances.get(name);
+        if (instance) {
+            await instance.close();
+        }
+    }
+
+    /**
      * Resets all singleton instances (primarily for testing environments).
      * @static
      */
     public static resetInstances(): void {
-        RedisClient.instances.clear();
+        registry.instances.clear();
     }
 
     /**
@@ -232,6 +301,29 @@ export default class RedisClient {
      * @param seconds - Cache expiration in seconds (0 for no expiration).
      * @returns Promise resolving to the data payload.
      */
+    /**
+     * Stores a value as JSON, so it reads back through {@link getObject} unchanged.
+     *
+     * {@link set} is deliberately different: it only serialises objects, leaving a
+     * string to be stored verbatim so that {@link get} returns exactly what was put
+     * in. That asymmetry is fine for a `set`/`get` pair, but it breaks a
+     * `set`/`getObject` pair - a stored `'active'` is not valid JSON, so
+     * `getObject` parses it as a miss, and a stored `'123'` parses back as the
+     * number `123`. Anything written for `getObject` goes through this method.
+     *
+     * @param key - Redis key name.
+     * @param value - Value to store. Buffers are stored raw; everything else is JSON-encoded.
+     * @param seconds - Expiration time in seconds (0 for no expiration).
+     */
+    async setObject(key: string, value: any, seconds: number = 0): Promise<void> {
+        const payload = Buffer.isBuffer(value) ? value : JSON.stringify(value);
+        if (seconds === 0) {
+            await this._client.set(key, payload);
+        } else {
+            await this._client.set(key, payload, 'EX', seconds);
+        }
+    }
+
     async getOrSet<T>(key: string, fetchFn: () => Promise<T>, seconds: number = 0): Promise<T> {
         const data = await this.getObject<T>(key);
         if (data !== null && data !== undefined) {
@@ -250,7 +342,9 @@ export default class RedisClient {
             try {
                 const fetchedData = await fetchFn();
                 if (fetchedData !== null && fetchedData !== undefined) {
-                    await this.set(key, fetchedData, seconds);
+                    // 必须与读取端的 getObject 对称，否则字符串缓存永远不命中，
+                    // 而 '123' 这类字面量还会在往返中被改写成 number。
+                    await this.setObject(key, fetchedData, seconds);
                 }
                 return fetchedData;
             } finally {
@@ -330,9 +424,12 @@ export default class RedisClient {
      * @param key - Redis key name.
      * @param name - Hash field name.
      * @param value - Value to set.
+     * @returns `true` when the field was set, `false` when it already existed.
+     *   `HSETNX` is typically used as a lightweight lock or an idempotency marker,
+     *   so the caller needs this answer - it used to be discarded.
      */
-    async hsetnx(key: string, name: string, value: string | Buffer | number): Promise<void> {
-        await this._client.hsetnx(key, name, value);
+    async hsetnx(key: string, name: string, value: string | Buffer | number): Promise<boolean> {
+        return (await this._client.hsetnx(key, name, value)) === 1;
     }
 
     /**
@@ -459,13 +556,23 @@ export default class RedisClient {
         if (this.isClosed) return;
         this.isClosed = true;
 
+        // 先摘掉订阅连接，再关主连接；此前 subClient 是在主连接之后处理的，
+        // 主连接 quit() 若抛异常，subClient 就永远泄漏了。
+        if (this.subClient) {
+            const sub = this.subClient;
+            this.subClient = null;
+            this.handlers.clear();
+            await sub.quit();
+        }
         if (this._client) {
             await this._client.quit();
             this.logger.info('Redis client closed');
         }
-        if (this.subClient) {
-            await this.subClient.quit();
-            this.subClient = null;
+        // 把自己从注册表里摘掉：此前关闭后的实例仍留在表里，getInstance() 会继续
+        // 把这条死连接交给调用方。
+        if (this.registeredName != null && registry.instances.get(this.registeredName) === this) {
+            registry.instances.delete(this.registeredName);
+            this.registeredName = null;
         }
     }
 
@@ -486,8 +593,16 @@ export default class RedisClient {
      * @private
      */
     private createSubClient(): void {
+        if (this.isClosed) {
+            // 关闭后再订阅，派生出来的 subClient 会因为 close() 提前返回而永远泄漏。
+            throw new Error('RedisClient is closed; subscribe() is no longer available.');
+        }
         if (!this.subClient) {
             this.subClient = this._client.duplicate();
+            // duplicate() 只复制连接选项，不会复制主连接上的监听器。EventEmitter
+            // 在没有 'error' 监听时触发 error，Node 会直接抛未捕获异常并终止进程
+            // ——服务端重载、网络闪断、订阅连接被踢，都会走到这里。
+            this.subClient.on('error', (err) => this.logger.error({ err }, 'Redis subscription client error'));
             this.subClient.on('message', (channel: string, message: string) => {
                 const parsed = this.parseMessage(message);
                 const handlers = this.handlers.get(channel) || [];

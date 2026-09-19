@@ -12,6 +12,7 @@
 - ✅ **双模式支持**：完整支持 ES Modules (ESM) 与 CommonJS (CJS)
 - ✅ **单例与多实例**：支持命名单例（`getInstance('session')`）与独立实例创建
 - ✅ **Mock Redis 支持**：内置基于 `ioredis-mock` 的模拟环境
+- ✅ **连接串或选项对象**：`redis://` / `rediss://` 字符串与 `RedisOptions` 均可
 - ✅ **可插拔日志**：通过 `@ticatec/logger-api` 契约输出，凭据与缓存值不会进入日志
 - ✅ **Cache-Aside 模式 (`getOrSet`)**：内置 `getOrSet` 自动查询与回填缓存
 - ✅ **JSON 自动序列化**：针对对象类型提供自动序列化与反序列化
@@ -110,9 +111,51 @@ console.log(value); // 'testValue'
 - **`getInstance(name?)`**：如果对应名字的实例从未 `init()` 过，会抛出 `Error`，不再静默返回 `undefined`。
 - **`hset` / `sadd` / `rpush`** 在带 `seconds` TTL 时走 ioredis pipeline；pipeline 内命令出错现在会被抛出，与不带 TTL 的分支行为保持一致。
 - **`subscribe` / `unsubscribe`** 按函数引用匹配 handler —— `unsubscribe` 时必须传入与 `subscribe` 时完全相同的函数引用，不能是新的匿名/内联函数。
-- **`init(conf, name?)`** 对已存在的名字再次调用时，返回已有实例并**忽略新的 `conf`**，同时记一条 `warn` 日志。
-- **`resetInstances()`** 只清空注册表，不会关闭连接——需要真正断开时请先对各实例调用 `close()`。
+- **`init(conf, name?)`** 对已存在的名字再次调用时，返回已有实例并**忽略新的 `conf`**，同时记一条 `warn` 日志；若已有实例处于关闭状态，则会被替换。
+- **`resetInstances()`** 只清空注册表，不会关闭连接——需要真正断开时请调用 `close()` 或 `closeInstance()`。
+- **`hsetnx`** 设置成功返回 `true`，字段已存在返回 `false`。
 - **`conf`** 参数（`RedisClient.create()` / `RedisClient.init()` / `new RedisClient()`）类型为 ioredis 的 `RedisOptions | null`（传 `null` 使用 Mock Redis）。
+
+
+### 连接串
+
+`create()` 与 `init()` 除选项对象外也接受连接串：
+
+```typescript
+await RedisClient.init(process.env.REDIS_URL!);          // redis:// 或 rediss://
+await RedisClient.init({ host: 'localhost', port: 6379 });
+await RedisClient.init(null);                            // mock 客户端
+```
+
+URL 里内嵌的凭据在日志中同样会被脱敏，与选项对象一致。
+
+### 生命周期
+
+```typescript
+await RedisClient.init(conf, 'session');
+const client = RedisClient.getInstance('session');
+
+await RedisClient.closeInstance('session');   // 关闭并注销
+RedisClient.getInstance('session');           // 抛异常：已不在注册表中
+await RedisClient.init(conf, 'session');      // 重新建立连接
+```
+
+`close()` 会把实例从注册表里摘掉，因此关闭后的客户端不会再被交出去，同名 `init()`
+会重新建连。对已关闭的客户端调用 `subscribe()` 会抛异常，而不是派生出一个无人回收的
+订阅连接。
+
+### 缓存与序列化
+
+`set()` / `get()` 与 `setObject()` / `getObject()` 是两条独立的通道：
+
+| 写入 | 读取 | 实际存储 |
+|---|---|---|
+| `set('k', 'active')` | `get('k')` → `'active'` | 原样字符串 |
+| `setObject('k', 'active')` | `getObject('k')` → `'active'` | `"active"`（JSON） |
+
+两条通道混用无法往返：`set()` 原样存字符串，而 `getObject()` 解析不了它。
+`getOrSet()` 与 `AbstractCachedData` 全程使用 `setObject` / `getObject` 这一对，
+因此它们接受的任何值都能原样读回——包括普通字符串，以及形如 JSON 字面量的字符串。
 
 ## 日志
 

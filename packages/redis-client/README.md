@@ -12,6 +12,7 @@ A lightweight TypeScript wrapper around ioredis, providing convenient methods fo
 - ✅ **Dual Module Support**: Full ES Module (ESM) & CommonJS (CJS) compatibility
 - ✅ **Singleton & Multi-Instance**: Supports named singletons (`getInstance('session')`) and standalone instances
 - ✅ **Mock Redis Support**: Built-in mock Redis via `ioredis-mock` for testing environments
+- ✅ **Connection URL or Options**: `redis://` / `rediss://` strings and `RedisOptions` are both accepted
 - ✅ **Pluggable Logging**: Writes through the `@ticatec/logger-api` contract, with credentials and cached values kept out of the log
 - ✅ **Cache-Aside Pattern (`getOrSet`)**: Built-in `getOrSet` method to fetch or populate cache automatically
 - ✅ **JSON Serialization**: Automatic JSON serialization/deserialization for objects
@@ -110,9 +111,53 @@ console.log(value); // 'testValue'
 - **`getInstance(name?)`** throws an `Error` if no instance was `init()`-ed under that name, instead of silently returning `undefined`.
 - **`hset` / `sadd` / `rpush`** with a `seconds` TTL run inside an ioredis pipeline; command errors inside the pipeline are now surfaced (thrown), matching the non-TTL code path.
 - **`subscribe` / `unsubscribe`** match handlers by function reference — pass the exact same function reference to `unsubscribe` that you passed to `subscribe`, not a new inline/anonymous function.
-- **`init(conf, name?)`** called a second time for a name that already exists returns the existing instance and **ignores the new `conf`**, with a `warn` in the log.
-- **`resetInstances()`** clears the registry without closing the connections - call `close()` on each instance first when you need them shut down.
+- **`init(conf, name?)`** called a second time for a name that already exists returns the existing instance and **ignores the new `conf`**, with a `warn` in the log. A *closed* instance is replaced instead.
+- **`resetInstances()`** clears the registry without closing the connections - call `close()` or `closeInstance()` when you need them shut down.
+- **`hsetnx`** returns `true` when the field was set and `false` when it already existed.
 - **`conf`** on `RedisClient.create()` / `RedisClient.init()` / `new RedisClient()` is typed as ioredis's `RedisOptions | null` (pass `null` to use Mock Redis).
+
+
+### Connection URL
+
+`create()` and `init()` accept a connection string as well as an options object:
+
+```typescript
+await RedisClient.init(process.env.REDIS_URL!);          // redis:// or rediss://
+await RedisClient.init({ host: 'localhost', port: 6379 });
+await RedisClient.init(null);                            // mock client
+```
+
+Credentials embedded in the URL are redacted in the log exactly like those in an
+options object.
+
+### Lifecycle
+
+```typescript
+await RedisClient.init(conf, 'session');
+const client = RedisClient.getInstance('session');
+
+await RedisClient.closeInstance('session');   // closes and unregisters
+RedisClient.getInstance('session');           // throws: no longer registered
+await RedisClient.init(conf, 'session');      // creates a fresh connection
+```
+
+`close()` unregisters the instance, so a closed client is never handed out again
+and `init()` under the same name reconnects. `subscribe()` on a closed client
+throws rather than deriving a subscriber that nothing would clean up.
+
+### Caching and serialization
+
+`set()` / `get()` and `setObject()` / `getObject()` are two separate channels:
+
+| Write | Read | Stored form |
+|---|---|---|
+| `set('k', 'active')` | `get('k')` → `'active'` | the string verbatim |
+| `setObject('k', 'active')` | `getObject('k')` → `'active'` | `"active"` (JSON) |
+
+Mixing them does not round-trip: `set()` stores a string verbatim, and
+`getObject()` cannot parse it. `getOrSet()` and `AbstractCachedData` use the
+`setObject` / `getObject` pair throughout, so any value they accept reads back
+unchanged - including plain strings and strings that look like JSON literals.
 
 ## Logging
 

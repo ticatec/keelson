@@ -1,4 +1,7 @@
 import RedisClient from "./RedisClient.js";
+import type { MessageHandler, RedisConnection } from "./RedisClient.js";
+import type { GetKey } from "./cached-data/AbstractCachedData.js";
+import type { CachedDataConstructor } from "./cached-data/CachedDataManager.js";
 import AbstractCachedData from "./cached-data/AbstractCachedData.js";
 import CachedDataManager from "./cached-data/CachedDataManager.js";
 
@@ -12,4 +15,12 @@ export {
     RedisClient,
     AbstractCachedData,
     CachedDataManager
+};
+
+/** 接口与类型别名以 export type 导出，兼容 isolatedModules / 仅转译的工具链。 */
+export type {
+    MessageHandler,
+    RedisConnection,
+    GetKey,
+    CachedDataConstructor
 };
