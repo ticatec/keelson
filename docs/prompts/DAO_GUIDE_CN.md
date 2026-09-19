@@ -2,7 +2,7 @@
 
 中文 | [English](DAO_GUIDE.md)
 
-本指南说明如何使用 `@ticatec/keelson-core` v4 编写与维护数据访问对象（DAO）。
+本指南说明如何使用 `@ticatec/keelson-core` 编写与维护数据访问对象（DAO）。
 
 ## 📚 目录
 

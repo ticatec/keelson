@@ -2,7 +2,7 @@
 
 [中文文档](SERVICE_GUIDE_CN.md) | English
 
-This guide explains how to build and maintain Services and Repositories with `@ticatec/keelson-core` v4.
+This guide explains how to build and maintain Services and Repositories with `@ticatec/keelson-core`.
 
 ## 📚 Table of Contents
 

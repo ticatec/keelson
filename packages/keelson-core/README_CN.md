@@ -279,7 +279,7 @@ protected buildDynamicQuery(): void {
 | `quickSearch<T>(sql, params?, pageNo?, rowCount?, booleanFields?)` | 方言无关的快速分页查询，返回 `QuickSearchResult<T>` |
 | `executeCountSQL(sql, params, key?)` | 执行 `count(*)` 查询并返回数字（`key` 默认 `'cc'`） |
 | `genID()` | 32 位无连字符 UUID v7 —— 时间有序，适合直接做主键 |
-| `getBooleanValue(b)` / `getBoolean(b)` | `1`/`0` 与 `'T'`/`'F'` 转换辅助方法 |
+| `toBooleanInt(b)` / `toBooleanChar(b)` | 写入方向：把布尔值格式化成入库的形态，分别是 `1`/`0` 与 `'T'`/`'F'`。读取方向是 `DBConnection.getBoolean(value)`，或者查询时的 `booleanFields` 参数 |
 | `logger` | 以子类名命名的日志器 |
 
 ### CommonRepository
@@ -490,11 +490,11 @@ class MyDBFactory implements DBFactory {
 | `getRowSet(result)` | protected | 行数组 —— `resultToList()` 会调用它，必须返回真实数据 |
 | `getAffectRows(result)` | protected | 受影响行数 |
 | `getFirstRow(result)` | protected | 映射后的首行，或 `null` |
-| `DBFactory.close()` | public | **4.0.0 起为必选** —— 关闭连接池 |
+| `DBFactory.close()` | public | **1.0.0 起为必选** —— 关闭连接池 |
 
-**可选覆写：** `getRowSetLimitClause(rowCount, offset)`（默认 ` limit N offset M`）、`toCamel(name)`、`buildFieldsMap(fields)`、`setNestObj(obj, field, value)`、`resultToList(result)`、`getBoolean(value)`。
+**可选覆写：** `getRowSetLimitClause(rowCount, offset)`（默认 ` limit N offset M`）、`toCamel(name)`、`splitFieldPath(field)`（默认按 `.` 拆分；需要改分隔符时覆写它，不要覆写带着原型链防御的 `setNestObj()`）、`buildFieldsMap(fields)`、`setNestObj(obj, field, value)`、`resultToList(result)`、`getBoolean(value)`。
 
-**驱动可用的辅助能力：** `this.logger`、`this.safeLogMeta(sql, params)`（只记录语句与参数**个数**，绝不记录参数值）、`this.sanitizeParams(params)`（把 `undefined` 映射为 `null`）、`this.toCamel(name)`。
+**驱动可用的辅助能力：** `this.logger`、`this.safeLogMeta(sql, params)`（记录语句与参数**个数**；只有 `KEELSON_LOG_SQL_PARAMS=true` 时才记录参数值）、`this.sanitizeParams(params)`（把 `undefined` 映射为 `null`）、`this.toCamel(name)`、`this.getBoolean(value)`（接受 `true`/`false`、`1`/`0`，以及 `'1'`、`'0'`、`'t'`、`'f'`、`'true'`、`'false'`，不分大小写）。
 
 ## 🔧 进阶特性
 
@@ -666,7 +666,7 @@ try {
 
 ## 🔀 从 node-common-library 3.x 迁移
 
-| 变更 | 3.x | 4.0.0 |
+| 变更点 | 旧版（node-common-library 3.x） | 新版（keelson-core 1.0.0） |
 | --- | --- | --- |
 | `insertRecord()` / `executeInsertQuery()` | 返回插入的行（或驱动相关的值） | 返回 `InsertResult<T>` —— 读取 `result.record`、`result.affectedRows`、`result.insertId` |
 | `updateRecord()` / `executeUpdateQuery()` | 返回更新后的行（或驱动相关的值） | 返回 `UpdateResult<T>` —— 读取 `result.record`、`result.affectedRows` |
@@ -679,6 +679,8 @@ try {
 | DAO 查询日志 | `{ sql, params }` —— 每个绑定参数的值 | `{ sql, paramCount }`；仅在 `KEELSON_LOG_SQL_PARAMS=true` 时带值 |
 | DAO 的 logger category | `'controller'` | `'dao'` —— 请在日志配置里补一个 `dao` 分类，否则会回落到 root |
 | `DBManager.init()` 的日志 | 整个 factory 对象，含口令 | 只记工厂类名 |
+| `CommonDAO.getBoolean(b)` / `getBooleanValue(b)` | 布尔转 `'T'`/`'F'`、布尔转 `1`/`0` | 更名为 **`toBooleanChar(b)`** / **`toBooleanInt(b)`**。旧的 `getBoolean` 与反向的 `DBConnection.getBoolean(value)` 同名，`this.getBoolean(row.isActive)` 能编译通过并返回 `'T'`。不保留兼容别名，请直接改调用 |
+| `DBConnection.getBoolean(value)` | `'true'` / `'false'` 落到真值判断，`'false'` 被读成 `true` | 在 `'t'` / `'f'`、`'1'` / `'0'` 之外识别 `'true'` / `'false'`（不分大小写、忽略首尾空白） |
 
 另有两处行为变更没有改变签名，如果你依赖它们请重新确认：
 
@@ -692,7 +694,7 @@ try {
 const row = await this.executeInsertQuery(sql, params);
 return row.id;
 
-// 4.0.0
+// 1.0.0
 const result = await this.executeInsertQuery<User>(sql, params);
 return result.record?.id;          // MySQL 自增表也可用 result.insertId
 ```
@@ -706,11 +708,11 @@ return result.record?.id;          // MySQL 自增表也可用 result.insertId
 | `pnpm test` | 运行 Jest 测试套件 |
 | `pnpm lint` | 对 `src/**/*.ts` 执行 ESLint（`prebuild` 也会自动调用） |
 | `pnpm clean` | 删除 `lib/` |
-| `pnpm publish-public` | 以 public 权限发布到 npm |
+| `pnpm publish:public` | 以 public 权限发布到 npm |
 
 `prepublishOnly` 会依次执行 `typecheck && test && build`，因此类型检查或测试失败会阻止发布。
 
-双格式构建依赖 `package.json` 里的 `exports` 映射：`.` 条目把 `import` 路由到 `lib/esm/index.js`、`require` 路由到 `lib/cjs/index.js`，类型由 `lib/cjs/index.d.ts` 提供。同时保留了向后兼容的 `./lib/db/Field` 子路径。
+双格式构建依赖 `package.json` 里的 `exports` 映射：`.` 条目把 `import` 路由到 `lib/esm/index.js`、`require` 路由到 `lib/cjs/index.js`，类型由 `lib/cjs/index.d.ts` 提供。
 
 ## 📝 依赖说明
 
@@ -738,17 +740,8 @@ return result.record?.id;          // MySQL 自增表也可用 result.insertId
 
 **Henry Feng** —— [huili.f@gmail.com](mailto:huili.f@gmail.com)
 
-## 📖 专题指南
-
-| 指南 | 内容 |
-| --- | --- |
-| [DAO 层](docs/DAO_GUIDE_CN.md) | 编写 DAO、内置查询方法、`InsertResult` / `UpdateResult`、分页、占位符 |
-| [Service 与 Repository 层](docs/SERVICE_GUIDE_CN.md) | 四层架构、`@Transaction`、传播行为、`TransactionManager` |
-| [依赖注入](docs/DEPENDENCY_INJECTION_GUIDE_CN.md) | `beanFactory`、惰性代理、`Beans` 加载器、循环依赖 |
-| [查询条件构建](docs/SEARCH_CRITERIA_CN.md) | 动态查询构建器完整参考 —— 基线契约、条件方法、生成的 SQL |
-
 ## 🔗 相关链接
 
-- [GitHub 仓库](https://github.com/ticatec/keelson-core)
+- [GitHub 仓库](https://github.com/ticatec/keelson/tree/main/packages/keelson-core)
 - [NPM 包](https://www.npmjs.com/package/@ticatec/keelson-core)
 - [变更日志](CHANGELOG.md)

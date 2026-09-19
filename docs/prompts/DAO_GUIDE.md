@@ -2,7 +2,7 @@
 
 [中文文档](DAO_GUIDE_CN.md) | English
 
-This guide explains how to create and maintain Data Access Objects (DAOs) with `@ticatec/keelson-core` v4.
+This guide explains how to create and maintain Data Access Objects (DAOs) with `@ticatec/keelson-core`.
 
 ## 📚 Table of Contents
 

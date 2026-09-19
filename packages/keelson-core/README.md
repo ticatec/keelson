@@ -281,7 +281,7 @@ Abstract base class for Data Access Objects. Members available to subclasses (al
 | `quickSearch<T>(sql, params?, pageNo?, rowCount?, booleanFields?)` | Dialect-independent paginated query returning `QuickSearchResult<T>` |
 | `executeCountSQL(sql, params, key?)` | Runs a `count(*)` query and returns a number (`key` defaults to `'cc'`) |
 | `genID()` | 32-character UUID v7 without dashes — time-ordered, suitable as a primary key |
-| `getBooleanValue(b)` / `getBoolean(b)` | `1`/`0` and `'T'`/`'F'` coercion helpers |
+| `toBooleanInt(b)` / `toBooleanChar(b)` | Write direction: formats a boolean for the column it is stored in - `1`/`0` and `'T'`/`'F'` respectively. The read direction is `DBConnection.getBoolean(value)`, or the `booleanFields` argument on a query |
 | `logger` | Logger scoped to the subclass name |
 
 ### CommonRepository
@@ -492,11 +492,11 @@ class MyDBFactory implements DBFactory {
 | `getRowSet(result)` | protected | The row array — `resultToList()` calls this, so it must return real rows |
 | `getAffectRows(result)` | protected | Affected row count |
 | `getFirstRow(result)` | protected | Mapped first row, or `null` |
-| `DBFactory.close()` | public | **Required since 4.0.0** — shuts the pool down |
+| `DBFactory.close()` | public | **Required since 1.0.0** — shuts the pool down |
 
-**Optional overrides:** `getRowSetLimitClause(rowCount, offset)` (defaults to ` limit N offset M`), `toCamel(name)`, `buildFieldsMap(fields)`, `setNestObj(obj, field, value)`, `resultToList(result)`, `getBoolean(value)`.
+**Optional overrides:** `getRowSetLimitClause(rowCount, offset)` (defaults to ` limit N offset M`), `toCamel(name)`, `splitFieldPath(field)` (defaults to splitting on `.`; override this rather than `setNestObj()`, which carries the prototype-chain guard), `buildFieldsMap(fields)`, `setNestObj(obj, field, value)`, `resultToList(result)`, `getBoolean(value)`.
 
-**Helpers available to your driver:** `this.logger`, `this.safeLogMeta(sql, params)` (logs the statement and the parameter *count*, never the values), `this.sanitizeParams(params)` (maps `undefined` → `null`), `this.toCamel(name)`.
+**Helpers available to your driver:** `this.logger`, `this.safeLogMeta(sql, params)` (logs the statement and the parameter *count*; the values only when `KEELSON_LOG_SQL_PARAMS=true`), `this.sanitizeParams(params)` (maps `undefined` → `null`), `this.toCamel(name)`, `this.getBoolean(value)` (accepts `true`/`false`, `1`/`0`, and `'1'`, `'0'`, `'t'`, `'f'`, `'true'`, `'false'` in any case).
 
 ## 🔧 Advanced Features
 
@@ -674,7 +674,7 @@ try {
 
 ## 🔀 Migrating from node-common-library 3.x
 
-| Change | Before (3.x) | After (4.0.0) |
+| Change | Before (node-common-library 3.x) | After (keelson-core 1.0.0) |
 | --- | --- | --- |
 | `insertRecord()` / `executeInsertQuery()` | returned the inserted row (or a driver-specific value) | returns `InsertResult<T>` — read `result.record`, `result.affectedRows`, `result.insertId` |
 | `updateRecord()` / `executeUpdateQuery()` | returned the updated row (or a driver-specific value) | returns `UpdateResult<T>` — read `result.record`, `result.affectedRows` |
@@ -687,6 +687,8 @@ try {
 | DAO query logs | `{ sql, params }` — every bind parameter value | `{ sql, paramCount }`; values only with `KEELSON_LOG_SQL_PARAMS=true` |
 | DAO logger category | `'controller'` | `'dao'` — add a `dao` category to your logger config, or it falls back to root |
 | `DBManager.init()` log | the whole factory object, password included | the factory class name |
+| `CommonDAO.getBoolean(b)` / `getBooleanValue(b)` | boolean → `'T'`/`'F'` and boolean → `1`/`0` | renamed to **`toBooleanChar(b)`** / **`toBooleanInt(b)`**. The old `getBoolean` shared its name with `DBConnection.getBoolean(value)`, which runs the other way; `this.getBoolean(row.isActive)` compiled and returned `'T'`. No compatibility alias is kept - rename the calls |
+| `DBConnection.getBoolean(value)` | `'true'` / `'false'` fell through to truthiness, so `'false'` read as `true` | recognises `'true'` / `'false'` (any case, trimmed) alongside `'t'` / `'f'` and `'1'` / `'0'` |
 
 Two more behaviours changed without changing a signature — worth re-reading if you depend on them:
 
@@ -700,7 +702,7 @@ Upgrading a call site usually looks like this:
 const row = await this.executeInsertQuery(sql, params);
 return row.id;
 
-// 4.0.0
+// 1.0.0
 const result = await this.executeInsertQuery<User>(sql, params);
 return result.record?.id;          // or result.insertId on MySQL / auto-increment tables
 ```
@@ -714,11 +716,11 @@ return result.record?.id;          // or result.insertId on MySQL / auto-increme
 | `pnpm test` | Runs the Jest suite |
 | `pnpm lint` | ESLint over `src/**/*.ts` (also runs automatically via `prebuild`) |
 | `pnpm clean` | Removes `lib/` |
-| `pnpm publish-public` | Publishes to npm with public access |
+| `pnpm publish:public` | Publishes to npm with public access |
 
 `prepublishOnly` runs `typecheck && test && build`, so a failing type check or test blocks publishing.
 
-The dual build relies on the `exports` map in `package.json`: the `.` entry routes `import` to `lib/esm/index.js` and `require` to `lib/cjs/index.js`, with `lib/cjs/index.d.ts` providing types. A backwards-compatible `./lib/db/Field` subpath is also exposed for legacy consumers.
+The dual build relies on the `exports` map in `package.json`: the `.` entry routes `import` to `lib/esm/index.js` and `require` to `lib/cjs/index.js`, with `lib/cjs/index.d.ts` providing types.
 
 ## 📝 Dependencies
 
@@ -746,17 +748,8 @@ This project is licensed under the MIT License — see the [LICENSE](LICENSE) fi
 
 **Henry Feng** — [huili.f@gmail.com](mailto:huili.f@gmail.com)
 
-## 📖 In-depth Guides
-
-| Guide | Covers |
-| --- | --- |
-| [DAO Layer](docs/DAO_GUIDE.md) | Writing DAOs, the built-in query helpers, `InsertResult` / `UpdateResult`, pagination, placeholders |
-| [Service & Repository Layers](docs/SERVICE_GUIDE.md) | The 4-tier architecture, `@Transaction`, propagation, `TransactionManager` |
-| [Dependency Injection](docs/DEPENDENCY_INJECTION_GUIDE.md) | `beanFactory`, lazy proxies, `Beans` loaders, circular dependencies |
-| [Search Criteria](docs/SEARCH_CRITERIA.md) | The dynamic query builder in full — baseline contract, condition helpers, generated SQL |
-
 ## 🔗 Links
 
-- [GitHub Repository](https://github.com/ticatec/keelson-core)
+- [GitHub Repository](https://github.com/ticatec/keelson/tree/main/packages/keelson-core)
 - [NPM Package](https://www.npmjs.com/package/@ticatec/keelson-core)
 - [CHANGELOG](CHANGELOG.md)

@@ -27,6 +27,22 @@ To migrate, change the dependency and the import specifier - nothing else:
 Every export keeps its name and signature. The old package will be deprecated on
 npm with a pointer here.
 
+### ⚠️ Breaking Changes
+
+- **`CommonDAO.getBoolean()` → `toBooleanChar()`, `CommonDAO.getBooleanValue()` → `toBooleanInt()`.**
+  The old `getBoolean(value: boolean): string` shared its name with
+  `DBConnection.getBoolean(value: any): boolean`, which runs the other way: one formats
+  a boolean for storage as `'T'` / `'F'`, the other reads a stored value back into a
+  boolean. Inside a DAO, `this.getBoolean(row.isActive)` compiled cleanly and handed
+  back the string `'T'` - a name that reads like the read direction, doing the write
+  direction. The new names say which way they go, and the companion
+  `getBooleanValue()` is renamed for symmetry.
+
+  No compatibility alias is kept. Both methods are `protected`, so a stale call is a
+  compile error in the subclass rather than a silent wrong value - and an alias would
+  leave the trap in place, which is the whole reason for the rename. 1.0.0 is not
+  published yet, so this costs nothing outside the repository.
+
 ### Fixed
 
 - **`getBoolean()` read the string `'false'` as `true`.** The string forms it recognised

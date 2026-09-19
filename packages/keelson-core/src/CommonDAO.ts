@@ -72,22 +72,31 @@ export default abstract class CommonDAO {
     }
 
     /**
-     * Converts a boolean value to an integer (true=1, false=0).
+     * Converts a boolean into the integer a database column stores it as (`true` → 1).
+     *
+     * 这两个方法是**写入方向**：把 JS 的布尔值格式化成入库的形态。
+     * 读取方向是 `DBConnection.getBoolean(value)`，或者查询时用 `booleanFields` 参数。
      * @param value - Boolean value to convert.
      * @protected
      * @returns Integer value (1 or 0).
      */
-    protected getBooleanValue(value: boolean): number {
+    protected toBooleanInt(value: boolean): number {
         return value === true ? 1 : 0;
     }
 
     /**
-     * Converts a boolean value to a character ('T' or 'F').
+     * Converts a boolean into the character a database column stores it as (`true` → `'T'`).
+     *
+     * 此前这个方法叫 `getBoolean`，与 `DBConnection.getBoolean(value: any): boolean`
+     * 同名反向：一个把布尔转成 `'T'`/`'F'` 写进去，一个把库里的值读成布尔。
+     * 在 DAO 里写 `this.getBoolean(row.isActive)` 会顺理成章地编译通过，
+     * 却拿到字符串 `'T'`——名字读起来像读取，做的却是写入。1.0.0 尚未发布，
+     * 趁这个窗口直接改名，不留兼容别名，否则这个坑就一直在。
      * @param value - Boolean value to convert.
      * @protected
      * @returns String ('T' or 'F').
      */
-    protected getBoolean(value: boolean): string {
+    protected toBooleanChar(value: boolean): string {
         return value === true ? 'T' : 'F';
     }
 

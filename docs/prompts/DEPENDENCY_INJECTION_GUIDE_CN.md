@@ -2,7 +2,7 @@
 
 中文 | [English](DEPENDENCY_INJECTION_GUIDE.md)
 
-本文说明 `@ticatec/keelson-core` v4 中的依赖管理 —— 用 `beanFactory` 完成注册与查找，用 `Beans` 完成延迟模块加载。
+本文说明 `@ticatec/keelson-core` 中的依赖管理 —— 用 `beanFactory` 完成注册与查找，用 `Beans` 完成延迟模块加载。
 
 ## 📚 目录
 

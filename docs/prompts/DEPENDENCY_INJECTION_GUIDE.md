@@ -2,7 +2,7 @@
 
 [中文文档](DEPENDENCY_INJECTION_GUIDE_CN.md) | English
 
-This document explains dependency management in `@ticatec/keelson-core` v4 — `beanFactory` for registration and lookup, and `Beans` for deferred module loading.
+This document explains dependency management in `@ticatec/keelson-core` — `beanFactory` for registration and lookup, and `Beans` for deferred module loading.
 
 ## 📚 Table of Contents
 

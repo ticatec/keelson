@@ -2,7 +2,7 @@
 
 中文 | [English](SERVICE_GUIDE.md)
 
-本指南说明如何使用 `@ticatec/keelson-core` v4 构建与维护 Service 和 Repository。
+本指南说明如何使用 `@ticatec/keelson-core` 构建与维护 Service 和 Repository。
 
 ## 📚 目录
 

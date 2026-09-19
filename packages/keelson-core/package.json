@@ -1,7 +1,7 @@
 {
   "name": "@ticatec/keelson-core",
   "version": "1.0.0",
-  "description": "A comprehensive Node.js database access framework providing robust abstractions for database connection management, SQL execution, transaction handling, pagination, and dynamic query building.",
+  "description": "Core database access, declarative transactions, dependency injection (BeanFactory), four-tier architecture (Service/Repository/DAO), dynamic query building, and pagination framework for Keelson.",
   "type": "module",
   "main": "./lib/cjs/index.js",
   "module": "./lib/esm/index.js",
@@ -41,6 +41,7 @@
     "publish:public": "pnpm publish --access public --no-git-checks"
   },
   "keywords": [
+    "keelson",
     "nodejs",
     "database",
     "orm",
@@ -52,6 +53,7 @@
     "criteria",
     "mysql",
     "postgresql",
+    "dameng",
     "sqlite",
     "connection-pool",
     "bean-factory",
@@ -59,6 +61,7 @@
     "typescript",
     "framework",
     "ticatec",
+    "logger-api",
     "esm",
     "commonjs",
     "dual-module"
