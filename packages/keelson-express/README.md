@@ -21,7 +21,7 @@ A comprehensive TypeScript library providing common classes, controllers, and mi
 
 ## Documentation
 
-- **[Controller Guide](./CONTROLLER.md)** - Comprehensive guide on using controllers for CRUD and search operations
+- **[Controller Guide](../../docs/prompts/CONTROLLER.md)** - Comprehensive guide on using controllers for CRUD and search operations
 
 > 🚀 **Major Upgrade Notice**: The controller hierarchy has been streamlined. The redundant subclasses (`AdminBaseController`, `TenantBaseController`, `AdminSearchController`, `TenantSearchController`) have been unified into `CommonController` and `CommonSearchController`. Validation rules are now cleanly configured by overriding `getRules(): ValidationRules`.
 
@@ -446,7 +446,7 @@ Base class for route definitions featuring:
 - **CommonController<T>**: Base CRUD controller with automatic validation and default user argument passing `[loggedUser, req.body]`
 - **CommonSearchController<T>**: Search controller providing out-of-the-box search query handling
 
-📚 **[Full Controller Usage Guide →](./CONTROLLER.md)**
+📚 **[Full Controller Usage Guide →](../../docs/prompts/CONTROLLER.md)**
 
 ## Architecture Overview
 
