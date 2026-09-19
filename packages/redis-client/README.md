@@ -11,7 +11,7 @@ A lightweight TypeScript wrapper around ioredis, providing convenient methods fo
 
 - ✅ **Dual Module Support**: Full ES Module (ESM) & CommonJS (CJS) compatibility
 - ✅ **Singleton & Multi-Instance**: Supports named singletons (`getInstance('session')`) and standalone instances
-- ✅ **Mock Redis Support**: Built-in mock Redis via `ioredis-mock` for testing environments
+- ✅ **Mock Redis Support**: In-memory client for tests via `ioredis-mock`, kept out of production installs
 - ✅ **Connection URL or Options**: `redis://` / `rediss://` strings and `RedisOptions` are both accepted
 - ✅ **Pluggable Logging**: Writes through the `@ticatec/logger-api` contract, with credentials and cached values kept out of the log
 - ✅ **Cache-Aside Pattern (`getOrSet`)**: Built-in `getOrSet` method to fetch or populate cache automatically
@@ -116,6 +116,24 @@ console.log(value); // 'testValue'
 - **`hsetnx`** returns `true` when the field was set and `false` when it already existed.
 - **`conf`** on `RedisClient.create()` / `RedisClient.init()` / `new RedisClient()` is typed as `RedisConnection` (`RedisOptions | string | null` - pass `null` to use Mock Redis). An optional `options?: RedisOptions` parameter is also accepted.
 
+
+### Mock Redis in tests
+
+`RedisClient.create(null)` / `init(null)` returns an in-memory client backed by
+[`ioredis-mock`](https://www.npmjs.com/package/ioredis-mock). That package is a
+**development dependency of your application**, not of this one:
+
+```bash
+pnpm add -D ioredis-mock
+```
+
+It is deliberately not shipped with `@ticatec/redis-client`. It is 7.2 MB and
+pulls in `fengari`, a Lua VM written in JavaScript, to emulate Redis' `EVAL`;
+nothing in a production deployment should be paying for that. It is resolved at
+call time from the application's working directory, so a production install that
+never installs it also never loads it - and if such an install does reach the
+mock branch it fails with a message saying so, rather than quietly running
+against an in-memory fake.
 
 ### Connection URL
 

@@ -11,7 +11,7 @@
 
 - ✅ **双模式支持**：完整支持 ES Modules (ESM) 与 CommonJS (CJS)
 - ✅ **单例与多实例**：支持命名单例（`getInstance('session')`）与独立实例创建
-- ✅ **Mock Redis 支持**：内置基于 `ioredis-mock` 的模拟环境
+- ✅ **Mock Redis 支持**：测试用内存客户端（`ioredis-mock`），不随包进入生产环境
 - ✅ **连接串或选项对象**：`redis://` / `rediss://` 字符串与 `RedisOptions` 均可
 - ✅ **可插拔日志**：通过 `@ticatec/logger-api` 契约输出，凭据与缓存值不会进入日志
 - ✅ **Cache-Aside 模式 (`getOrSet`)**：内置 `getOrSet` 自动查询与回填缓存
@@ -116,6 +116,21 @@ console.log(value); // 'testValue'
 - **`hsetnx`** 设置成功返回 `true`，字段已存在返回 `false`。
 - **`conf`** 参数（`RedisClient.create()` / `RedisClient.init()` / `new RedisClient()`）类型为 `RedisConnection`（`RedisOptions | string | null`，传 `null` 使用 Mock Redis）。同时支持传入可选的 `options?: RedisOptions` 追加额外连接参数。
 
+
+### 测试中的 Mock Redis
+
+`RedisClient.create(null)` / `init(null)` 返回一个由
+[`ioredis-mock`](https://www.npmjs.com/package/ioredis-mock) 支撑的内存客户端。
+该包是**你的应用的 devDependency**，不是本包的依赖：
+
+```bash
+pnpm add -D ioredis-mock
+```
+
+本包刻意不携带它：它有 7.2 MB，并且为了模拟 Redis 的 `EVAL` 而依赖 `fengari`
+——一个用 JavaScript 写的 Lua 虚拟机，生产部署没有任何理由为此买单。它在调用时
+才从应用的工作目录解析，因此没装它的生产环境根本不会加载它；万一生产代码真的走到
+mock 分支，会得到一条明确报错，而不是悄无声息地跑在一个内存假库上。
 
 ### 连接串
 

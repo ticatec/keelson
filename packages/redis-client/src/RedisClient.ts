@@ -1,6 +1,8 @@
 import { Redis } from "ioredis";
 import type { RedisOptions } from "ioredis";
-import MockRedis from "ioredis-mock";
+import { createRequire } from "node:module";
+import * as path from "node:path";
+import { pathToFileURL } from "node:url";
 import { getLogger, Logger } from "@ticatec/logger-api";
 
 export type MessageHandler = (channel: string, data: any) => void;
@@ -63,7 +65,41 @@ export default class RedisClient {
     private registeredName: string | null = null;
 
     /**
-     * 构造一条可安全写入日志的连接参数摘要。
+     * 创建一个内存 mock 客户端（`conf` 为 null 时）。
+     *
+     * `ioredis-mock` 是 **devDependency**，不随本包进入生产环境。它 7.2MB，并且为了
+     * 模拟 Redis 的 EVAL 而依赖 fengari——一个用 JS 实现的 Lua 虚拟机。此前它是
+     * dependencies 里的静态顶层 import，于是每个生产安装都会拖进这 9MB，而且
+     * `require('@ticatec/redis-client')` 会把 41 个 mock 相关模块一并载入内存，
+     * 哪怕从未调用过 `create(null)`。
+     *
+     * 因此改为运行时按需解析，且解析起点是**调用方应用**的目录——mock 本就该是
+     * 应用自己的 devDependency。生产环境没装它，走到这条分支就会得到一条明确的错误，
+     * 而不是一个能用的 mock。
+     *
+     * @returns 伪装成 Redis 的 mock 客户端
+     * @private
+     */
+    private static createMockClient(): Redis {
+        try {
+            // 从应用的工作目录解析，而不是从本包内部：mock 是使用方的 devDependency。
+            const requireFrom = createRequire(pathToFileURL(path.join(process.cwd(), 'noop.js')));
+            const mod = requireFrom('ioredis-mock');
+            const MockRedis = (mod && mod.default) ? mod.default : mod;
+            return new MockRedis() as Redis;
+        } catch (cause) {
+            throw new Error(
+                "Mock Redis requires 'ioredis-mock', which is a development dependency and is " +
+                "deliberately not shipped with @ticatec/redis-client. Install it in your own " +
+                "devDependencies (pnpm add -D ioredis-mock) to use RedisClient.create(null) / " +
+                "RedisClient.init(null) in tests. Production code must pass real connection options.",
+                { cause }
+            );
+        }
+    }
+
+    /**
+     * 构造一条可安全写入日志的连接摘要。
      *
      * RedisOptions 里带着 `password`、`username`、`sentinelPassword` 以及 TLS 的
      * 密钥material，整个对象直接丢进日志等于把生产库口令写进日志系统。这里采用
@@ -130,7 +166,7 @@ export default class RedisClient {
             this._client.on('reconnecting', () => this.logger.info('Attempting to reconnect to Redis server...'));
         } else {
             this.logger.debug('Using mock Redis client (ioredis-mock)');
-            this._client = new (MockRedis as any)() as Redis;
+            this._client = RedisClient.createMockClient();
         }
     }
 

@@ -112,6 +112,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Removed
 
+- **`ioredis-mock` is no longer a runtime dependency.** It is 7.2 MB and depends on
+  `fengari`, a Lua VM written in JavaScript, to emulate Redis' `EVAL` - and it was a
+  static top-level import in `dependencies`, so every production install downloaded
+  it, shipped it, and loaded it into memory. Measured on `require()` of the package
+  with no mock ever used: 108 modules and 271 ms before, 62 modules and 171 ms after;
+  41 of those modules were the mock and its Lua VM. It is now a dev dependency,
+  resolved at call time from the **application's** working directory - so the mock
+  belongs to whoever writes the tests. A production install that reaches
+  `create(null)` gets an explanatory error instead of a silently working fake.
+  Applications using the mock add it to their own devDependencies:
+  `pnpm add -D ioredis-mock`.
 - The `pino` dev dependency. Nothing imported it.
 
 ## [1.1.0]
