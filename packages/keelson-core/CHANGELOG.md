@@ -112,6 +112,13 @@ npm with a pointer here.
 
 ### Changed
 
+- Copyright holder in `LICENSE` is **Ticatec** across every package in the monorepo. It
+  had been split between `Henry Feng` and `Ticatec` (and one lowercase `ticatec`). Each
+  file keeps its own year, which is the year that package was first published, not the
+  year of this edit. The npm `author` field still names Henry Feng with his email - the
+  author of the code and the holder of the copyright are two different fields, and only
+  the second one was ambiguous.
+
 - **`DBConnection.safeLogMeta()` delegates to `sqlContext()`.** It was a second,
   independent implementation, so `KEELSON_LOG_SQL_PARAMS=true` only ever affected
   `CommonDAO`: the driver layer, which is where the statement is actually executed and

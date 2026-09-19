@@ -103,6 +103,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Copyright holder in `LICENSE` is **Ticatec** across every package in the monorepo. It
+  had been split between `Henry Feng` and `Ticatec` (and one lowercase `ticatec`). Each
+  file keeps its own year, which is the year that package was first published, not the
+  year of this edit. The npm `author` field still names Henry Feng with his email - the
+  author of the code and the holder of the copyright are two different fields, and only
+  the second one was ambiguous.
+
+- The npm `author` field gained the `url` the other packages already carried
+  (`github.com/ticatec`).
+
 - `engines.node` raised from `>=16.0.0` to `>=18.0.0`, matching the other packages.
 - `publish-public` renamed to `publish:public`; the unused `dev` script removed.
 - `jest.config.js` pins `module: commonjs` for ts-jest. With `tsconfig.json` now on

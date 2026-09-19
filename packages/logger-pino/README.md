@@ -222,4 +222,4 @@ Nothing here relies on Node's module-walk resolution, and libraries need no depe
 
 ## 📄 License
 
-MIT © [Henry Feng](https://github.com/ticatec)
+MIT © [Ticatec](https://github.com/ticatec)

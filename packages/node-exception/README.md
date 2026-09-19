@@ -654,7 +654,7 @@ From the monorepo root, `pnpm verify` type-checks, tests and builds every packag
 
 ## 📄 License
 
-MIT © [Henry Feng](https://github.com/henryfeng)
+MIT © [Ticatec](https://github.com/ticatec)
 
 ## 🔗 Links
 

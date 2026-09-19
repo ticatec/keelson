@@ -632,7 +632,7 @@ pnpm lint        # 仅 lint
 
 ## 📄 许可证
 
-MIT © [Henry Feng](https://github.com/henryfeng)
+MIT © [Ticatec](https://github.com/ticatec)
 
 ## 🔗 链接
 

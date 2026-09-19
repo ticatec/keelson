@@ -5,6 +5,25 @@ All notable changes to `@ticatec/node-exception` are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Changed
+
+- Copyright holder in `LICENSE` is **Ticatec** across every package in the monorepo. It
+  had been split between `Henry Feng` and `Ticatec` (and one lowercase `ticatec`). Each
+  file keeps its own year, which is the year that package was first published, not the
+  year of this edit. The npm `author` field still names Henry Feng with his email - the
+  author of the code and the holder of the copyright are two different fields, and only
+  the second one was ambiguous.
+
+- The `author` and `contributors` URLs pointed at `github.com/henryfeng` while every
+  other package in the monorepo points at the organization. Aligned to
+  `github.com/ticatec`. The `funding` URL still points at `sponsors/henryfeng`, which is
+  a personal sponsorship page and a deliberate choice to make, not a consistency fix.
+
+> **2.1.0 is already published on npm.** Everything above lands in the next release, not
+> in 2.1.0 - bump the version before publishing.
+
 ## [2.1.0] - 2026-09-18
 
 ### Security
@@ -95,8 +114,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   including a regression test for every defect listed here.
 - `getHttpContainer()` and the `ExpressContainer` class are exported, so
   applications can wrap or inspect the active container.
-
-### Changed
 
 - `strict` and `isolatedModules` are enabled; the compilation target moved from
   `es2017` to `es2022`, matching `logger-api` and `logger-pino` (and giving

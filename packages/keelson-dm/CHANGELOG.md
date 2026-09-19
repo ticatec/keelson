@@ -73,6 +73,16 @@ npm with a pointer here.
 
 ### Changed
 
+- Copyright holder in `LICENSE` is **Ticatec** across every package in the monorepo. It
+  had been split between `Henry Feng` and `Ticatec` (and one lowercase `ticatec`). Each
+  file keeps its own year, which is the year that package was first published, not the
+  year of this edit. The npm `author` field still names Henry Feng with his email - the
+  author of the code and the holder of the copyright are two different fields, and only
+  the second one was ambiguous.
+
+- The npm `author` field gained the `url` the other packages already carried
+  (`github.com/ticatec`).
+
 - **README tails unified across the three drivers.** `License` is followed by `Author`
   and `Links` (source, npm, issues, changelog), matching `@ticatec/keelson-core`.
   `Related Packages` is gone - `Installation` and `Peer Dependencies` already name those

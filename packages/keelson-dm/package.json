@@ -62,7 +62,11 @@
     "url": "https://github.com/ticatec/keelson.git",
     "directory": "packages/keelson-dm"
   },
-  "author": "Henry Feng",
+  "author": {
+    "name": "Henry Feng",
+    "email": "huili.f@gmail.com",
+    "url": "https://github.com/ticatec"
+  },
   "license": "MIT",
   "bugs": {
     "url": "https://github.com/ticatec/keelson/issues"

@@ -222,4 +222,4 @@ loggers:
 
 ## 📄 许可证
 
-MIT © [Henry Feng](https://github.com/ticatec)
+MIT © [Ticatec](https://github.com/ticatec)
