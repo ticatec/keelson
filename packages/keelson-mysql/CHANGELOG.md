@@ -41,6 +41,21 @@ npm with a pointer here.
   booleans stored as `'true'` / `'false'` in a `VARCHAR` or `ENUM` column are common,
   and the `booleanFields` argument of `listQuery()` / `find()` inverted them.
 
+- **The README's local-development instructions did not work.** The Chinese README
+  carried a `开发指南` section - with no English counterpart - whose clone URL was a
+  GitHub *web* path (`.../keelson/tree/main/packages/keelson-mysql.git`, not a
+  repository) and whose setup step was `npm install`. The workspace declares its
+  dependencies with `workspace:*`, a protocol npm does not implement, so that step ends
+  in `EUNSUPPORTEDPROTOCOL` - reproduced. Both READMEs now carry the same Contributing
+  section as the rest of the monorepo, and say plainly that the workspace is pnpm-only.
+
+- **Two of the three "Known Issues" were not true.** One said `getRowSet()` and
+  `getFirstRow()` might not match the mysql2 response shape - `fetchData()` builds that
+  shape itself, so they do. The other asked for better internal types, which is not a
+  limitation a user of the package runs into. They are replaced by two that are real:
+  which methods use the prepared-statement protocol, and how the per-connection
+  statement cache grows with query builders that vary placeholder arity.
+
 - **`getFields()` no longer reports every column as `Text`.** The type was hard-coded,
   which is a value that happens to be right for string columns and wrong for everything
   else. It now reads `columnType`, the MySQL protocol column-type code that `mysql2`
@@ -68,6 +83,8 @@ npm with a pointer here.
   ends the pool once and logs once, matching the other two drivers.
 
 ### Changed
+
+- Installation examples use `pnpm add`, matching the rest of the monorepo.
 
 - **`strict` is on.** The build configs (`tsconfig.cjs.json` / `tsconfig.esm.json`)
   did not extend `tsconfig.json` - they were standalone - so nothing in the base

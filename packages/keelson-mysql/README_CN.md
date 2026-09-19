@@ -20,7 +20,7 @@
 ## 安装
 
 ```bash
-npm install @ticatec/keelson-mysql
+pnpm add @ticatec/keelson-mysql
 ```
 
 ### 对等依赖
@@ -28,7 +28,7 @@ npm install @ticatec/keelson-mysql
 请确保安装所需的对等依赖：
 
 ```bash
-npm install mysql2 @ticatec/keelson-core
+pnpm add mysql2 @ticatec/keelson-core
 ```
 
 ## 快速开始
@@ -199,17 +199,43 @@ try {
 
 1. **插入/更新不回传记录行**: MySQL 没有 PostgreSQL 的 `RETURNING` 子句，所以 `insertRecord` 与 `updateRecord` 的 `record` 恒为 `null`；新记录的主键通过 `insertId` 取得。只关心影响行数时用 `executeUpdate()` 更直接。
 
-2. **类型安全**: 一些内部方法使用 `any` 类型。建议添加更具体的类型定义以提高类型安全性。
+2. **查询走预处理语句协议**：`fetchData()`、`executeUpdate()`、`insertRecord()`、
+   `updateRecord()` 调用的是 `mysql2` 的 `execute()`。`executeSQL()` 用的是 `query()`，
+   预处理协议不接受的语句走这条路。
 
-3. **结果结构**: `getRowSet` 和 `getFirstRow` 方法对结果结构的假设可能并不总是与实际的 mysql2 响应格式匹配。
+3. **每条不同的语句在连接级预处理缓存里占一个槽位**：`mysql2` 按 SQL 文本缓存，
+   因此动态拼 `IN (?, ?, ?)` 的查询构造器，每种参数个数都会生成一个新条目。
+   默认每个连接缓存 16000 条，超出后淘汰最旧的；连接池配置里的
+   `maxPreparedStatements` 可以调整这个上限。
 
 ## 贡献
 
-1. Fork 这个仓库
-2. 创建您的功能分支 (`git checkout -b feature/amazing-feature`)
-3. 提交您的更改 (`git commit -m 'Add some amazing feature'`)
-4. 推送到分支 (`git push origin feature/amazing-feature`)
-5. 打开一个 Pull Request
+本包位于 [Keelson](https://github.com/ticatec/keelson) monorepo，欢迎在该仓库提交 issue 与 PR。
+
+### 开发设置
+
+```bash
+git clone https://github.com/ticatec/keelson.git
+cd keelson
+pnpm install
+cd packages/keelson-mysql
+
+pnpm build       # 同时构建 CJS 与 ESM 产物（构建前先跑 lint）
+pnpm test        # 运行测试
+pnpm typecheck   # 对三套配置做类型检查
+pnpm lint        # 仅 lint
+```
+
+在 monorepo 根目录执行 `pnpm verify`，会对全部包做构建、类型检查与测试。
+
+工作区只支持 pnpm：这里的依赖用 `workspace:*` 声明，npm 不认识这个协议，
+`npm install` 会直接以 `EUNSUPPORTEDPROTOCOL` 失败。
+
+### 发布
+
+```bash
+pnpm publish:public   # prepublishOnly 会先跑 typecheck、test 与 build
+```
 
 ## 许可证
 
@@ -225,28 +251,3 @@ try {
 
 - [@ticatec/keelson-core](https://www.npmjs.com/package/@ticatec/keelson-core) - 核心框架库
 - [mysql2](https://www.npmjs.com/package/mysql2) - Node.js 的 MySQL 客户端
-
-## 开发指南
-
-### 本地开发
-
-```bash
-# 克隆仓库
-git clone https://github.com/ticatec/keelson/tree/main/packages/keelson-mysql.git
-cd keelson-mysql
-
-# 安装依赖
-npm install
-
-# 构建项目
-npm run build
-```
-
-
-### 发布
-
-```bash
-# 构建并发布到 npm
-npm run build
-npm run publish:public
-```

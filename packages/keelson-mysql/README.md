@@ -20,7 +20,7 @@ A MySQL database connection implementation for the `@ticatec/keelson-core` frame
 ## Installation
 
 ```bash
-npm install @ticatec/keelson-mysql
+pnpm add @ticatec/keelson-mysql
 ```
 
 ### Peer Dependencies
@@ -28,7 +28,7 @@ npm install @ticatec/keelson-mysql
 Make sure to install the required peer dependencies:
 
 ```bash
-npm install mysql2 @ticatec/keelson-core
+pnpm add mysql2 @ticatec/keelson-core
 ```
 
 ## Quick Start
@@ -200,17 +200,47 @@ The pool configuration summary never carries `password` or `uri`.
 
 1. **Insert/update do not return the row**: MySQL has no `RETURNING` clause, so `record` is always `null` on `insertRecord` and `updateRecord`; the new primary key comes back as `insertId`. When only the affected-row count matters, `executeUpdate()` is the more direct call.
 
-2. **Type Safety**: Some internal methods use `any` types. Consider adding more specific type definitions for better type safety.
+2. **Queries go through the prepared-statement protocol.** `fetchData()`, `executeUpdate()`,
+   `insertRecord()` and `updateRecord()` call `mysql2`'s `execute()`. `executeSQL()` uses
+   `query()` instead, which is the route for statements the prepared-statement protocol
+   does not accept.
 
-3. **Result Structure**: The `getRowSet` and `getFirstRow` methods make assumptions about result structure that may not always match the actual mysql2 response format.
+3. **Each distinct statement occupies a slot in the per-connection prepared-statement
+   cache.** `mysql2` caches by SQL text, so query builders that vary the arity of an
+   `IN (?, ?, ?)` list produce a new entry per arity. The cache holds 16000 statements per
+   connection by default and evicts the oldest beyond that; `maxPreparedStatements` in the
+   pool configuration raises or lowers it.
 
 ## Contributing
 
-1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add some amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
+This package lives in the [Keelson](https://github.com/ticatec/keelson) monorepo. Issues
+and pull requests are welcome there.
+
+### Development Setup
+
+```bash
+git clone https://github.com/ticatec/keelson.git
+cd keelson
+pnpm install
+cd packages/keelson-mysql
+
+pnpm build       # Build both CJS and ESM outputs (lints first)
+pnpm test        # Run the test suite
+pnpm typecheck   # Type-check all three configurations
+pnpm lint        # Lint only
+```
+
+From the monorepo root, `pnpm verify` builds, type-checks and tests every package.
+
+The workspace is pnpm-only: the dependencies here are declared with `workspace:*`, a
+protocol npm does not understand, so `npm install` fails outright with
+`EUNSUPPORTEDPROTOCOL`.
+
+### Publishing
+
+```bash
+pnpm publish:public   # runs typecheck, test and build first, via prepublishOnly
+```
 
 ## License
 
