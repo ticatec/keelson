@@ -1,6 +1,7 @@
 import { setLoggerProvider, resetLoggerProvider } from '@ticatec/logger-api';
 import type { Logger } from '@ticatec/logger-api';
 import http from 'http';
+import net from 'net';
 import fs from 'fs';
 
 import AppConf from '../AppConf.js';
@@ -8,6 +9,7 @@ import ProcessorManager from '../ProcessorManager.js';
 import CommonProcessor from '../CommonProcessor.js';
 import routerHelper from '../RouterHelper.js';
 import CommonController from '../common/CommonController.js';
+import Controller from '../common/Controller.js';
 import CommonSearchController from '../common/CommonSearchController.js';
 import BaseController from '../common/BaseController.js';
 import CommonRoutes, { AuthenticatedRoutes } from '../CommonRoutes.js';
@@ -17,6 +19,7 @@ import { HealthCheckRegistry } from '../health/HealthCheckRegistry.js';
 import { createSystemHealthIndicator } from '../health/BuiltinHealthIndicators.js';
 import { HealthRoutes } from '../health/HealthRoutes.js';
 import { StringValidator, NumberValidator } from '@ticatec/bean-validator';
+import { UnauthenticatedError } from '@ticatec/node-exception';
 
 /** Silences framework logging for the duration of the suite. */
 const SILENT: Logger = (() => {
@@ -87,6 +90,37 @@ class ProtectedRoutes extends AuthenticatedRoutes {
     }
 }
 
+/** 一条故意慢的路由：关停开始时它还在处理中。 */
+let slowRequestStarted: (() => void) | null = null;
+
+class SlowRoutes extends CommonRoutes {
+    protected bindRoutes() {
+        this.get('/ping', routerHelper.invokeController(async (_req, res) => {
+            slowRequestStarted?.();
+            await new Promise(resolve => setTimeout(resolve, 300));
+            res.json({ done: true });
+        }));
+    }
+}
+
+class SlowServer extends BaseServer {
+    public listenPort: number = 0;
+    public readonly inFlight: Promise<void>;
+
+    constructor() {
+        super();
+        this.inFlight = new Promise<void>(resolve => { slowRequestStarted = resolve; });
+    }
+
+    protected async loadConfigFile(): Promise<void> {}
+    protected getWebConf() {
+        return { port: this.listenPort, ip: '127.0.0.1', contextRoot: '/api' };
+    }
+    protected async setupRoutes(): Promise<void> {
+        await this.bindRoutes('/slow', async () => ({ default: SlowRoutes }));
+    }
+}
+
 class TestServer extends BaseServer {
     public listenPort: number = 0;
     public failPostCreate: boolean = false;
@@ -107,6 +141,9 @@ class TestServer extends BaseServer {
     protected async setupRoutes(): Promise<void> {
         await this.bindRoutes('/pub', async () => ({ default: PublicRoutes }));
         await this.bindRoutes('/priv', async () => ({ default: ProtectedRoutes }));
+    }
+    public exposeBindRoutes(path: string, loader: any): Promise<void> {
+        return this.bindRoutes(path, loader);
     }
 }
 
@@ -274,6 +311,111 @@ describe('keelson-express comprehensive test suite', () => {
         expect(fs.existsSync('./check.dat')).toBe(false);
     });
 
+
+    test('shutdown lets an in-flight request finish and does not truncate it', async () => {
+        const server = new SlowServer();
+        server.listenPort = 0;
+        await server.startup();
+        const port = parseInt(fs.readFileSync('./check.dat', 'utf-8'), 10);
+
+        // 关停期间必须让已经在处理的请求写完响应。closeAllConnections() 会把这条
+        // 连接一起销毁，客户端拿到的是被截断的响应——那不是优雅关停。
+        const responded = new Promise<string>((resolve, reject) => {
+            const socket = net.connect({ port, host: '127.0.0.1' }, () => {
+                socket.write('GET /api/slow/ping HTTP/1.1\r\nHost: 127.0.0.1\r\nConnection: keep-alive\r\n\r\n');
+            });
+            let buffer = '';
+            socket.on('data', chunk => {
+                buffer += chunk.toString();
+                if (buffer.includes('"done":true')) {
+                    socket.destroy();
+                    resolve(buffer);
+                }
+            });
+            socket.on('error', reject);
+        });
+
+        await server.inFlight;      // 请求已进入处理函数
+        const shutdown = server.shutdown();
+
+        const body = await Promise.race([
+            responded,
+            new Promise<string>((_, reject) => setTimeout(() => reject(new Error('in-flight request was cut off by shutdown')), 5000))
+        ]);
+        expect(body).toContain('"done":true');
+
+        await Promise.race([
+            shutdown,
+            new Promise((_, reject) => setTimeout(() => reject(new Error('shutdown() never resolved')), 5000))
+        ]);
+    }, 15000);
+
+    test('contextRoot and app report a usable error before startup', async () => {
+        const server = new TestServer();
+
+        await expect(server.exposeBindRoutes('/x', async () => ({ default: PublicRoutes })))
+            .rejects.toThrow(/Express application is not created yet/);
+    });
+
+    describe('state shared across the CommonJS and ESM builds', () => {
+        test('AppConf keeps its instance on a well-known global symbol', () => {
+            const key = Symbol.for('@ticatec/keelson-express.app-conf');
+            AppConf.init({ server: { port: 8080 } });
+
+            // 两份产物各自求值一次模块顶层代码。单例若是类静态字段，一个进程里
+            // 就会有两个 AppConf：ESM 侧 init() 写入的配置，CJS 侧 getInstance()
+            // 读不到。挂在 Symbol.for 的键上，两份拿到的才是同一个对象。
+            const shared = (globalThis as any)[key];
+            expect(shared).toBeDefined();
+            expect(shared.instance).toBe(AppConf.getInstance());
+            expect(AppConf.getInstance()?.get('server.port')).toBe(8080);
+        });
+
+        test('Controller.debugEnabled is the same switch on both sides', () => {
+            const key = Symbol.for('@ticatec/keelson-express.controller-debug');
+            const previous = Controller.debugEnabled;
+            try {
+                Controller.debugEnabled = true;
+                expect((globalThis as any)[key].enabled).toBe(true);
+
+                // 模拟另一份产物：它读到的是同一个状态对象
+                (globalThis as any)[key].enabled = false;
+                expect(Controller.debugEnabled).toBe(false);
+            } finally {
+                Controller.debugEnabled = previous;
+            }
+        });
+
+        test('ProcessorManager resolves to one manager', () => {
+            const key = Symbol.for('@ticatec/keelson-express.processor-manager');
+            const manager = ProcessorManager.getInstance();
+            expect((globalThis as any)[key].instance).toBe(manager);
+            expect(ProcessorManager.getInstance()).toBe(manager);
+        });
+    });
+
+    test('AppConf.get() does not reach up the prototype chain', () => {
+        AppConf.init({ server: { port: 8080 } });
+        const conf = AppConf.getInstance()!;
+
+        // 此前用的是 `k in result`，会顺着原型链找，于是这些键都能取到
+        // Object.prototype 上的成员，而配置里根本没有它们。
+        expect(conf.get('constructor')).toBeUndefined();
+        expect(conf.get('toString')).toBeUndefined();
+        expect(conf.get('server.constructor')).toBeUndefined();
+        expect(conf.get('server.port')).toBe(8080);
+    });
+
+    test('the processor subsystem is reachable from the package entry point', async () => {
+        const entry: any = await import('../index.js');
+        // ProcessorManager / CommonProcessor 此前没有从 index 导出，而 exports 映射
+        // 只开放了 "." 与 "./package.json"，深层导入同样被挡住——BaseServer.shutdown()
+        // 会调 stopAll()，使用方却拿不到这个类去注册处理器。
+        expect(typeof entry.ProcessorManager?.getInstance).toBe('function');
+        expect(typeof entry.CommonProcessor).toBe('function');
+        expect(entry.ProcessStatus?.Running).toBe(1);
+    });
+
     test('should reject startup if postServerCreated fails', async () => {
         const server = new TestServer();
         server.listenPort = 0;
@@ -426,6 +568,90 @@ describe('keelson-express comprehensive test suite', () => {
         });
     });
 
+
+    describe('deprecated userCheck()', () => {
+
+        /** Builds the router, runs its validation middleware, and reports what happened. */
+        const runValidation = async (routes: CommonRoutes, user: any) => {
+            const app: any = { use: jest.fn() };
+            await routes.bind(app, '/test');
+            const routerInstance = app.use.mock.calls[0][1];
+            const layers = routerInstance.stack.filter((l: any) => l.handle && l.handle.length === 3);
+            const next = jest.fn();
+            for (const layer of layers) {
+                await layer.handle({ user }, {}, next);
+            }
+            const errors = next.mock.calls.filter((c: any[]) => c[0] != null).map((c: any[]) => c[0]);
+            return { passed: errors.length === 0, errors };
+        };
+
+        test('an override of userCheck() still guards the route', async () => {
+            // userCheck() 自 0.5.x 起就没有任何调用点了（0.4.9 里还在调），却保留着
+            // @deprecated "will be removed in a future version" 的文档和三段把它当成
+            // 授权检查使用的示例。靠覆写 userCheck 做授权的应用升级后，检查被静默
+            // 跳过——isValidUser 的默认实现返回 true，于是每个请求都放行。
+            const seen: any[] = [];
+            class LegacyRoutes extends CommonRoutes {
+                protected override userCheck(user: any): boolean {
+                    seen.push(user);
+                    return user?.role === 'admin';
+                }
+            }
+
+            const denied = await runValidation(new LegacyRoutes(), { role: 'guest' });
+            expect(seen).toEqual([{ role: 'guest' }]);
+            expect(denied.passed).toBe(false);
+            expect(denied.errors[0]).toBeInstanceOf(UnauthenticatedError);
+
+            const allowed = await runValidation(new LegacyRoutes(), { role: 'admin' });
+            expect(allowed.passed).toBe(true);
+        });
+
+        test('both checks must pass when userCheck() and isValidUser() are overridden', async () => {
+            class BothRoutes extends CommonRoutes {
+                protected override userCheck(user: any): boolean {
+                    return user?.role === 'admin';
+                }
+                protected override isValidUser(user: any): boolean {
+                    return user?.tenantActive === true;
+                }
+            }
+
+            expect((await runValidation(new BothRoutes(), { role: 'admin', tenantActive: true })).passed).toBe(true);
+            expect((await runValidation(new BothRoutes(), { role: 'guest', tenantActive: true })).passed).toBe(false);
+            expect((await runValidation(new BothRoutes(), { role: 'admin', tenantActive: false })).passed).toBe(false);
+        });
+
+        test('warns once per router when userCheck() is overridden', async () => {
+            const warnings: any[] = [];
+            setLoggerProvider(() => ({ ...SILENT, warn: (...args: any[]) => { warnings.push(args); } } as any));
+            try {
+                class LegacyRoutes extends CommonRoutes {
+                    protected override userCheck(): boolean {
+                        return true;
+                    }
+                }
+                await runValidation(new LegacyRoutes(), { role: 'admin' });
+                const deprecation = warnings.filter(w => String(w[1]).includes('userCheck()'));
+                expect(deprecation).toHaveLength(1);
+            } finally {
+                setLoggerProvider(() => SILENT);
+            }
+        });
+
+        test('says nothing when userCheck() is left alone', async () => {
+            const warnings: any[] = [];
+            setLoggerProvider(() => ({ ...SILENT, warn: (...args: any[]) => { warnings.push(args); } } as any));
+            try {
+                class PlainRoutes extends CommonRoutes {}
+                await runValidation(new PlainRoutes(), { role: 'admin' });
+                expect(warnings.filter(w => String(w[1]).includes('userCheck()'))).toHaveLength(0);
+            } finally {
+                setLoggerProvider(() => SILENT);
+            }
+        });
+    });
+
     describe('Health Check Subsystem', () => {
         test('should execute checkLiveness and checkReadiness on HealthCheckRegistry', async () => {
             const registry = new HealthCheckRegistry();
@@ -433,7 +659,7 @@ describe('keelson-express comprehensive test suite', () => {
 
             const liveness = registry.checkLiveness();
             expect(liveness.status).toBe('UP');
-            expect(liveness.details.uptime).toBeGreaterThanOrEqual(0);
+            expect(liveness.details?.uptime).toBeGreaterThanOrEqual(0);
 
             const readiness = await registry.checkReadiness();
             expect(readiness.status).toBe('UP');

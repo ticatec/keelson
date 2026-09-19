@@ -43,7 +43,7 @@ export default abstract class CommonProcessor<T> {
      */
     startup() {
         if (!this.processInterval) {
-            this.logger.debug('Starting processor');
+            this.logger.debug({}, 'Starting processor');
             this.nappingDuration = this.interval;
             this.status = ProcessStatus.Napping;
             this.processInterval = setInterval(() => this.checkNap(), 1000);
@@ -55,12 +55,12 @@ export default abstract class CommonProcessor<T> {
      */
     async stop(): Promise<void> {
         if (this.processInterval) {
-            this.logger.debug('Stopping processor');
+            this.logger.debug({}, 'Stopping processor');
             clearInterval(this.processInterval);
             this.processInterval = null;
         }
         if (this.runningPromise) {
-            this.logger.debug('Waiting for in-flight processor tasks to complete');
+            this.logger.debug({}, 'Waiting for in-flight processor tasks to complete');
             await this.runningPromise;
         }
     }
@@ -94,7 +94,7 @@ export default abstract class CommonProcessor<T> {
     protected async startProcess(): Promise<void> {
         const arr = await this.loadToProcessData();
         if (arr.length > 0) {
-            this.logger.debug('Pending items found, starting processing');
+            this.logger.debug({ pending: arr.length }, 'Pending items found, starting processing');
             const pool = new Set<Promise<void>>();
             for (const item of arr) {
                 const task = this.processItem(item)
@@ -125,7 +125,7 @@ export default abstract class CommonProcessor<T> {
      * Trigger immediate execution
      */
     runImmediately() {
-        this.logger.debug('Triggering immediate execution');
+        this.logger.debug({}, 'Triggering immediate execution');
         this.nappingDuration = this.interval;
     }
 

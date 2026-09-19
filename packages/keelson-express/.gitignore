@@ -9,3 +9,4 @@ check.dat
 /*.tgz
 /package/
 /logs/
+*.iml

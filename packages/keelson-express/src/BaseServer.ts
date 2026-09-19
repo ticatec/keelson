@@ -23,10 +23,17 @@ export default abstract class BaseServer {
     protected get logger(): Logger {
         return getLogger(this.constructor.name);
     }
-    /** Context root path for the server */
-    protected contextRoot: string;
-    protected app: Express;
-    protected httpServer: http.Server = null;
+    /**
+     * Context root path for the server. Set by {@link startup} from `getWebConf()`.
+     * 在 startup() 跑完之前是 undefined——子类若在此之前用它，拼出来的路径会带上
+     * 字面量 "undefined"，所以 bindRoutes() 里加了显式检查。
+     */
+    protected contextRoot?: string;
+    /**
+     * Express application. Created by {@link startWebServer}; undefined before startup.
+     */
+    protected app?: Express;
+    protected httpServer: http.Server | null = null;
     /** Health check registry for application probe indicators */
     protected healthRegistry: HealthCheckRegistry;
 
@@ -56,7 +63,7 @@ export default abstract class BaseServer {
      */
     protected writeCheckFile(port: number, fileName: string = './check.dat') {
         try {
-            this.logger.debug({ port }, 'Port');
+            this.logger.debug({ port, fileName }, 'Writing listening port to check file');
             fs.writeFileSync(fileName, `${port}`);
         } catch (err) {
             this.logger.error({ err }, 'Error writing port file');
@@ -69,7 +76,7 @@ export default abstract class BaseServer {
      */
     async startup() {
         await this.loadConfigFile();
-        this.logger.info('Starting server...');
+        this.logger.info({}, 'Starting server');
         try {
             await this.beforeStart();
             const webConf = this.getWebConf();
@@ -118,7 +125,7 @@ export default abstract class BaseServer {
         const healthPrefix = webConf.healthPath || '/health';
         this.logger.debug({ healthPrefix }, 'Mounting health check subsystem routes');
         const healthRoutes = new HealthRoutes(this.healthRegistry);
-        await healthRoutes.bind(this.app, healthPrefix);
+        await healthRoutes.bind(this.requireApp(), healthPrefix);
     }
 
     /**
@@ -139,8 +146,9 @@ export default abstract class BaseServer {
         app.use(routerHelper.retrieveUser());
         await this.setupRoutes();
         app.use(routerHelper.actionNotFound());
+        // @ticatec/node-exception 的 handleError 自己会按状态码分级记录（5xx 带栈记
+        // error，4xx 记 debug），这里不再补一条，否则同一个错误在日志里出现两次。
         app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
-            this.logger.debug({ err }, "Application error");
             handleError(err, req, res, next);
         });
 
@@ -159,7 +167,7 @@ export default abstract class BaseServer {
                     await this.postServerCreated(server);
                     this.writeCheckFile(actualPort);
                     this.httpServer = server;
-                    this.logger.info(`Web service started successfully, listening on IP: ${webConf.ip}, port: ${actualPort}`);
+                    this.logger.info({ ip: webConf.ip, port: actualPort }, 'Web service started');
                     resolve(server);
                 } catch (err) {
                     this.logger.error({ err }, 'Post server creation setup failed, closing server');
@@ -174,7 +182,7 @@ export default abstract class BaseServer {
      * Gracefully shuts down the HTTP server and stops background processors
      */
     async shutdown(checkFileName: string = './check.dat'): Promise<void> {
-        this.logger.info('Shutting down server...');
+        this.logger.info({}, 'Shutting down server');
         try {
             const { default: ProcessorManager } = await import('./ProcessorManager.js');
             await ProcessorManager.getInstance().stopAll();
@@ -191,14 +199,23 @@ export default abstract class BaseServer {
         }
 
         if (this.httpServer) {
+            const server = this.httpServer;
             await new Promise<void>((resolve) => {
-                this.httpServer.close(() => {
+                server.close(() => {
                     this.httpServer = null;
                     resolve();
                 });
+                // Node 18 的 close() 只停止接受新连接，空闲的 keep-alive 连接会一直
+                // 把服务器占住，close 的回调因此可能迟迟不触发；Node 19 起 close()
+                // 自己会断开空闲连接。engines 允许 >=18，所以显式调一次，在新版本上
+                // 等价于空操作。
+                //
+                // 只断空闲连接，不调 closeAllConnections()——后者会把正在处理请求的
+                // 连接一并销毁，正在写的响应会被截断，那就不叫优雅关停了。
+                server.closeIdleConnections?.();
             });
         }
-        this.logger.info('Server shutdown completed');
+        this.logger.info({}, 'Server shutdown completed');
     }
 
     /**
@@ -228,7 +245,35 @@ export default abstract class BaseServer {
     protected async bindRoutes(path: string, loader: moduleLoader): Promise<void> {
         const clazz: any = (await loader()).default;
         const routes: CommonRoutes = new clazz();
-        await routes.bind(this.app, `${this.contextRoot}${path}`);
+        await routes.bind(this.requireApp(), `${this.requireContextRoot()}${path}`);
+    }
+
+    /**
+     * Returns the Express application, or fails with a message that says what went wrong.
+     *
+     * 直接用 this.app 的话，startup() 之前调用会报 "Cannot read properties of
+     * undefined"，看不出是生命周期用错了。
+     * @protected
+     */
+    protected requireApp(): Express {
+        if (!this.app) {
+            throw new Error('Express application is not created yet. Routes can only be bound from setupRoutes(), which startup() calls after the app exists.');
+        }
+        return this.app;
+    }
+
+    /**
+     * Returns the context root, or fails if startup() has not resolved it yet.
+     *
+     * 此前这里是 `${this.contextRoot}${path}` 的模板字符串，undefined 会被静默地
+     * 拼成字面量 "undefined"，路由挂到 /undefined/... 上，启动不报错、请求全 404。
+     * @protected
+     */
+    protected requireContextRoot(): string {
+        if (this.contextRoot == null) {
+            throw new Error('contextRoot is not resolved yet. It is read from getWebConf() during startup().');
+        }
+        return this.contextRoot;
     }
 
     /**

@@ -28,18 +28,29 @@
 ## 安装
 
 ```bash
-npm install @ticatec/keelson-express @ticatec/keelson-core @ticatec/logger-pino
+pnpm add @ticatec/keelson-express
 ```
-
-> `@ticatec/logger-pino` 已经把 `pino` 作为常规依赖打包，安装封装库即可，无需单独安装 `pino`。
 
 ### 对等依赖
 
-```bash
-npm install express@^5.0.0 @ticatec/keelson-core@^3.1.0 @ticatec/bean-validator@>=1.0.0 @ticatec/node-exception@>=2.0.0
+```json
+{
+  "peerDependencies": {
+    "@ticatec/logger-api": ">=1.0.0",
+    "@ticatec/keelson-core": ">=1.0.0",
+    "@ticatec/bean-validator": ">=1.1.0",
+    "@ticatec/node-exception": ">=2.1.0",
+    "express": "^5.0.0"
+  }
+}
 ```
 
-> 此外还需安装 `@ticatec/logger-pino` —— 所有 `@ticatec/*` 包都通过这个单例完成日志输出。
+```bash
+pnpm add @ticatec/logger-api @ticatec/keelson-core @ticatec/bean-validator @ticatec/node-exception express
+```
+
+日志实现是可选的。不装任何实现时，`@ticatec/logger-api` 回退到 console，按 `LOG_LEVEL` 过滤。
+需要走 pino，就再装 `@ticatec/logger-pino`，并在应用入口注入实现。
 
 ## 快速开始
 
@@ -615,19 +626,22 @@ class UserController extends CommonController<UserService> {
 
 ## 错误处理
 
-使用 `@ticatec/express-exception` 进行集中式错误处理：
+使用 `@ticatec/node-exception` 进行集中式错误处理：
 
 ```typescript
 import {
     ActionNotFoundError,
     UnauthenticatedError,
     IllegalParameterError
-} from '@ticatec/express-exception';
+} from '@ticatec/node-exception';
 
-// 错误会自动处理和格式化
-throw new ActionNotFoundError('资源未找到');
-throw new UnauthenticatedError('用户未认证');
-throw new IllegalParameterError('输入数据无效');
+// 框架会捕获这些错误并按对应状态码渲染
+throw new ActionNotFoundError();                     // 404，消息固定
+throw new UnauthenticatedError();                    // 401，消息固定
+throw new IllegalParameterError('输入数据无效');       // 400，消息由你给出
+
+// 每个构造函数都接受 ErrorOptions，可以保留原始异常：
+throw new IllegalParameterError('输入数据无效', { cause: parseError });
 ```
 
 ## API 参考
@@ -640,66 +654,116 @@ export type RestfulFunction = (req: Request) => any;
 export type ControlFunction = (req: Request, res: Response) => any;
 export type moduleLoader = () => Promise<any>;
 
-// 用户接口
-export interface CommonUser {
-    accountCode: string;
-    name: string;
-    tenant?: { // 可选，平台管理员可能没有租户信息
-        code: string;
-        name: string;
-    };
-    [key: string]: any;
-}
+// 用户接口。两个接口都是空的，这是刻意的：框架从不读取用户对象上的任何字段，
+// 因此也不声明任何字段，形状由你的应用决定。
+export interface CommonUser {}
 
 export interface LoggedUser extends CommonUser {
-    isPlatform?: boolean; // 平台管理员标识
-    actAs?: CommonUser; // 用于用户扮演
+    actAs?: CommonUser;   // 用于用户扮演
 }
 ```
 
-## 开发
+通过模块增强声明一次自己的用户模型，应用里所有 `getLoggedUser(req)` 与 `req.user`
+就都是这个类型：
 
-### 构建
+```typescript
+// types/keelson-express.d.ts
+import '@ticatec/keelson-express';
 
-```bash
-npm run build         # 构建项目
-npm run dev           # 开发模式（监听）
+interface AppUser {
+    accountCode: string;
+    name: string;
+    isPlatform?: boolean;
+    tenant?: { code: string; name: string };
+    actAs?: AppUser;
+}
+
+declare module '@ticatec/keelson-express' {
+    interface CustomUserRegistry {
+        user: AppUser;
+    }
+}
 ```
+
+`req.user` 已由本包声明在 Express 的 `Request` 上，无需再单独增强 `Express.Request`。
+
+### 后台处理器
+
+```typescript
+import { ProcessorManager, CommonProcessor } from '@ticatec/keelson-express';
+
+class MailProcessor extends CommonProcessor<Mail> {
+    constructor() { super(30); }                        // 每 30 秒轮询一次
+    protected async loadToProcessData(): Promise<Mail[]> { return mailRepo.pending(); }
+    protected async processItem(mail: Mail): Promise<void> { await send(mail); }
+}
+
+ProcessorManager.getInstance().register(MailProcessor);
+ProcessorManager.getInstance().startAll();
+```
+
+`BaseServer.shutdown()` 会调用 `ProcessorManager.getInstance().stopAll()`，
+停掉定时器并等待还在执行中的任务结束。
 
 ## 系统要求
 
 - Node.js >= 18.0.0
-- Express.js ^5.1.0
-- TypeScript ^5.0.0
+- Express ^5.0.0
+- TypeScript ^5.0.0（从源码构建时）
 
-## 依赖项
+## 日志
 
-- `@ticatec/bean-validator`: 数据验证
-- `@ticatec/express-exception`: 错误处理
-- `@ticatec/keelson-core`: 通用工具
-- `@ticatec/logger-pino`: Pino 日志封装
-- `pino`: 高性能结构化日志框架
+日志走 [`@ticatec/logger-api`](https://www.npmjs.com/package/@ticatec/logger-api) 契约。
+未注入实现时回退到 console，按 `LOG_LEVEL` 过滤。
+
+路由绑定、请求生命周期与处理器轮询记在 `debug`，服务启停记在 `info`。
+框架不会把用户标识写进日志：网关注入的 `user` 头不会被回显，`isValidUser()` 校验失败时
+记录的是哪条路由、是否处于代理身份状态，而不是被拒的是谁。
+
+请求与响应体只在显式打开时才记录——设置 `Controller.debugEnabled = true`。
+这个开关会把 `req.body` 与 `req.query` 打到 `debug` 上，客户端发来的一切（包括凭据）
+都在里面，属于开发期的工具，不应出现在生产环境。
 
 ## 贡献
 
-1. Fork 仓库
-2. 创建你的功能分支 (`git checkout -b feature/amazing-feature`)
-3. 提交你的更改 (`git commit -m 'Add some amazing feature'`)
-4. 推送到分支 (`git push origin feature/amazing-feature`)
-5. 创建 Pull Request
+本包位于 [Keelson](https://github.com/ticatec/keelson) monorepo，欢迎在该仓库提交 issue 与 PR。
 
-## 许可证
+### 开发设置
 
-此项目使用 MIT 许可证 - 查看 [LICENSE](LICENSE) 文件了解详情。
+```bash
+git clone https://github.com/ticatec/keelson.git
+cd keelson
+pnpm install
+cd packages/keelson-express
 
-## 支持
+pnpm build       # 同时构建 CJS 与 ESM 产物（构建前先跑 lint）
+pnpm test        # 运行测试
+pnpm typecheck   # 对三套配置做类型检查
+pnpm lint        # 仅 lint
+```
 
-获取支持和提问：
+在 monorepo 根目录执行 `pnpm verify`，会对全部包做构建、类型检查与测试。
 
-- 📧 邮箱: huili.f@gmail.com
-- 🐛 问题: [GitHub Issues](https://github.com/ticatec/keelson-express/issues)
-- 📚 文档: [GitHub 仓库](https://github.com/ticatec/keelson-express)
+工作区只支持 pnpm：这里的依赖用 `workspace:*` 声明，npm 不认识这个协议，
+`npm install` 会直接以 `EUNSUPPORTEDPROTOCOL` 失败。
 
----
+### 发布
 
-由 [TicaTec](https://github.com/ticatec) 用 ❤️ 制作
+```bash
+pnpm publish:public   # prepublishOnly 会先跑 lint、typecheck、test 与 build
+```
+
+## 授权协议
+
+MIT —— 详见 [LICENSE](LICENSE) 文件。
+
+## 👨‍💻 作者
+
+**Henry Feng** —— [huili.f@gmail.com](mailto:huili.f@gmail.com)
+
+## 🔗 相关链接
+
+- [GitHub 仓库](https://github.com/ticatec/keelson/tree/main/packages/keelson-express)
+- [NPM 包](https://www.npmjs.com/package/@ticatec/keelson-express)
+- [问题反馈](https://github.com/ticatec/keelson/issues)
+- [变更日志](CHANGELOG.md)

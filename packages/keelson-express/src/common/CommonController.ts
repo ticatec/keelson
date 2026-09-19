@@ -25,7 +25,7 @@ export default abstract class CommonController<T> extends BaseController<T> {
      * Default validation rules for entity operations (can be overridden by subclass)
      * @protected
      */
-    protected getRules(): ValidationRules {
+    protected getRules(): ValidationRules | null {
         return null;
     }
 
@@ -33,7 +33,7 @@ export default abstract class CommonController<T> extends BaseController<T> {
      * Validation rules for create operation (defaults to getRules)
      * @protected
      */
-    protected getCreateRules(): ValidationRules {
+    protected getCreateRules(): ValidationRules | null {
         return this.getRules();
     }
 
@@ -41,7 +41,7 @@ export default abstract class CommonController<T> extends BaseController<T> {
      * Validation rules for update operation (defaults to getRules)
      * @protected
      */
-    protected getUpdateRules(): ValidationRules {
+    protected getUpdateRules(): ValidationRules | null {
         return this.getRules();
     }
 
@@ -73,7 +73,7 @@ export default abstract class CommonController<T> extends BaseController<T> {
      * @param rules Validation rules
      * @protected
      */
-    protected doValidate(data: any, rules: ValidationRules) {
+    protected doValidate(data: any, rules: ValidationRules | null) {
         if (!rules || !Array.isArray(rules) || rules.length === 0) {
             return;
         }
@@ -121,8 +121,8 @@ export default abstract class CommonController<T> extends BaseController<T> {
      * @protected
      */
     protected checkInterface(name: string): void {
-        if (this.service[name] == null) {
-            this.logger.warn(`Current service does not have interface: ${name}`);
+        if ((this.service as Record<string, any>)[name] == null) {
+            this.logger.warn({ method: name }, 'Current service does not implement this interface');
             throw new ActionNotFoundError();
         }
     }
@@ -135,7 +135,7 @@ export default abstract class CommonController<T> extends BaseController<T> {
      * @protected
      */
     protected async invokeServiceInterface(name: string, args: Array<any> = []): Promise<any> {
-        return await this.service[name](...args);
+        return await (this.service as Record<string, any>)[name](...args);
     }
 
     protected buildNewEntry(req: Request): any {
@@ -182,7 +182,7 @@ export default abstract class CommonController<T> extends BaseController<T> {
      */
     protected _del(_req: Request): Promise<any> {
         // Please implement delete interface in subclass, otherwise system exception will be thrown
-        this.logger.warn('Current service does not have delete interface');
+        this.logger.warn({ method: 'del' }, 'Current service does not implement a delete interface');
         throw new ActionNotFoundError();
     }
 

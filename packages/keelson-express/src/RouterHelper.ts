@@ -115,7 +115,9 @@ class RouterHelper {
                     res.status(204).send();
                 }
             } catch (ex) {
-                this.logger.debug(ex);
+                // 不再在这里补一条日志：@ticatec/node-exception 的 handleError 已经
+                // 按状态码分级记录（5xx 带栈记 error，4xx 记 debug），这里再打一条
+                // 只会让同一个错误在日志里出现两次。
                 handleError(ex, req, res, null);
             }
         }
@@ -152,7 +154,6 @@ class RouterHelper {
             try {
                 await func(req, res);
             } catch (ex) {
-                this.logger.debug(ex);
                 handleError(ex, req, res, null);
             }
         }
@@ -211,11 +212,16 @@ class RouterHelper {
                     user['language'] = language
                 }
 
-                req['user'] = user;
+                req.user = user;
 
-                this.logger.debug(`User retrieved from header: ${user.accountCode}`);
+                // 不再把 accountCode 写进日志：CommonUser / LoggedUser 里根本没有
+                // 声明这个字段，框架读的是一个契约之外的属性——换一种用户模型就是
+                // undefined；而且这条日志对每个带 user 头的请求都会打一次，等于把
+                // 用户标识铺满 debug 日志。需要按用户追踪请求，应当在应用层的
+                // 中间件里做，而不是烧进框架。
+                this.logger.debug({ path: req.path, impersonating: user.actAs != null }, 'User attached from request header');
             } catch (ex) {
-                this.logger.warn({error: ex.message, path: req.path}, 'Invalid user header format');
+                this.logger.warn({error: ex instanceof Error ? ex.message : String(ex), path: req.path}, 'Invalid user header format');
             }
         }
     }
@@ -283,11 +289,11 @@ class RouterHelper {
     checkLoggedUser() {
         return async (req: Request, res: Response, next: any) => {
             await this.retrieveUserFormHeader(req);
-            if (req['user'] == null) {
+            if (req.user == null) {
                 this.logger.warn({path: req.path, method: req.method}, 'Unauthenticated request');
                 handleError(new UnauthenticatedError(), req, res, null);
             } else {
-                this.logger.debug(`User authenticated: ${req['user'].accountCode}`);
+                this.logger.debug({ path: req.path, method: req.method }, 'Authenticated request');
                 next();
             }
         }

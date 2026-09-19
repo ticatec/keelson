@@ -86,13 +86,13 @@ export default class CommonRoutes {
      * @param path The route path to bind this router to
      */
     async bind(app: Express, path: string): Promise<void> {
-        this.logger.debug(`Binding router to path: ${path}`);
+        this.logger.debug({ path }, 'Binding router to path');
         const userHook = this.getUserHook();
         if (userHook) {
             this.router.use(async (req: Request, _res: Response, next: NextFunction) => {
                 try {
-                    if (req['user']) {
-                        req['user'] = await userHook(req['user']);
+                    if (req.user) {
+                        req.user = await userHook(req.user);
                     }
                     next();
                 } catch (error) {
@@ -100,11 +100,27 @@ export default class CommonRoutes {
                 }
             });
         }
+        // userCheck() 自 0.5.x 起就没有调用点了（0.4.9 还在调），却一直保留着
+        // @deprecated "will be removed in a future version" 的文档和三段把它当作
+        // 授权检查使用的示例。靠覆写 userCheck 做授权的应用升级后，检查被静默跳过，
+        // 而 isValidUser 的默认实现返回 true——每个请求都放行，没有任何报错。
+        // 这里恢复调用：覆写了就执行，并与 isValidUser 取与（原本在保护什么，
+        // 继续保护什么），同时在绑定时告警一次，提示迁移。
+        const legacyUserCheck = this.userCheck !== CommonRoutes.prototype.userCheck;
+        if (legacyUserCheck) {
+            this.logger.warn({ path, router: this.constructor.name },
+                'This router overrides the deprecated userCheck(); it is being called together with isValidUser(). Move the logic into isValidUser() - userCheck() will be removed.');
+        }
         this.router.use(async (req: Request, res: Response, next: NextFunction) => {
             try {
-                const user = req['user'] as RegisteredUser;
-                if (!await this.isValidUser((user as any)?.actAs ?? user)) {
-                    this.logger.debug({ user }, 'User validation failed');
+                const user = req.user as RegisteredUser | undefined;
+                const subject = ((user as any)?.actAs ?? user) as RegisteredUser;
+                const valid = await this.isValidUser(subject)
+                    && (!legacyUserCheck || await this.userCheck(subject));
+                if (!valid) {
+                    // 这里原先记的是整个 user 对象——账号、角色、租户，网关塞进头里的
+                    // 一切都会落到日志上。校验失败要定位的是哪条路由被拒了，不是这个人是谁。
+                    this.logger.debug({ path, impersonating: (user as any)?.actAs != null }, 'User validation failed');
                     next(new UnauthenticatedError());
                 } else {
                     next();
@@ -115,12 +131,12 @@ export default class CommonRoutes {
         });
         const globalHandler = this.getGlobalHandler();
         if (globalHandler) {
-            this.logger.info('Setting global handler middleware');
+            this.logger.info({ path }, 'Setting global handler middleware');
             this.router.use(globalHandler as RequestHandler);
         }
         this.bindRoutes();
         app.use(path, this.router);
-        this.logger.info(`Router bound successfully to path: ${path}`);
+        this.logger.info({ path }, 'Router bound successfully');
     }
 
     /**
@@ -292,7 +308,7 @@ export default class CommonRoutes {
      */
     get(path: string, handler: RequestHandler) {
         this.router.get(path, handler);
-        this.logger.debug(`Registered GET route: ${path}`);
+        this.logger.debug({ method: 'GET', path }, 'Registered route');
     }
 
     /**
@@ -316,7 +332,7 @@ export default class CommonRoutes {
      */
     post(path: string, handler: RequestHandler) {
         this.router.post(path, handler);
-        this.logger.debug(`Registered POST route: ${path}`);
+        this.logger.debug({ method: 'POST', path }, 'Registered route');
     }
 
     /**
@@ -333,7 +349,7 @@ export default class CommonRoutes {
      */
     put(path: string, handler: RequestHandler) {
         this.router.put(path, handler);
-        this.logger.debug(`Registered PUT route: ${path}`);
+        this.logger.debug({ method: 'PUT', path }, 'Registered route');
     }
 
     /**
@@ -351,7 +367,7 @@ export default class CommonRoutes {
      */
     delete(path: string, handler: RequestHandler) {
         this.router.delete(path, handler);
-        this.logger.debug(`Registered DELETE route: ${path}`);
+        this.logger.debug({ method: 'DELETE', path }, 'Registered route');
     }
 
     /**

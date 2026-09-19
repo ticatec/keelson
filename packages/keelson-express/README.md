@@ -28,18 +28,30 @@ A comprehensive TypeScript library providing common classes, controllers, and mi
 ## Installation
 
 ```bash
-npm install @ticatec/keelson-express @ticatec/keelson-core @ticatec/logger-pino
+pnpm add @ticatec/keelson-express
 ```
-
-> `@ticatec/logger-pino` bundles `pino` as a regular dependency, so installing the wrapper is enough — no separate `pino` install needed.
 
 ### Peer Dependencies
 
-```bash
-npm install express@^5.0.0 @ticatec/keelson-core@^3.1.0 @ticatec/bean-validator@>=1.0.0 @ticatec/node-exception@>=2.0.0
+```json
+{
+  "peerDependencies": {
+    "@ticatec/logger-api": ">=1.0.0",
+    "@ticatec/keelson-core": ">=1.0.0",
+    "@ticatec/bean-validator": ">=1.1.0",
+    "@ticatec/node-exception": ">=2.1.0",
+    "express": "^5.0.0"
+  }
+}
 ```
 
-> Also install `@ticatec/logger-pino` — every `@ticatec/*` package resolves logging through this singleton.
+```bash
+pnpm add @ticatec/logger-api @ticatec/keelson-core @ticatec/bean-validator @ticatec/node-exception express
+```
+
+A logging provider is optional. With none installed, `@ticatec/logger-api` falls back to
+the console, filtered by `LOG_LEVEL`. To route logs through pino, add
+`@ticatec/logger-pino` and install the provider at your composition root.
 
 ## Quick Start
 
@@ -615,19 +627,22 @@ class UserController extends CommonController<UserService> {
 
 ## Error Handling
 
-Centralized error handling with `@ticatec/express-exception`:
+Centralized error handling with `@ticatec/node-exception`:
 
 ```typescript
 import {
     ActionNotFoundError,
     UnauthenticatedError,
     IllegalParameterError
-} from '@ticatec/express-exception';
+} from '@ticatec/node-exception';
 
-// Errors are automatically handled and formatted
-throw new ActionNotFoundError('Resource not found');
-throw new UnauthenticatedError('User not authenticated');
-throw new IllegalParameterError('Invalid input data');
+// Errors are caught by the framework and rendered with the right status code
+throw new ActionNotFoundError();                     // 404, fixed message
+throw new UnauthenticatedError();                    // 401, fixed message
+throw new IllegalParameterError('Invalid input');    // 400, message is yours
+
+// Every constructor also takes ErrorOptions, so the original error can be kept:
+throw new IllegalParameterError('Invalid input', { cause: parseError });
 ```
 
 ## API Reference
@@ -640,64 +655,124 @@ export type RestfulFunction = (req: Request) => any;
 export type ControlFunction = (req: Request, res: Response) => any;
 export type moduleLoader = () => Promise<any>;
 
-// User interfaces
-export interface CommonUser {
-    accountCode: string;
-    name: string;
-    tenant?: { // Optional, may not be present for platform admins
-        code: string;
-        name: string;
-    };
-    [key: string]: any;
-}
+// User interfaces. Both are deliberately empty: the framework never reads a field off
+// the user, so it declares none. Your application supplies the shape.
+export interface CommonUser {}
 
 export interface LoggedUser extends CommonUser {
-    isPlatform?: boolean; // Platform admin flag
-    actAs?: CommonUser; // For user impersonation
+    actAs?: CommonUser;   // For user impersonation
 }
 ```
 
-## Development
+Declare your own user model once, through module augmentation, and every
+`getLoggedUser(req)` and `req.user` in the application is typed as it:
 
-### Build
+```typescript
+// types/keelson-express.d.ts
+import '@ticatec/keelson-express';
 
-```bash
-npm run build         # Build the project
-npm run dev           # Development mode with watch
+interface AppUser {
+    accountCode: string;
+    name: string;
+    isPlatform?: boolean;
+    tenant?: { code: string; name: string };
+    actAs?: AppUser;
+}
+
+declare module '@ticatec/keelson-express' {
+    interface CustomUserRegistry {
+        user: AppUser;
+    }
+}
 ```
+
+`req.user` is declared on Express's `Request` by this package, so no separate
+augmentation of `Express.Request` is needed.
+
+### Background processors
+
+```typescript
+import { ProcessorManager, CommonProcessor } from '@ticatec/keelson-express';
+
+class MailProcessor extends CommonProcessor<Mail> {
+    constructor() { super(30); }                        // poll every 30 seconds
+    protected async loadToProcessData(): Promise<Mail[]> { return mailRepo.pending(); }
+    protected async processItem(mail: Mail): Promise<void> { await send(mail); }
+}
+
+ProcessorManager.getInstance().register(MailProcessor);
+ProcessorManager.getInstance().startAll();
+```
+
+`BaseServer.shutdown()` calls `ProcessorManager.getInstance().stopAll()`, which stops the
+timers and awaits whatever is still in flight.
 
 ## Requirements
 
 - Node.js >= 18.0.0
-- Express.js ^5.1.0
-- TypeScript ^5.0.0
+- Express ^5.0.0
+- TypeScript ^5.0.0 (to build from source)
 
-## Dependencies
+## Logging
 
-- `@ticatec/bean-validator`: Data validation
-- `@ticatec/express-exception`: Error handling
-- `@ticatec/keelson-core`: Common utilities
-- `@ticatec/logger-pino`: Pino logging wrapper
-- `pino`: High-performance structured logging framework
+Logging goes through the [`@ticatec/logger-api`](https://www.npmjs.com/package/@ticatec/logger-api)
+contract. With no provider installed it falls back to the console, filtered by `LOG_LEVEL`.
+
+Route binding, the request lifecycle and processor ticks are logged at `debug`; server
+startup and shutdown at `info`. The framework does not write the user identity into the
+log: the gateway-supplied `user` header is not echoed, and a failed `isValidUser()` logs
+the route and whether impersonation was in play, not who was rejected.
+
+Request and response bodies are logged only when you opt in, by setting
+`Controller.debugEnabled = true`. That switch prints `req.body` and `req.query` at `debug`
+— everything a client sent, credentials included — so it belongs in development, not in
+production.
 
 ## Contributing
 
-1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add some amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
+This package lives in the [Keelson](https://github.com/ticatec/keelson) monorepo. Issues
+and pull requests are welcome there.
+
+### Development Setup
+
+```bash
+git clone https://github.com/ticatec/keelson.git
+cd keelson
+pnpm install
+cd packages/keelson-express
+
+pnpm build       # Build both CJS and ESM outputs (lints first)
+pnpm test        # Run the test suite
+pnpm typecheck   # Type-check all three configurations
+pnpm lint        # Lint only
+```
+
+From the monorepo root, `pnpm verify` builds, type-checks and tests every package.
+
+The workspace is pnpm-only: the dependencies here are declared with `workspace:*`, a
+protocol npm does not understand, so `npm install` fails outright with
+`EUNSUPPORTEDPROTOCOL`.
+
+### Publishing
+
+```bash
+pnpm publish:public   # runs lint, typecheck, test and build first, via prepublishOnly
+```
 
 ## License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+MIT - see the [LICENSE](LICENSE) file.
 
-## Support
+## 👨‍💻 Author
 
-For support and questions:
+**Henry Feng** — [huili.f@gmail.com](mailto:huili.f@gmail.com)
 
-- 📧 Email: huili.f@gmail.com
-- 🐛 Issues: [GitHub Issues](https://github.com/ticatec/keelson-express/issues)
+## 🔗 Links
+
+- [GitHub Repository](https://github.com/ticatec/keelson/tree/main/packages/keelson-express)
+- [NPM Package](https://www.npmjs.com/package/@ticatec/keelson-express)
+- [Issues](https://github.com/ticatec/keelson/issues)
+- [CHANGELOG](CHANGELOG.md)
 - 📚 Documentation: [GitHub Repository](https://github.com/ticatec/keelson-express)
 
 ---
