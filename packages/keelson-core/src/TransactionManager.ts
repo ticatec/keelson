@@ -10,8 +10,24 @@ interface TransactionContext {
     isTransaction: boolean;
 }
 
+/**
+ * 事务上下文锚定到 globalThis，理由见 DBManager 中的说明：CJS 与 ESM 两份构建各持
+ * 一个 ThreadLocal 时，跨模块格式的调用会看不到彼此的事务连接。
+ */
+interface TransactionState {
+    threadLocal: ThreadLocal<TransactionContext>;
+}
+
+const STATE_KEY = Symbol.for('@ticatec/keelson-core.transaction');
+
+const state: TransactionState = ((globalThis as any)[STATE_KEY] ??= {
+    threadLocal: new ThreadLocal<TransactionContext>()
+});
+
 export default class TransactionManager {
-    private static threadLocal = new ThreadLocal<TransactionContext>();
+    private static get threadLocal(): ThreadLocal<TransactionContext> {
+        return state.threadLocal;
+    }
     private static _logger: Logger | null = null;
 
     private static get logger(): Logger {

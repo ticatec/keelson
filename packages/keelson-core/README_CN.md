@@ -7,7 +7,11 @@
 [![Version](https://img.shields.io/npm/v/@ticatec/keelson-core)](https://www.npmjs.com/package/@ticatec/keelson-core)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-> **v4.0.0 包含破坏性变更。** 如果你从 3.x 升级，请先阅读[从 3.x 迁移](#-从-3x-迁移)。
+> **本包原名 `@ticatec/node-common-library`。** 现已更名为
+> `@ticatec/keelson-core`，版本从 1.0.0 重新起步——npm 上换了名字就是一个全新的包，
+> 有自己的发布历史。迁移只需替换依赖名与 import 路径，没有任何导出改过名字或签名。
+> 若你是从 `node-common-library` 3.x 过来的，3.x 至本版之间的行为变更见
+> [从 node-common-library 3.x 迁移](#-从-node-common-library-3x-迁移)。
 
 ## 🌟 特性
 
@@ -660,7 +664,7 @@ try {
 }
 ```
 
-## 🔀 从 3.x 迁移
+## 🔀 从 node-common-library 3.x 迁移
 
 | 变更 | 3.x | 4.0.0 |
 | --- | --- | --- |

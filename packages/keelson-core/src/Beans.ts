@@ -4,9 +4,26 @@ import beanFactory from "./BeanFactory.js";
 
 export type BeanLoader = () => Promise<any>;
 
+/**
+ * 单例锚定到 globalThis，理由见 DBManager 中的说明。
+ */
+interface BeansState {
+    instance?: Beans;
+}
+
+const STATE_KEY = Symbol.for('@ticatec/keelson-core.beans');
+
+const state: BeansState = ((globalThis as any)[STATE_KEY] ??= {});
+
 export default class Beans {
 
-    private static instance: Beans;
+    private static get instance(): Beans | undefined {
+        return state.instance;
+    }
+
+    private static set instance(value: Beans | undefined) {
+        state.instance = value;
+    }
     /**
      * 已注册的 Bean 类型。此前写成 `= {}`，被推断为 `{}`，于是用字符串索引它在
      * strict 下报错，而在 strict 之外 `v.loader` 的类型一路是 any，写错成员名也没人管。

@@ -3,9 +3,33 @@ import type {Logger} from "../Logger.js";
 import DBConnection from "./DBConnection.js";
 import DBFactory from "./DBFactory.js";
 
+/**
+ * 进程级状态锚定到 globalThis，键为众所周知的 Symbol。
+ *
+ * 本包同时发布 CommonJS 与 ESM 两份构建，Node 把它们当作两个互不相干的模块实例，
+ * 因此类静态字段会一分为二。对这个包来说后果尤其严重：应用以 ESM 启动并调用
+ * DBManager.init()，而某个以 CJS 加载的 DAO 调用 getInstance() 时，拿到的是另一份
+ * 尚未初始化的静态字段，直接抛「未初始化」；事务上下文更隐蔽——ESM 的 @Transaction
+ * 开启的连接存在 ESM 那份 ThreadLocal 里，CJS 的 DAO 取到的是空的另一份，于是报
+ * 「No database connection available」，而调用方明明就在事务里。
+ */
+interface DBManagerState {
+    instance?: DBManager;
+}
+
+const STATE_KEY = Symbol.for('@ticatec/keelson-core.db-manager');
+
+const state: DBManagerState = ((globalThis as any)[STATE_KEY] ??= {});
+
 export default class DBManager {
 
-    private static instance?: DBManager;
+    private static get instance(): DBManager | undefined {
+        return state.instance;
+    }
+
+    private static set instance(value: DBManager | undefined) {
+        state.instance = value;
+    }
     private static _logger: Logger | null = null;
 
     private static get logger(): Logger {

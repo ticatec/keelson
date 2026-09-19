@@ -80,6 +80,20 @@ export class BeanFactory {
     }
 }
 
-const beanFactory: BeanFactory = new BeanFactory();
+/**
+ * Bean 注册表锚定到 globalThis，理由见 DBManager 中的说明：否则 CJS 侧注册的 Bean，
+ * ESM 侧的工厂完全看不到。
+ */
+interface FactoryState {
+    factory: BeanFactory;
+}
+
+const FACTORY_KEY = Symbol.for('@ticatec/keelson-core.bean-factory');
+
+const factoryState: FactoryState = ((globalThis as any)[FACTORY_KEY] ??= {
+    factory: new BeanFactory()
+});
+
+const beanFactory: BeanFactory = factoryState.factory;
 
 export default beanFactory;

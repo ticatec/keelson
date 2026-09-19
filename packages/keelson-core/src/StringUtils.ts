@@ -68,7 +68,9 @@ const isString = (s: unknown): boolean => {
  * @returns True if formatted as a number.
  */
 const isNumber = (s: unknown): boolean => {
-    return isString(s) && !isNaN(Number(s));
+    // 必须先排除空串与纯空白：JavaScript 里 Number('') 与 Number('   ') 都等于 0，
+    // 于是 !isNaN(...) 成立，空值会被当成合法数字（通常被后续逻辑理解为 0）。
+    return isString(s) && (s as string).trim().length > 0 && !isNaN(Number(s));
 };
 
 /**

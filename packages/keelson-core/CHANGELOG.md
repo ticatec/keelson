@@ -27,6 +27,54 @@ To migrate, change the dependency and the import specifier - nothing else:
 Every export keeps its name and signature. The old package will be deprecated on
 npm with a pointer here.
 
+### Fixed
+
+- **The singleton registries split between the CommonJS and ESM builds.**
+  `DBManager.instance`, `TransactionManager.threadLocal`, `beanFactory` and
+  `Beans.instance` were class statics, and this package ships both builds - so a
+  process that mixed them got two of each. Reproduced: an ESM `DBManager.init()`
+  left the CJS `getInstance()` throwing "DBManager is not initialized", and
+  `beanFactory` / `Beans.getInstance()` were different objects on each side.
+
+  The worst case was the transaction context: a `@Transaction` opened in an ESM
+  service stored its connection in the ESM `ThreadLocal`, so a DAO loaded as CJS
+  called `getCurrentConnection()` on a different, empty one and reported
+  "No database connection available. Ensure you are inside a @Transaction" - from
+  inside a transaction. All four are now anchored to `globalThis` under
+  `Symbol.for('@ticatec/keelson-core.*')`, matching `logger-api` and
+  `redis-client`. Verified end to end: an ESM-opened transaction is now visible
+  from the CJS side.
+
+- **`StringUtils.isNumber('')` and `isNumber('   ')` returned `true`.**
+  `Number('')` and `Number('   ')` are both `0`, so `!isNaN(...)` held and a blank
+  value passed as a valid number - typically read downstream as `0`. A string must
+  now be non-blank.
+
+- **`toCamel` could not handle upper-case column names.** It only upper-cased the
+  letter after an underscore and left the rest alone, so `USER_NAME` became
+  `USERNAME`, `ORDER_STATUS` became `ORDERSTATUS` and `STATUS` stayed `STATUS`.
+  Dameng, Oracle and unquoted PostgreSQL all return upper-case names, which is why
+  the DM driver had to override this method. An all-upper-case name is now
+  lower-cased before the conversion.
+
+- **`setNestObj` did not guard the prototype chain.** A column alias can come from
+  dynamically built SQL. `__proto__.isAdmin` happened not to pollute anything -
+  but only because `toCamel` rewrote it to `_proto_` - while
+  `constructor.prototype.x` threw a `TypeError` out of the row mapping. Both the
+  raw and the camel-cased form of every path segment are now checked against
+  `__proto__` / `constructor` / `prototype`, and a primitive already sitting on the
+  path is left alone instead of being replaced.
+
+- **`ThreadLocal.set()` warned through a bare `console.warn`**, bypassing the
+  `@ticatec/logger-api` pipeline - neither filtered by `LOG_LEVEL` nor routed to
+  the application's sinks. It now uses the contract like everything else.
+
+### Removed
+
+- The `pino` dev dependency; nothing imported it.
+- The `./lib/db/Field` subpath export. `Field` and `FieldType` are already part of
+  the root export, and the subpath exposed an internal build path.
+
 ## [Unreleased]
 
 ### Changed

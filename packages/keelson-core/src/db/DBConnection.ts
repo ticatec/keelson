@@ -5,6 +5,11 @@ import type {Logger} from "../Logger.js";
 import PaginationList from "./PaginationList.js";
 import CommonSearchCriteria from "./CommonSearchCriteria.js";
 
+/**
+ * 会改写原型链的属性名，任何由外部输入拼出来的字段路径都不得落到它们上面。
+ */
+const UNSAFE_KEYS = new Set(['__proto__', 'constructor', 'prototype']);
+
 type PostConstructionFun = (obj: any) => void;
 
 export type {PostConstructionFun};
@@ -406,7 +411,11 @@ export default abstract class DBConnection {
      * @returns CamelCase string.
      */
     protected toCamel(name: string) {
-        return name.replace(/_(\w)/g, (all, letter) => {
+        // 全大写列名先整体转小写再做驼峰转换。达梦、Oracle 以及未加引号的 PostgreSQL
+        // 返回的都是全大写列名，此前只把下划线后的字母改大写、其余原样保留，于是
+        // USER_NAME 变成 USERNAME、STATUS 原样不动，驱动只好各自重写这个方法。
+        const normalized = /^[A-Z0-9_]+$/.test(name) ? name.toLowerCase() : name;
+        return normalized.replace(/_(\w)/g, (all, letter) => {
             return letter.toUpperCase();
         });
     }
@@ -443,14 +452,30 @@ export default abstract class DBConnection {
     protected setNestObj(obj: any, field: string, value: any): void {
         if (value !== undefined) {
             const attrs = field.split('.');
-            let attr = this.toCamel(attrs[0]);
-            let nestObj = obj;
-            for (let i = 0; i < attrs.length - 1; i++) {
-                nestObj[attr] = nestObj[attr] ?? {};
-                nestObj = nestObj[attr];
-                attr = this.toCamel(attrs[i + 1]);
+            // 列别名可能来自动态拼接的 SQL，因此路径上的每一段都要挡住原型链的保留字。
+            // 此前 '__proto__' 侥幸没造成污染，只是因为 toCamel 把它改写成了 _proto_；
+            // 而 'constructor.prototype.x' 会在赋值时直接抛 TypeError，让整个结果映射崩掉。
+            const segments = attrs.map(a => this.toCamel(a));
+            // 原始段与转换后的段都要检查。只查转换后的不够：toCamel 会把 __proto__
+            // 改写成 _proto_，看着就不像保留字了；只查原始段也不够：别名里写
+            // CONSTRUCTOR 转换后同样落到 constructor 上。
+            const unsafe = (name: string) => UNSAFE_KEYS.has(name);
+            if (attrs.some(unsafe) || segments.some(unsafe)) {
+                return;
             }
-            nestObj[attr] = value;
+            let nestObj = obj;
+            for (let i = 0; i < segments.length - 1; i++) {
+                const key = segments[i];
+                const next = nestObj[key];
+                if (next == null) {
+                    nestObj[key] = {};
+                } else if (typeof next !== 'object') {
+                    // 中间层已经是基本类型值，继续下钻会把它替换掉，造成数据丢失。
+                    return;
+                }
+                nestObj = nestObj[key];
+            }
+            nestObj[segments[segments.length - 1]] = value;
         }
     }
 

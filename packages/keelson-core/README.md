@@ -7,7 +7,13 @@ A comprehensive Node.js database access framework providing robust abstractions 
 [![Version](https://img.shields.io/npm/v/@ticatec/keelson-core)](https://www.npmjs.com/package/@ticatec/keelson-core)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-> **v4.0.0 contains breaking changes.** If you are upgrading from 3.x, read [Migrating from 3.x](#-migrating-from-3x) first.
+> **This package was `@ticatec/node-common-library`.** It is now
+> `@ticatec/keelson-core`, starting again at 1.0.0 - a new name on npm is a new
+> package with its own publish history. Migrating is a rename of the dependency
+> and the import specifier; no export changed its name or signature. If you are
+> coming from `node-common-library` 3.x, the behavioural changes that landed
+> between 3.x and this release are listed under
+> [Migrating from node-common-library 3.x](#-migrating-from-node-common-library-3x).
 
 ## 🌟 Features
 
@@ -666,7 +672,7 @@ try {
 }
 ```
 
-## 🔀 Migrating from 3.x
+## 🔀 Migrating from node-common-library 3.x
 
 | Change | Before (3.x) | After (4.0.0) |
 | --- | --- | --- |
