@@ -290,7 +290,10 @@ pnpm add @ticatec/keelson-pg pg
 import 'reflect-metadata';
 ```
 
-然后按顺序读这几份指南，它们是层层递进的：
+先读[教程](tutorial/README_CN.md)——九章，一章一个主题，各章独立成篇，
+讲的是这些部件为什么长成这样、怎么拼在一起。
+
+需要单个层的完整细节时，查这几份参考手册：
 
 | 指南 | 内容 |
 | --- | --- |

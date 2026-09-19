@@ -733,7 +733,7 @@ setUserResolver(new BearerResolver());   // once, at the composition root
 When the identity comes from somewhere else entirely, extend `UserResolver` directly:
 
 ```typescript
-import UserResolver, { setUserResolver } from '@ticatec/keelson-express';
+import { UserResolver, setUserResolver } from '@ticatec/keelson-express';
 
 class SessionResolver extends UserResolver {
     async resolve(req: Request) {

@@ -729,7 +729,7 @@ setUserResolver(new BearerResolver());   // 在应用入口调用一次
 身份来自完全不同的地方时，直接继承 `UserResolver`：
 
 ```typescript
-import UserResolver, { setUserResolver } from '@ticatec/keelson-express';
+import { UserResolver, setUserResolver } from '@ticatec/keelson-express';
 
 class SessionResolver extends UserResolver {
     async resolve(req: Request) {

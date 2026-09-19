@@ -308,7 +308,10 @@ pnpm add @ticatec/keelson-pg pg
 import 'reflect-metadata';
 ```
 
-Then read the guides in order — they build on each other:
+Start with the [tutorial](tutorial/README.md) — nine chapters, one topic each, readable in
+any order. It covers why the pieces are shaped the way they are and how they fit together.
+
+For the exhaustive detail of a single layer, the reference guides:
 
 | Guide | Covers |
 | --- | --- |
