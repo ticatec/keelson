@@ -311,19 +311,18 @@ import 'reflect-metadata';
 Start with the [tutorial](tutorial/README.md) — nine chapters, one topic each, readable in
 any order. It covers why the pieces are shaped the way they are and how they fit together.
 
-For the exhaustive detail of a single layer, the reference guides:
+For the exhaustive detail of a single layer:
 
-| Guide | Covers |
+| Reference | Covers |
 | --- | --- |
-| [DAO Layer](docs/prompts/DAO_GUIDE.md) | Writing DAOs, the query helpers, `InsertResult` / `UpdateResult`, pagination, placeholders |
-| [Service & Repository](docs/prompts/SERVICE_GUIDE.md) | The four tiers, `@Transaction`, propagation, `TransactionManager` |
-| [Dependency Injection](docs/prompts/DEPENDENCY_INJECTION_GUIDE.md) | `beanFactory`, lazy proxies, `Beans` loaders, circular dependencies |
-| [Search Criteria](docs/prompts/SEARCH_CRITERIA.md) | The dynamic query builder — baseline contract, condition helpers, generated SQL |
-| [Controllers](docs/prompts/CONTROLLER.md) | CRUD and search controllers, validation rules, argument mapping |
-| [Bean Validation](docs/prompts/BEAN_VALIDATION.md) | Validator types, options, custom checks, localised messages |
-| [AI Prompts](docs/prompts/AI_PROMPTS.md) | The layer rules as a block to paste into an AI session, plus prompts per layer |
+| [AI Prompts](docs/prompts/AI_PROMPTS.md) | The layer rules as a block to paste into an AI session, plus prompts per layer — the authoritative statement of the conventions |
+| [Search Criteria](docs/prompts/SEARCH_CRITERIA.md) | The dynamic query builder — condition helpers, utilities, extension points, generated SQL |
+| [bean-validator README](packages/bean-validator/README.md) | Every validator, its options and defaults, custom checks, localised messages |
+| [keelson-express README](packages/keelson-express/README.md) | Controllers, routes, the server lifecycle, identity |
+| [keelson-core README](packages/keelson-core/README.md) | DAO helpers, transactions, the bean factory |
 
-Each guide has a Chinese counterpart with a `_CN` suffix.
+The two documents under `docs/prompts/` have Chinese counterparts with a `_CN` suffix; each
+package README has a `README_CN.md` beside it.
 
 ## Renamed packages
 

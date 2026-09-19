@@ -42,7 +42,7 @@ Service 接口（已定义，不要重写）：
   interface <OrderService> {
       createNew(user: AppUser, data: <Order>): Promise<string>;
       update(user: AppUser, data: <Order>): Promise<void>;
-      search(user: AppUser, criteria: any): Promise<PaginationList<<Order>>>;
+      search(user: AppUser, criteria: any): Promise<PaginationList>;
   }
 
 实体字段及其约束：
@@ -161,5 +161,6 @@ CSV 内容由 service 以字符串返回，控制器不负责拼装。
 ---
 
 下一篇：[Service 层](AI_PROMPTS_3_SERVICE_CN.md)。背景阅读：
-[控制器指南](CONTROLLER_CN.md)、[数据校验指南](BEAN_VALIDATION_CN.md)、
+[keelson-express 的 README](../../packages/keelson-express/README_CN.md)、
+[bean-validator 的 README](../../packages/bean-validator/README_CN.md)、
 教程第 [4](../../tutorial/04-http-layer_CN.md) 章。

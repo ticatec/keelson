@@ -131,6 +131,42 @@ To reshape the body before validation, override `buildNewEntry(req)` / `buildUpd
 "call the service with the id" — there is usually a soft-delete flag, a cascade, or a rule
 about who may — so the framework declines to guess.
 
+### An endpoint that is not CRUD
+
+`BaseController<T>` is the layer beneath `CommonController`: it holds the injected service
+and the logger, and nothing else. Extend it when the endpoint has its own shape — an
+export, an approval step, a bulk action — and write the method yourself.
+
+Inside it, two protected helpers give you the same late-bound dispatch the CRUD methods
+use:
+
+```typescript
+import { BaseController } from '@ticatec/keelson-express';
+import type { RestfulFunction } from '@ticatec/keelson-express';
+
+export class ReportController extends BaseController<ReportService> {
+
+    constructor(service: ReportService) {
+        super(service);          // BaseController's constructor is protected — declare a public one
+    }
+
+    exportCsv(): RestfulFunction {
+        return async (req) => this.service.exportCsv(
+            this.getLoggedUser(req), String(req.query.month)
+        );
+    }
+}
+```
+
+You have a typed service here, so call it directly. The late-bound pair —
+`checkInterface(name)`, which throws `ActionNotFoundError` when the method is missing, and
+`invokeServiceInterface(name, args)`, which calls it — lives one level up on
+`CommonController`, and is what lets the CRUD methods stay generic over a service they
+have no interface for. Extend `CommonController` if you want them.
+
+A `RestfulFunction` takes the request and returns a value — it is not an Express handler,
+so it still goes through `routerHelper.invokeRestfulAction(...)` when you bind it.
+
 ## Validation
 
 Declare rules; the controller runs them before calling the service.
@@ -215,7 +251,9 @@ For anything finer, override `isValidUser()` — chapter 5.
 
 ---
 
-Deeper reference: [Controller guide](../docs/prompts/CONTROLLER.md) and
-[Bean Validation guide](../docs/prompts/BEAN_VALIDATION.md).
+Deeper reference: [keelson-express's README](../packages/keelson-express/README.md) for
+controllers and routes, [bean-validator's README](../packages/bean-validator/README.md) for
+every validator and option, and [the web-layer prompts](../docs/prompts/AI_PROMPTS_2_WEB.md)
+for the rules.
 
 Next: [Identity and access control](05-identity.md).

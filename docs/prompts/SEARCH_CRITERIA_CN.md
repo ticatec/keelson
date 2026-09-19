@@ -38,10 +38,10 @@ protected constructor(criteria?: any)
 
 | 字段 | 默认值 | 收敛范围 |
 | --- | --- | --- |
-| `page` | `1` | `>= 1` |
-| `pageSize` | `25` | `1 … 1000` |
+| `page` | `1` | 小于 `1` → `1` |
+| `pageSize` | `25` | 小于 `1` → `25`；大于 `1000` → `1000` |
 
-正因为有这层收敛，恶意的 `pageSize=999999` 无法把分页接口变成全表导出，负数 `page` 也不会生成 `offset -25` 这样的语法错误。
+两者的收敛方式并不一样，而这个差别是要紧的。`page` 小于 1 会变成 1，但 `pageSize` 小于 1 会回落到**默认值 25**，不是 1——`pageSize=0` 拿到的是 25 行，不是 1 行。只有上界是真正的钳制，正是它挡住了恶意的 `pageSize=999999` 把分页接口变成全表导出；而 `page` 的下界挡住的是 `page=0` 生成 `offset -25`。
 
 #### 受保护属性
 
@@ -105,7 +105,7 @@ this.addEqualsCriteria(this.criteria?.status, 'p.status');
 protected addWildcardCriteria(text: string, field: string): number
 ```
 
-`text` 含 `*` 时追加 `and <field> like <占位符>` 并把 `*` 转为 `%`；否则追加 `and <field> = <占位符>`。输入中字面量的 `\`、`%`、`_` 会被转义 —— 用户搜索 `a_b` 匹配的是字面字符串，而不是"任意三个字符"。
+`text` 含 `*` 时追加 `and <field> like <占位符>` 并把 `*` 转为 `%`；否则追加 `and <field> = <占位符>`。转义只发生在 LIKE 这一支：`a_b*` 绑定的参数是 `a\_b%`，下划线保持字面含义。不含 `*` 的 `a_b` 根本不会被转义——它也不需要，因为用的是 `=` 而不是 `LIKE`。
 
 ```typescript
 this.addWildcardCriteria(this.criteria?.name, 'p.name');
@@ -136,6 +136,8 @@ async paginationQuery(conn: DBConnection): Promise<PaginationList>
 
 先执行 `select count(*) as cc from (<sql>) a`，再套用驱动的 limit/offset 子句执行分页查询。
 
+计数会把你的 SQL 包进子查询，由此有两条后果。`ORDER BY` 要放在 `this.orderBy` 里、不要写进 `this.sql`——在被计数的子查询里它是一次没人看的排序，有些方言还会直接报错。`this.sql` 里也绝不能出现 LIMIT / OFFSET：基类会在 `this.orderBy` 之后追加对应方言的限量子句。
+
 ```typescript
 {
   count: number,     // 匹配总行数
@@ -145,7 +147,9 @@ async paginationQuery(conn: DBConnection): Promise<PaginationList>
 }
 ```
 
-统计结果为 `0` 时直接短路返回 `{ count: 0, hasMore: false, list: [], pages: 0 }`，不再执行分页查询。
+`hasMore` 是算出来的，不是查出来的：它等于 `offset + pageSize < count`，其中 `offset = (page - 1) * pageSize`，`pageSize` 取的是收敛之后的值。
+
+统计结果为 `0` 时直接短路返回 `{ count: 0, hasMore: false, list: [], pages: 0 }`，不再执行分页查询。`offset >= count` 时同样短路——翻过尾页的任何一页，在 COUNT 之后就返回空列表，所以 `page=10000000` 只花一次往返而不是两次，你也不需要自己加保护。
 
 #### `query(conn)`
 
@@ -181,7 +185,7 @@ protected getPostProcessor(): ((row: any) => void) | null {
 protected setBooleanFields(...fields: Array<string>): void
 ```
 
-声明哪些结果字段需要从驱动的表示（`1`/`0`、`'T'`/`'F'`、`'t'`/`'f'`）转换为 `true` / `false`。点号路径可深入已生成的嵌套对象。请在构造函数中调用。
+声明哪些结果字段需要转换为 `true` / `false`。认得的值是：真正的布尔值、数字 `1` 与 `0`，以及字符串 `'1'`、`'0'`、`'t'`、`'f'`、`'true'`、`'false'`——先 trim 再转小写，所以 `'TRUE'` 与 `'T'` 是同一条规则。其余一律落到朴素的真值判断，这也是为什么意料之外的 `'yes'` 会悄悄变成 `true`。点号路径可深入已生成的嵌套对象。请在构造函数中调用。
 
 ```typescript
 this.setBooleanFields('isActive', 'isDeleted', 'category.isActive');
@@ -195,6 +199,8 @@ protected getPlaceholder(index: number): string
 
 按 1 起始的参数序号返回当前连接的占位符。当需要追加构建方法覆盖不到的原始片段时使用。
 
+构造函数执行期间还没有连接——`conn` 是在每次执行之前才赋值的——所以在构造函数里调用它，无论真实方言是什么，都会悄悄返回 PostgreSQL 风格的 `$n`。占位符要在 `buildDynamicQuery()` 里生成，不要在构造函数里。
+
 ### 工具方法
 
 | 方法 | 用途 |
@@ -205,7 +211,7 @@ protected getPlaceholder(index: number): string
 | `replaceWildStar(s)` | 转义 `\`、`%`、`_`，再把 `*` 转为 `%` |
 | `escapePercentage(s)` | 转义 `\`、`%`、`_` |
 | `wrapLikeMatch(s)` | 包装为 `%s%` |
-| `getNextDayStart(d)` | 次日本地零点，夏令时安全；日期非法时返回 `null` |
+| `getNextDayStart(d)` | Node 进程所在时区的次日零点；入参为 `null`/`undefined` 或非法日期时返回 `null`。夏令时跳过零点的那天返回 01:00，它仍是次日的第一个时刻 |
 
 ---
 

@@ -154,8 +154,22 @@ Please register it via beanFactory.register('UserRepository', Class) before usag
 没有任何东西会替你核对；注册写在了错误的生命周期方法里；或者 `Beans` 的加载器指向的
 模块没有 `default` 导出。
 
----
+## bean 不要带状态
 
-深入参考：[依赖注入指南](../docs/prompts/DEPENDENCY_INJECTION_GUIDE_CN.md)。
+一个 bean 是整个进程里所有请求共用的那一个实例。构造函数之外任何写到 `this` 上的东西，
+下一个请求都看得见；压力一上来，就是两个请求在写同一个字段。每请求的状态靠参数传递，
+或者放在事务上下文里——绝不要放在 service 上。
+
+## 自己的一份注册表
+
+`BeanFactory` 除了单例之外也作为类导出，所以 `new BeanFactory()` 能给你一份别人看不到的
+私有注册表。
+
+它的用处比听上去窄。`CommonService.getRepositoryInstance()` 与
+`CommonRepository.getDAOInstance()` 读的是模块级单例，不接受注册表参数，所以一个要跑
+service 或 repository 的测试，无论如何都得注册到全局的 `beanFactory` 上。私有实例只对
+直接调用注册表的代码有意义。
+
+---
 
 下一章：[HTTP 层](04-http-layer_CN.md) —— 路由、控制器、校验与错误。

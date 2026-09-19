@@ -126,6 +126,40 @@ export class UserController extends CommonSearchController<UserService> {
 `_del()` 默认直接抛 `ActionNotFoundError`，除非你覆写它。删除很少只是"拿 id 调一下
 service"——通常有软删标记、级联关系，或者关于谁有权删的规则——所以框架拒绝替你猜。
 
+### 不是 CRUD 的接口
+
+`BaseController<T>` 是 `CommonController` 下面的那一层：它只持有注入进来的 service 和
+logger，别的什么都没有。当一个接口有自己的形状时继承它——导出、审批、批量操作——
+方法自己写。
+
+在它里面，两个受保护的辅助方法给你和 CRUD 方法一样的延迟派发：
+
+```typescript
+import { BaseController } from '@ticatec/keelson-express';
+import type { RestfulFunction } from '@ticatec/keelson-express';
+
+export class ReportController extends BaseController<ReportService> {
+
+    constructor(service: ReportService) {
+        super(service);          // BaseController 的构造函数是 protected，自己声明一个 public 的
+    }
+
+    exportCsv(): RestfulFunction {
+        return async (req) => this.service.exportCsv(
+            this.getLoggedUser(req), String(req.query.month)
+        );
+    }
+}
+```
+
+这里的 service 是有类型的，直接调就行。延迟派发的那一对——`checkInterface(name)`
+在方法不存在时抛 `ActionNotFoundError`，`invokeServiceInterface(name, args)` 负责调用——
+在上一层的 `CommonController` 上，正是它让 CRUD 方法能对一个没有接口约束的 service
+保持通用。需要它们就继承 `CommonController`。
+
+`RestfulFunction` 接收请求、返回一个值——它不是 Express 的处理函数，所以绑定的时候
+一样要过 `routerHelper.invokeRestfulAction(...)`。
+
 ## 校验
 
 声明规则，控制器会在调用 service 之前执行它们。
@@ -206,7 +240,8 @@ export default class UserRoutes extends AuthenticatedRoutes { /* ... */ }
 
 ---
 
-深入参考：[控制器指南](../docs/prompts/CONTROLLER_CN.md)、
-[数据校验指南](../docs/prompts/BEAN_VALIDATION_CN.md)。
+深入参考：[keelson-express 的 README](../packages/keelson-express/README_CN.md)（控制器
+与路由）、[bean-validator 的 README](../packages/bean-validator/README_CN.md)（每个校验器
+与选项），以及 [web 层提示词](../docs/prompts/AI_PROMPTS_2_WEB_CN.md)（规则）。
 
 下一章：[身份与访问控制](05-identity_CN.md)。

@@ -164,9 +164,24 @@ Three usual causes, in order of likelihood: a typo between the `register` name a
 lookup name — they are strings, nothing checks them; registration in the wrong lifecycle
 method; or a `Beans` loader pointing at a module with no `default` export.
 
----
+## Keep beans stateless
 
-Deeper reference:
-[Dependency Injection guide](../docs/prompts/DEPENDENCY_INJECTION_GUIDE.md).
+A bean is one instance shared by every request in the process. Anything you assign to
+`this` outside the constructor is visible to the next request, and under load that is two
+requests writing the same field. Per-request state travels as arguments, or in the
+transaction context — never on the service.
+
+## A registry of your own
+
+`BeanFactory` is exported as a class as well as a singleton, so `new BeanFactory()` gives
+you a private registry that nothing else can see.
+
+It is narrower than it sounds. `CommonService.getRepositoryInstance()` and
+`CommonRepository.getDAOInstance()` read the module-level singleton and take no registry
+argument, so a test that exercises a service or a repository has to register onto the
+global `beanFactory` regardless. A private instance is only useful for code that calls the
+registry directly.
+
+---
 
 Next: [The HTTP layer](04-http-layer.md) — routes, controllers, validation and errors.

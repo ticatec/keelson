@@ -38,10 +38,10 @@ It reads two fields off `criteria` and clamps them:
 
 | Field | Default | Clamped to |
 | --- | --- | --- |
-| `page` | `1` | `>= 1` |
-| `pageSize` | `25` | `1 … 1000` |
+| `page` | `1` | below `1` → `1` |
+| `pageSize` | `25` | below `1` → `25`; above `1000` → `1000` |
 
-Clamping is why a hostile `pageSize=999999` cannot turn a paginated endpoint into a full-table dump, and a negative `page` cannot produce a `offset -25` syntax error.
+The two are not clamped the same way, and the difference matters. A `page` below 1 becomes 1, but a `pageSize` below 1 falls back to the **default 25**, not to 1 — `pageSize=0` gives you 25 rows, not one. Only the upper bound is a true clamp, and it is what stops a hostile `pageSize=999999` from turning a paginated endpoint into a full-table dump. The `page` floor is what stops `page=0` from producing `offset -25`.
 
 #### Protected properties
 
@@ -105,7 +105,7 @@ this.addEqualsCriteria(this.criteria?.status, 'p.status');
 protected addWildcardCriteria(text: string, field: string): number
 ```
 
-If `text` contains `*`, appends `and <field> like <placeholder>` and converts `*` to `%`; otherwise appends `and <field> = <placeholder>`. Literal `\`, `%` and `_` in the input are escaped, so a user searching for `a_b` matches the literal string rather than any three characters.
+If `text` contains `*`, appends `and <field> like <placeholder>` and converts `*` to `%`; otherwise appends `and <field> = <placeholder>`. Escaping applies to the LIKE branch only: `a_b*` binds `a\_b%`, so the underscore stays literal. A starless `a_b` is not escaped at all — it does not need to be, because the operator is `=`, not `LIKE`.
 
 ```typescript
 this.addWildcardCriteria(this.criteria?.name, 'p.name');
@@ -136,6 +136,8 @@ async paginationQuery(conn: DBConnection): Promise<PaginationList>
 
 Runs `select count(*) as cc from (<sql>) a`, then the page query with the driver's limit/offset clause.
 
+Two consequences of that count wrapping your SQL in a subquery. Keep `ORDER BY` in `this.orderBy` and out of `this.sql` — inside the counted subquery it is a sort nobody reads, and some dialects reject it outright. And never put a LIMIT or OFFSET in `this.sql`: the base class appends the dialect's own limit clause after `this.orderBy`.
+
 ```typescript
 {
   count: number,     // total matching rows
@@ -145,7 +147,9 @@ Runs `select count(*) as cc from (<sql>) a`, then the page query with the driver
 }
 ```
 
-When the count is `0`, it short-circuits to `{ count: 0, hasMore: false, list: [], pages: 0 }` without running the page query.
+`hasMore` is computed, not queried: it is `offset + pageSize < count`, where `offset = (page - 1) * pageSize` and `pageSize` is the clamped value.
+
+When the count is `0`, it short-circuits to `{ count: 0, hasMore: false, list: [], pages: 0 }` without running the page query. It short-circuits again whenever `offset >= count` — any page past the end returns an empty list after the COUNT alone, so `page=10000000` costs one round trip rather than two, and needs no guard of your own.
 
 #### `query(conn)`
 
@@ -181,7 +185,7 @@ protected getPostProcessor(): ((row: any) => void) | null {
 protected setBooleanFields(...fields: Array<string>): void
 ```
 
-Declares which result fields should be coerced to `true` / `false` from the driver's representation (`1`/`0`, `'T'`/`'F'`, `'t'`/`'f'`). Dotted paths reach into hydrated nested objects. Call it from the constructor.
+Declares which result fields should be coerced to `true` / `false`. The accepted values are a real boolean, the numbers `1` and `0`, and the strings `'1'`, `'0'`, `'t'`, `'f'`, `'true'`, `'false'` — trimmed and case-insensitive, so `'TRUE'` and `'T'` are the same rule. Anything else falls through to plain truthiness, which is why an unexpected `'yes'` silently becomes `true`. Dotted paths reach into hydrated nested objects. Call it from the constructor.
 
 ```typescript
 this.setBooleanFields('isActive', 'isDeleted', 'category.isActive');
@@ -195,6 +199,8 @@ protected getPlaceholder(index: number): string
 
 Returns the active connection's placeholder for a 1-based parameter index. Use it when appending a raw fragment that the builders do not cover.
 
+There is no connection yet while the constructor runs — `conn` is assigned just before each execution — so calling this from a constructor silently returns PostgreSQL-style `$n` whatever the real dialect is. Build placeholders in `buildDynamicQuery()`, not in the constructor.
+
 ### Utilities
 
 | Method | Purpose |
@@ -205,7 +211,7 @@ Returns the active connection's placeholder for a 1-based parameter index. Use i
 | `replaceWildStar(s)` | Escapes `\`, `%`, `_`, then converts `*` to `%` |
 | `escapePercentage(s)` | Escapes `\`, `%` and `_` |
 | `wrapLikeMatch(s)` | Wraps the string as `%s%` |
-| `getNextDayStart(d)` | Next local midnight, DST-safe; `null` for an invalid date |
+| `getNextDayStart(d)` | Next local midnight in the Node process's zone; `null` for `null`/`undefined` or an invalid date. Where a DST jump skips midnight it returns 01:00, which is still the first instant of the next local day |
 
 ---
 

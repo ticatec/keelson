@@ -101,6 +101,9 @@ repository 是唯一知道一个实体是怎么被取出来的那一层，所以
 - 租户不匹配抛 ActionNotFoundError，不是 InsufficientPermissionError——403 等于确认了
   这条记录存在，能让人枚举其他租户的 id
 - 这里不写 SQL；每次查询都是一次 DAO 调用
+- updateStatus 不去调 DAO 的 updateStatus——DAO 里没有这个方法。它用 DAO 的 findById 读出
+  整行，在拿到的对象上设置 status，再调 DAO 的 update（它写入全部可更新字段）。
+  其他任何单字段修改同理。
 - 不写业务规则；那是 service 的
 - 不加 @Transaction()；边界是 service 的
 
@@ -185,7 +188,7 @@ repository 是唯一知道一个实体是怎么被取出来的那一层，所以
 ```
 给 <Order>Repository 加上：
 
-  queryByCriteria(criteria: <Order>SearchCriteria): Promise<PaginationList<<Order>>>
+  queryByCriteria(criteria: <Order>SearchCriteria): Promise<PaginationList>
 
 它委托给 DAO 的分页辅助方法，返回框架的 PaginationList。criteria 对象是 service 构造的；
 repository 不构造 criteria，也不读 req.query。
@@ -196,6 +199,6 @@ repository 不构造 criteria，也不读 req.query。
 ---
 
 下一篇：[DAO 层](AI_PROMPTS_5_DAO_CN.md)。背景阅读：
-[Service 与 Repository 指南](SERVICE_GUIDE_CN.md)、
+[keelson-core 的 README](../../packages/keelson-core/README_CN.md)、
 教程第 [2](../../tutorial/02-layers-and-transactions_CN.md)、
 [8](../../tutorial/08-config-and-cache_CN.md) 章。

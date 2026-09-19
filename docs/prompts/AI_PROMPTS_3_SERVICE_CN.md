@@ -102,7 +102,7 @@ beanFactory.createBean<OrderService>('OrderService')!
    createNew(user: AppUser, data: <Order>): Promise<string>
    update(user: AppUser, data: <Order>): Promise<void>
    cancel(user: AppUser, id: string, reason: string): Promise<void>
-   search(user: AppUser, criteria: any): Promise<PaginationList<<Order>>>
+   search(user: AppUser, criteria: any): Promise<PaginationList>
 
    每个方法都写文档：做什么、会抛哪些异常。
 
@@ -201,7 +201,7 @@ beanFactory.createBean<OrderService>('OrderService')!
 
 - 入参是控制器从 req.query 原样传来的 criteria 对象
 - 它构造一个 CommonSearchCriteria 子类并交给 repository
-- 返回 PaginationList<<Order>>
+- 返回 PaginationList
 - 不加 @Transaction()——这是读操作
 
 同时生成查询条件类：src/criteria/<Order>SearchCriteria.ts，把查询字段
@@ -214,6 +214,6 @@ beanFactory.createBean<OrderService>('OrderService')!
 ---
 
 下一篇：[Repository 层](AI_PROMPTS_4_REPOSITORY_CN.md)。背景阅读：
-[Service 与 Repository 指南](SERVICE_GUIDE_CN.md)、
+[keelson-core 的 README](../../packages/keelson-core/README_CN.md)、
 [查询条件指南](SEARCH_CRITERIA_CN.md)、
 教程第 [2](../../tutorial/02-layers-and-transactions_CN.md) 章。

@@ -21,7 +21,7 @@
 
 ## 文档
 
-- **[Controller 使用指南](https://github.com/ticatec/keelson/blob/main/docs/prompts/CONTROLLER_CN.md)** - 控制器使用完整指南，包括 CRUD 和搜索操作
+- **[HTTP 层教程](https://github.com/ticatec/keelson/blob/main/tutorial/04-http-layer_CN.md)** - 路由、控制器、校验与错误，从头到尾
 
 > 🚀 **重大升级说明**：控制器体系已进行全面精简与现代化升级。已废弃并移除原有的 4 个特定子类（`AdminBaseController`、`TenantBaseController`、`AdminSearchController`、`TenantSearchController`），全面统一至 `CommonController` 与 `CommonSearchController`。校验规则现通过直接覆写 `getRules(): ValidationRules` 方法进行声明，无需在构造器中传递。
 
@@ -470,7 +470,7 @@ routerHelper.invokeController()    // 包装控制器处理器
 - **CommonController<T>**: 统一 CRUD 控制器，提供自动校验并默认自动透传用户参数 `[loggedUser, req.body]`
 - **CommonSearchController<T>**: 搜索控制器，提供开箱即用的搜索查询处理
 
-📚 **[完整控制器使用指南 →](https://github.com/ticatec/keelson/blob/main/docs/prompts/CONTROLLER_CN.md)**
+📚 **[完整 HTTP 层教程 →](https://github.com/ticatec/keelson/blob/main/tutorial/04-http-layer_CN.md)**
 
 ## 架构概览
 

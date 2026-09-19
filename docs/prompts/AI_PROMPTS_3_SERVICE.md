@@ -107,7 +107,7 @@ Produce two files.
    createNew(user: AppUser, data: <Order>): Promise<string>
    update(user: AppUser, data: <Order>): Promise<void>
    cancel(user: AppUser, id: string, reason: string): Promise<void>
-   search(user: AppUser, criteria: any): Promise<PaginationList<<Order>>>
+   search(user: AppUser, criteria: any): Promise<PaginationList>
 
    Document each method with what it does and which errors it throws.
 
@@ -214,7 +214,7 @@ Implement search on <Order>ServiceImpl.
 
 - It takes the criteria object the controller passed straight from req.query
 - It builds a CommonSearchCriteria subclass and hands it to the repository
-- It returns PaginationList<<Order>>
+- It returns PaginationList
 - No @Transaction() — it is a read
 
 Generate the criteria class too: src/criteria/<Order>SearchCriteria.ts, mapping the query
@@ -228,6 +228,6 @@ comment.
 ---
 
 Next: [Repository layer](AI_PROMPTS_4_REPOSITORY.md). Deeper background:
-[Service & Repository guide](SERVICE_GUIDE.md),
+[keelson-core's README](../../packages/keelson-core/README.md),
 [Search Criteria guide](SEARCH_CRITERIA.md),
 tutorial chapter [2](../../tutorial/02-layers-and-transactions.md).

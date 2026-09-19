@@ -119,10 +119,43 @@ await TransactionManager.execute(Propagation.REQUIRED, async () => {
 第三种传播行为只在这里才有意义：`Propagation.NONE` 会给回调一个连接但不开事务，
 用于那些不能待在事务里的语句。
 
-## 读操作不需要事务
+## 谁提交，谁不提交
 
-单条 `SELECT` 不需要边界。`CommonDAO` 从池里取连接、执行、返回。第 1 章的
-`GreetingService.get()` 加装饰器是为了统一，不是必需。
+"返回即提交，抛出即回滚"说的是**开启**了这个事务的那一帧，不是每一帧：
+
+| 情形 | 开启 | 提交 / 回滚 | 关闭 |
+| --- | --- | --- | --- |
+| `REQUIRED`，此前没有事务 | 是 | 是 | 是 |
+| `REQUIRED`，加入已有事务 | 否 | 否——归外层那一帧 | 否 |
+| `REQUIRES_NEW` | 是，在第二条连接上 | 是 | 是 |
+| `NONE` | 否 | 从不 | 是 |
+
+有两条推论值得记住。一个在外层事务里抛出的 `REQUIRED` 方法，自己不回滚任何东西——
+它把异常往上抛，由开启事务的那一帧回滚。以及，在 `NONE` 上下文**里面**发起的
+`REQUIRED` 调用没有东西可加入，于是它自己开一个真正的事务。
+
+## 装饰器是怎么找到你的方法的
+
+`@Transaction` 只写元数据，别的什么都不做。真正的包装发生在 `CommonService` 的构造函数里：
+它沿原型链走一遍，把带标记的方法逐个替换掉。由此有三条推论：
+
+- 在一个**没有**继承 `CommonService` 的类上，这个装饰器是静默空操作——不报错、没有事务，
+  方法就那么裸跑。这是最费时间的一种故障，因为代码看上去完全正确。
+- 包装是幂等的，所以一条互相继承的 service 链不会被包两次
+- 在边界内部，`TransactionManager.getCurrentConnection()` 能拿到当前连接，
+  类型是 `DBConnection | undefined`
+
+## 读操作仍然需要上下文
+
+单条 `SELECT` 不需要**事务**——但它需要**上下文**。`CommonDAO` 从来不自己从池里取连接；
+它是从环境上下文里读的，读不到就抛：
+
+```
+No database connection available. Ensure you are inside a @Transaction or using TransactionManager.execute().
+```
+
+`Propagation.NONE` 是"要连接、不要事务"的正规说法。第 1 章的 `GreetingService.get()`
+带着装饰器，是因为总得有人把上下文建立起来，不是为了形式统一。
 
 读操作**确实**需要事务的场合是：多次读取必须看到同一个快照——比如一份汇总三张表的
 报表，不能让数据在脚下变动。
@@ -167,8 +200,8 @@ await notifier.sendConfirmation(id);               // 只有提交成功才会�
 
 ---
 
-深入参考：[Service 与 Repository 指南](../docs/prompts/SERVICE_GUIDE_CN.md)（完整的
-传播行为与 `TransactionManager`）、[DAO 指南](../docs/prompts/DAO_GUIDE_CN.md)（每个查询
-辅助方法）。
+深入参考：[service 提示词](../docs/prompts/AI_PROMPTS_3_SERVICE_CN.md)、
+[DAO 提示词](../docs/prompts/AI_PROMPTS_5_DAO_CN.md)（分层规则），以及
+[keelson-core 的 README](../packages/keelson-core/README_CN.md)（每个查询辅助方法）。
 
 下一章：[装配](03-wiring_CN.md) —— 这些类怎么互相找到。

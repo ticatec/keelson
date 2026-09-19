@@ -125,11 +125,49 @@ throw rolls back.
 The third propagation mode only makes sense here: `Propagation.NONE` runs the callback with
 a connection but no transaction, for statements that must not be inside one.
 
-## Reads do not need a transaction
+## What commits, and what does not
 
-A single `SELECT` does not need a boundary. `CommonDAO` takes a connection from the pool,
-runs the statement and returns it. Chapter 1's `GreetingService.get()` was decorated for
-consistency, not necessity.
+"Return commits, throw rolls back" describes the frame that *opened* the transaction. It
+does not describe every frame:
+
+| Situation | begins | commits / rolls back | closes |
+| --- | --- | --- | --- |
+| `REQUIRED`, nothing open yet | yes | yes | yes |
+| `REQUIRED`, joining an open one | no | no — the outer frame owns it | no |
+| `REQUIRES_NEW` | yes, on a second connection | yes | yes |
+| `NONE` | no | never | yes |
+
+Two consequences worth keeping. A `REQUIRED` method that throws inside an outer transaction
+rolls nothing back by itself — it propagates, and the frame that opened the transaction does
+the rollback. And a `REQUIRED` call made *inside* a `NONE` context has nothing to join, so it
+opens a real transaction of its own.
+
+## How the decorator reaches your method
+
+`@Transaction` writes metadata and nothing more. The wrapping happens in the `CommonService`
+constructor, which walks the prototype chain and replaces each marked method. Three things
+follow:
+
+- on a class that does **not** extend `CommonService`, the decorator is a silent no-op — no
+  error, no transaction, just a method running bare. This is the failure that costs an
+  afternoon, because the code looks right.
+- wrapping is idempotent, so a chain of services extending one another is not double-wrapped
+- inside the boundary, `TransactionManager.getCurrentConnection()` gives you the active
+  connection, typed `DBConnection | undefined`
+
+## Reads still need a context
+
+A single `SELECT` does not need a *transaction* — but it does need a **context**.
+`CommonDAO` never takes a connection from the pool itself; it reads one out of the ambient
+context, and without one it throws:
+
+```
+No database connection available. Ensure you are inside a @Transaction or using TransactionManager.execute().
+```
+
+`Propagation.NONE` is the honest way to say "a connection, no transaction". Chapter 1's
+`GreetingService.get()` carries a decorator because something has to establish the context,
+not out of ceremony.
 
 Where a read *does* want one is when several reads must see the same snapshot — a report
 summing three tables that must not shift underneath it.
@@ -176,8 +214,8 @@ await notifier.sendConfirmation(id);               // only reached if the commit
 
 ---
 
-Deeper reference: [Service & Repository guide](../docs/prompts/SERVICE_GUIDE.md) for
-propagation and `TransactionManager` in full, and the
-[DAO guide](../docs/prompts/DAO_GUIDE.md) for every query helper.
+Deeper reference: [the service prompts](../docs/prompts/AI_PROMPTS_3_SERVICE.md) and
+[the DAO prompts](../docs/prompts/AI_PROMPTS_5_DAO.md) for the layer rules, and
+[keelson-core's README](../packages/keelson-core/README.md) for every query helper.
 
 Next: [Wiring](03-wiring.md) — how these classes find each other.

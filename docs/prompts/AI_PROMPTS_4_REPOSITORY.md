@@ -105,6 +105,9 @@ Rules:
 - a tenant mismatch throws ActionNotFoundError, not InsufficientPermissionError — a 403
   confirms the record exists and lets someone enumerate other tenants' ids
 - no SQL here; every query is a DAO call
+- updateStatus does NOT call a DAO updateStatus — there is no such method. It reads the row
+  with the DAO's findById, sets status on what came back, and calls the DAO's update, which
+  writes every updatable column. Same for any other single-field change.
 - no business rules; those are the service's
 - no @Transaction(); the boundary is the service's
 
@@ -197,7 +200,7 @@ Say which one applies to this entity and what you did about it.
 ```
 Add to <Order>Repository:
 
-  queryByCriteria(criteria: <Order>SearchCriteria): Promise<PaginationList<<Order>>>
+  queryByCriteria(criteria: <Order>SearchCriteria): Promise<PaginationList>
 
 It delegates to the DAO's pagination helper and returns the framework's PaginationList.
 The criteria object was built by the service; the repository does not build criteria and
@@ -209,6 +212,6 @@ Add findRecent(tenantCode, limit) as a plain non-paginated list for <the dashboa
 ---
 
 Next: [DAO layer](AI_PROMPTS_5_DAO.md). Deeper background:
-[Service & Repository guide](SERVICE_GUIDE.md),
+[keelson-core's README](../../packages/keelson-core/README.md),
 tutorial chapters [2](../../tutorial/02-layers-and-transactions.md) and
 [8](../../tutorial/08-config-and-cache.md).

@@ -293,19 +293,18 @@ import 'reflect-metadata';
 先读[教程](tutorial/README_CN.md)——九章，一章一个主题，各章独立成篇，
 讲的是这些部件为什么长成这样、怎么拼在一起。
 
-需要单个层的完整细节时，查这几份参考手册：
+需要单个层的完整细节时：
 
-| 指南 | 内容 |
+| 参考 | 内容 |
 | --- | --- |
-| [DAO 层](docs/prompts/DAO_GUIDE_CN.md) | 编写 DAO、查询辅助方法、`InsertResult` / `UpdateResult`、分页、占位符 |
-| [Service 与 Repository](docs/prompts/SERVICE_GUIDE_CN.md) | 四层架构、`@Transaction`、传播行为、`TransactionManager` |
-| [依赖注入](docs/prompts/DEPENDENCY_INJECTION_GUIDE_CN.md) | `beanFactory`、懒加载代理、`Beans` 加载器、循环依赖 |
-| [查询条件](docs/prompts/SEARCH_CRITERIA_CN.md) | 动态查询构造器——基线契约、条件辅助方法、生成的 SQL |
-| [控制器](docs/prompts/CONTROLLER_CN.md) | CRUD 与搜索控制器、校验规则、参数映射 |
-| [数据校验](docs/prompts/BEAN_VALIDATION_CN.md) | 各类校验器、选项、自定义检查、多语言消息 |
-| [AI 提示词](docs/prompts/AI_PROMPTS_CN.md) | 可粘贴进 AI 会话的分层规则块，以及按层组织的提示词 |
+| [AI 提示词](docs/prompts/AI_PROMPTS_CN.md) | 可粘贴进 AI 会话的分层规则块，以及按层组织的提示词——各项约定以它为准 |
+| [查询条件](docs/prompts/SEARCH_CRITERIA_CN.md) | 动态查询构造器——条件辅助方法、工具方法、扩展点、生成的 SQL |
+| [bean-validator README](packages/bean-validator/README_CN.md) | 每个校验器及其选项与默认值、自定义检查、多语言消息 |
+| [keelson-express README](packages/keelson-express/README_CN.md) | 控制器、路由、服务器生命周期、身份 |
+| [keelson-core README](packages/keelson-core/README_CN.md) | DAO 辅助方法、事务、bean 工厂 |
 
-去掉 `_CN` 后缀即是英文版。
+`docs/prompts/` 下的两份文档去掉 `_CN` 后缀即是英文版；每个包的 README 旁边都有
+一份 `README_CN.md`。
 
 ## 包重命名
 

@@ -44,7 +44,7 @@ Service interface (already defined, do not rewrite it):
   interface <OrderService> {
       createNew(user: AppUser, data: <Order>): Promise<string>;
       update(user: AppUser, data: <Order>): Promise<void>;
-      search(user: AppUser, criteria: any): Promise<PaginationList<<Order>>>;
+      search(user: AppUser, criteria: any): Promise<PaginationList>;
   }
 
 Entity fields and their constraints:
@@ -173,5 +173,6 @@ request into a round-trip before the transaction even opens.
 ---
 
 Next: [Service layer](AI_PROMPTS_3_SERVICE.md). Deeper background:
-[Controller guide](CONTROLLER.md), [Bean Validation guide](BEAN_VALIDATION.md),
+[keelson-express's README](../../packages/keelson-express/README.md),
+[bean-validator's README](../../packages/bean-validator/README.md),
 tutorial chapter [4](../../tutorial/04-http-layer.md).
