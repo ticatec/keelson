@@ -17,13 +17,25 @@ A versatile and extensible configuration loader for Node.js applications that su
 - **📡 Multiple Sources**: Support for local files, Consul KV store, and Nacos configuration center
 - **⚙️ Environment Configuration**: Easy configuration through environment variables
 - **🔄 Post-Processing**: Custom content transformation with PostLoader functions
+- **📝 Observable**: Loading traced through the `@ticatec/logger-api` contract, with configuration values kept out of the log
 
 ## Installation
 
 ```bash
-pnpm add @ticatec/config-loader
+pnpm add @ticatec/config-loader @ticatec/logger-api
 # or npm
-npm install @ticatec/config-loader
+npm install @ticatec/config-loader @ticatec/logger-api
+```
+
+`@ticatec/logger-api` is a peer dependency - a zero-dependency logging contract.
+With no provider registered it writes to the console, so nothing else is required.
+
+`consul` and `nacos` are optional peers; install only the one your configuration
+source needs:
+
+```bash
+pnpm add consul     # for CONFIG_MODE=consul
+pnpm add nacos      # for CONFIG_MODE=nacos
 ```
 
 ## Quick Start
@@ -184,6 +196,59 @@ const postProcessor = (content: string): string => {
 };
 
 const config = await loadConfig('local', 'app.yaml', 'logger.yaml', postProcessor);
+```
+
+## Logging
+
+The loader writes through [`@ticatec/logger-api`](https://www.npmjs.com/package/@ticatec/logger-api),
+a zero-dependency contract rather than a concrete logging library.
+
+This package runs at the very front of startup - it is what produces the logger's
+own configuration - so its first records are usually written before
+`setLoggerProvider()` has been called. That is expected: they fall back to the
+console, filtered by `LOG_LEVEL`, and the logger proxy picks up the real provider
+as soon as one is registered.
+
+| Event | Level | Payload |
+|---|---|---|
+| `loadConfig()` entry | `debug` | mode, config file, logger file |
+| Loader selected | `debug` | mode |
+| Local config directory resolved | `debug` | absolute root |
+| Connecting to Consul / Nacos | `debug` | target, and whether auth / TLS is configured |
+| Configuration loaded | `debug` | file, source, top-level key count, elapsed ms |
+| Resolving an include | `debug` | parent file, included file, mount key |
+| Source returned no content | `warn` | file, source |
+| Consul key / Nacos data ID missing | `warn` | key or data ID |
+| Path escapes the config directory | `warn` | requested path, root |
+
+**Configuration values are never logged.** A config file is exactly where database
+passwords and API keys live - the sample `config/db.yaml` in this repository has a
+`password:` line. Records carry file names, the include graph, key *counts* and
+timings; never parsed content. `CONSUL_TOKEN` is likewise reported only as
+`authenticated: true`.
+
+```
+DEBUG [ConfigLoader] Loading application and logger configuration {"mode":"local","configFile":"app.yaml","logFile":"logger.yaml"}
+DEBUG [ConfigLoader] Selecting configuration loader {"mode":"local"}
+DEBUG [LocalFileLoader] Resolved local configuration directory {"root":"/srv/app/config"}
+DEBUG [ConfigLoader] Resolving include {"parent":"app.yaml","include":"db.yaml","key":"database"}
+DEBUG [ConfigLoader] Configuration loaded {"file":"app.yaml","source":"LocalFileLoader","keys":3,"ms":4}
+```
+
+One summary record is written per `load()` call, plus one trace per include - not
+one summary per file, which would make a deep include tree unreadable.
+
+To route the records into a real logger, register a provider once the logger
+configuration has been loaded:
+
+```typescript
+import { loadConfig } from '@ticatec/config-loader';
+import { setLoggerProvider } from '@ticatec/logger-api';
+import { initialize, getPinoLogger } from '@ticatec/logger-pino';
+
+const { appConf, loggerConf } = await loadConfig('local', 'app.yaml', 'logger.yaml');
+initialize(loggerConf);
+setLoggerProvider(getPinoLogger);
 ```
 
 ## API Reference
@@ -586,22 +651,24 @@ export default class RobustEtcdLoader extends BaseLoader {
 
 ## Contributing
 
-We welcome contributions! Please see our [contribution guidelines](CONTRIBUTING.md) for details.
+This package lives in the [Keelson](https://github.com/ticatec/keelson) monorepo.
+Issues and pull requests are welcome there.
 
 ### Development Setup
 
 ```bash
-git clone https://github.com/ticatec/config-loader.git
-cd config-loader
-npm install
-npm run build
+git clone https://github.com/ticatec/keelson.git
+cd keelson
+pnpm install
+cd packages/config-loader
+
+pnpm build       # builds both CJS and ESM (lints first)
+pnpm test
+pnpm typecheck
+pnpm lint
 ```
 
-### Running Tests
-
-```bash
-npm test
-```
+From the monorepo root, `pnpm verify` builds, type-checks and tests every package.
 
 ## License
 
@@ -612,8 +679,8 @@ This library is released under the MIT License. See the [LICENSE](LICENSE) file 
 ## Support
 
 - 📧 Email: huili.f@gmail.com
-- 🐛 Issues: [GitHub Issues](https://github.com/ticatec/config-loader/issues)
-- 📖 Documentation: [GitHub Pages](https://ticatec.github.io/config-loader)
+- 📦 Source: [github.com/ticatec/keelson/tree/main/packages/config-loader](https://github.com/ticatec/keelson/tree/main/packages/config-loader)
+- 🐛 Issues: [github.com/ticatec/keelson/issues](https://github.com/ticatec/keelson/issues)
 
 ## Changelog
 

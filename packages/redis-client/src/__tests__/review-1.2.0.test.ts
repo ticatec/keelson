@@ -182,13 +182,18 @@ describe('hsetnx reports whether it set the field', () => {
 
 describe('connection URLs', () => {
     it('redacts the credentials embedded in a URL', async () => {
-        await RedisClient.init('rediss://app:UrlS3cret@redis.example.com:6380/3', 'url');
+        const client = await RedisClient.init(
+            'rediss://app:UrlS3cret@redis.example.com:6380/3',
+            'url',
+            { lazyConnect: true }
+        );
 
         const rec = find('Connecting to Redis')!;
         expect(rec.ctx).toEqual({
             host: 'redis.example.com', port: 6380, db: '3', tls: true, authenticated: true
         });
         expect(JSON.stringify(records)).not.toContain('UrlS3cret');
+        await client.close();
     });
 
     // new URL('anything:whatever') parses, leaving the rest of the string as the
@@ -199,7 +204,7 @@ describe('connection URLs', () => {
             const name = `bad-${bad.length}`;
             let client: RedisClient | null = null;
             try {
-                client = await RedisClient.init(bad, name);
+                client = await RedisClient.init(bad, name, { lazyConnect: true });
             } catch {
                 // ioredis rejected it; the log record was written first either way.
             }

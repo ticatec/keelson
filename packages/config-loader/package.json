@@ -1,10 +1,10 @@
 {
   "name": "@ticatec/config-loader",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "A versatile configuration loader for Node.js, supporting YAML format and various sources like local files, Consul, and Nacos, with include and deep merge capabilities.",
   "main": "lib/cjs/index.js",
   "module": "lib/esm/index.js",
-  "types": "lib/esm/index.d.ts",
+  "types": "lib/cjs/index.d.ts",
   "exports": {
     ".": {
       "import": {
@@ -21,20 +21,22 @@
   "files": [
     "lib/",
     "README*.md",
-    "LICENSE"
+    "LICENSE",
+    "CHANGELOG.md"
   ],
   "scripts": {
     "build:cjs": "tsc -p tsconfig.cjs.json && node -e \"require('fs').writeFileSync('./lib/cjs/package.json', '{\\\"type\\\": \\\"commonjs\\\"}')\"",
     "build:esm": "tsc -p tsconfig.esm.json && node -e \"require('fs').writeFileSync('./lib/esm/package.json', '{\\\"type\\\": \\\"module\\\"}')\"",
     "build": "node -e \"require('fs').rmSync('./lib', { recursive: true, force: true })\" && pnpm build:cjs && pnpm build:esm",
-    "dev": "tsc --watch",
     "clean": "node -e \"require('fs').rmSync('./lib', { recursive: true, force: true })\"",
     "prepublishOnly": "pnpm typecheck && pnpm test && pnpm build",
-    "typecheck": "tsc --noEmit",
+    "typecheck": "tsc -p tsconfig.cjs.json --noEmit && tsc -p tsconfig.esm.json --noEmit",
     "test": "jest",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
-    "publish-public": "pnpm publish --access public --no-git-checks"
+    "lint": "eslint 'src/**/*.ts'",
+    "prebuild": "pnpm lint",
+    "publish:public": "pnpm publish --access public --no-git-checks"
   },
   "keywords": [
     "config",
@@ -46,7 +48,10 @@
     "node.js",
     "typescript",
     "microservices",
-    "devops"
+    "devops",
+    "logger-api",
+    "logging",
+    "config-center"
   ],
   "author": {
     "name": "Henry Feng",
@@ -63,7 +68,7 @@
   },
   "homepage": "https://github.com/ticatec/keelson/tree/main/packages/config-loader",
   "engines": {
-    "node": ">=16.0.0"
+    "node": ">=18.0.0"
   },
   "publishConfig": {
     "access": "public",
@@ -73,16 +78,21 @@
     "yaml": "^2.7.0"
   },
   "devDependencies": {
+    "@ticatec/logger-api": "workspace:*",
     "@types/jest": "^29.5.14",
     "@types/node": "^20.11.17",
+    "@typescript-eslint/eslint-plugin": "^7.18.0",
+    "@typescript-eslint/parser": "^7.18.0",
     "consul": "^2.0.1",
     "dotenv": "^16.4.7",
+    "eslint": "^8.57.0",
     "jest": "^29.7.0",
     "nacos": "^2.6.0",
     "ts-jest": "^29.2.5",
     "typescript": "^5.0.0"
   },
   "peerDependencies": {
+    "@ticatec/logger-api": ">=1.0.0",
     "consul": "^2.0.0",
     "nacos": "^2.6.0"
   },

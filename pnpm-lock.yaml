@@ -99,18 +99,30 @@ importers:
         specifier: ^2.7.0
         version: 2.9.1
     devDependencies:
+      '@ticatec/logger-api':
+        specifier: workspace:*
+        version: link:../logger-api
       '@types/jest':
         specifier: ^29.5.14
         version: 29.5.14
       '@types/node':
         specifier: ^20.11.17
         version: 20.19.43
+      '@typescript-eslint/eslint-plugin':
+        specifier: ^7.18.0
+        version: 7.18.0(@typescript-eslint/parser@7.18.0(eslint@8.57.1)(typescript@5.9.3))(eslint@8.57.1)(typescript@5.9.3)
+      '@typescript-eslint/parser':
+        specifier: ^7.18.0
+        version: 7.18.0(eslint@8.57.1)(typescript@5.9.3)
       consul:
         specifier: ^2.0.1
         version: 2.0.1
       dotenv:
         specifier: ^16.4.7
         version: 16.6.1
+      eslint:
+        specifier: ^8.57.0
+        version: 8.57.1
       jest:
         specifier: ^29.7.0
         version: 29.7.0(@types/node@20.19.43)

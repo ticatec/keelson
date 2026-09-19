@@ -74,7 +74,7 @@ export default class RedisClient {
      * @returns 仅含非敏感字段的摘要
      * @private
      */
-    private static describeConnection(conf: RedisOptions | string): Record<string, unknown> {
+    private static describeConnection(conf: RedisOptions | string, options?: RedisOptions): Record<string, unknown> {
         if (typeof conf === 'string') {
             // URL 里的 user:pass@ 同样是凭据，绝不能原样写进日志。
             try {
@@ -97,27 +97,32 @@ export default class RedisClient {
                 return { connection: 'url', parsed: false };
             }
         }
+        const effective = options ? { ...conf, ...options } : conf;
         const summary: Record<string, unknown> = {
-            host: conf.host ?? '127.0.0.1',
-            port: conf.port ?? 6379,
-            db: conf.db ?? 0,
-            tls: conf.tls != null,
+            host: effective.host ?? '127.0.0.1',
+            port: effective.port ?? 6379,
+            db: effective.db ?? 0,
+            tls: effective.tls != null,
             // 只报告「是否配置了凭据」，绝不报告凭据本身
-            authenticated: conf.password != null || conf.username != null
+            authenticated: effective.password != null || effective.username != null
         };
-        if (Array.isArray(conf.sentinels)) {
-            summary.sentinels = conf.sentinels.length;
+        if (Array.isArray(effective.sentinels)) {
+            summary.sentinels = effective.sentinels.length;
         }
-        if (conf.name != null) {
-            summary.name = conf.name;
+        if (effective.name != null) {
+            summary.name = effective.name;
         }
         return summary;
     }
 
-    public constructor(conf: RedisConnection) {
+    public constructor(conf: RedisConnection, options?: RedisOptions) {
         if (conf != null) {
-            this.logger.debug(RedisClient.describeConnection(conf), 'Connecting to Redis');
-            this._client = typeof conf === 'string' ? new Redis(conf) : new Redis(conf);
+            this.logger.debug(RedisClient.describeConnection(conf, options), 'Connecting to Redis');
+            if (typeof conf === 'string') {
+                this._client = options ? new Redis(conf, options) : new Redis(conf);
+            } else {
+                this._client = options ? new Redis({ ...conf, ...options }) : new Redis(conf);
+            }
             this._client.on('error', (err) => this.logger.error({ err }, 'Redis Client Error'));
             this._client.on('connect', () => this.logger.info('Connecting to Redis server...'));
             this._client.on('ready', () => this.logger.info('Connected to Redis server.'));
@@ -154,10 +159,11 @@ export default class RedisClient {
      * Creates an independent, non-singleton RedisClient instance.
      * @static
      * @param conf - Redis connection options, a `redis://` / `rediss://` URL, or `null` for the mock client.
+     * @param options - Optional additional RedisOptions (e.g. when connecting via URL).
      * @returns RedisClient instance.
      */
-    public static create(conf: RedisConnection): RedisClient {
-        return new RedisClient(conf);
+    public static create(conf: RedisConnection, options?: RedisOptions): RedisClient {
+        return new RedisClient(conf, options);
     }
 
     /**
@@ -166,9 +172,14 @@ export default class RedisClient {
      * @static
      * @param conf - Redis connection options, a `redis://` / `rediss://` URL, or `null` for Mock Redis.
      * @param name - Singleton instance identifier (defaults to 'default').
+     * @param options - Optional additional RedisOptions (e.g. when connecting via URL).
      * @returns Promise resolving to RedisClient singleton instance.
      */
-    public static async init(conf: RedisConnection, name: string = 'default'): Promise<RedisClient> {
+    public static async init(
+        conf: RedisConnection,
+        name: string = 'default',
+        options?: RedisOptions
+    ): Promise<RedisClient> {
         const existing = registry.instances.get(name);
         if (existing && !existing.isClosed) {
             // 第二次调用的 conf 会被静默丢弃，而调用方多半以为自己重新配置了连接。
@@ -183,7 +194,7 @@ export default class RedisClient {
             // 之后每一次命令都失败，而调用方以为自己刚刚建立了一条新连接。
             RedisClient.getStaticLogger().debug({ name }, 'Replacing a closed RedisClient instance');
         }
-        const instance = new RedisClient(conf);
+        const instance = new RedisClient(conf, options);
         instance.registeredName = name;
         registry.instances.set(name, instance);
         return instance;
@@ -217,9 +228,29 @@ export default class RedisClient {
 
     /**
      * Resets all singleton instances (primarily for testing environments).
+     * Disconnects all active connections to prevent background reconnection attempts.
      * @static
      */
     public static resetInstances(): void {
+        for (const instance of registry.instances.values()) {
+            if (!instance.isClosed) {
+                if (instance._client) {
+                    try {
+                        instance._client.removeAllListeners();
+                        instance._client.on('error', () => { /* ignored */ });
+                        instance._client.disconnect();
+                    } catch { /* ignore */ }
+                }
+                if (instance.subClient) {
+                    try {
+                        instance.subClient.removeAllListeners();
+                        instance.subClient.on('error', () => { /* ignored */ });
+                        instance.subClient.disconnect();
+                    } catch { /* ignore */ }
+                }
+                instance.isClosed = true;
+            }
+        }
         registry.instances.clear();
     }
 
@@ -562,10 +593,31 @@ export default class RedisClient {
             const sub = this.subClient;
             this.subClient = null;
             this.handlers.clear();
-            await sub.quit();
+            sub.removeAllListeners();
+            sub.on('error', () => { /* ignored after close */ });
+            if (sub.status === 'wait' || sub.status === 'reconnecting' || sub.status === 'connecting') {
+                sub.disconnect();
+            } else {
+                try {
+                    await sub.quit();
+                } catch {
+                    sub.disconnect();
+                }
+            }
         }
         if (this._client) {
-            await this._client.quit();
+            const client = this._client;
+            client.removeAllListeners();
+            client.on('error', () => { /* ignored after close */ });
+            if (client.status === 'wait' || client.status === 'reconnecting' || client.status === 'connecting') {
+                client.disconnect();
+            } else {
+                try {
+                    await client.quit();
+                } catch {
+                    client.disconnect();
+                }
+            }
             this.logger.info('Redis client closed');
         }
         // 把自己从注册表里摘掉：此前关闭后的实例仍留在表里，getInstance() 会继续

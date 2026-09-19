@@ -5,7 +5,10 @@ module.exports = {
     roots: ['<rootDir>/src'],
     testMatch: ['**/__tests__/**/*.test.ts', '**/?(*.)+(spec|test).ts'],
     transform: {
-        '^.+\\.ts$': 'ts-jest',
+        // 显式指定 commonjs：tsconfig.json 现在用的是 NodeNext，ts-jest 会照抄，
+        // 于是 `await import(...)` 被原样保留为动态 import，而 Jest 的 CJS 运行时
+        // 需要 --experimental-vm-modules 才能执行它。
+        '^.+\\.ts$': ['ts-jest', { tsconfig: { module: 'commonjs' } }],
     },
     moduleNameMapper: {
         '^(\\.{1,2}/.*)\\.js$': '$1'

@@ -1,5 +1,9 @@
 import { ClientOptions, NacosConfigClient } from 'nacos';
 import BaseLoader from "../BaseLoader.js";
+import { getLogger } from "@ticatec/logger-api";
+import type { Logger } from "@ticatec/logger-api";
+
+const logger: Logger = getLogger('NacosConfigLoader');
 
 function parsePort(portStr: string | undefined, envName: string): number | undefined {
     if (portStr == null || portStr.trim() === '') {
@@ -74,6 +78,14 @@ export default class NacosConfigLoader extends BaseLoader {
             }
         }
 
+        logger.debug({
+            serverAddr: options.serverAddr ?? null,
+            endpoint: options.endpoint ?? null,
+            namespace: options.namespace ?? null,
+            group: this.group,
+            ssl: options.ssl === true
+        }, 'Connecting to Nacos');
+
         this.client = new NacosConfigClient(options);
     }
 
@@ -84,6 +96,10 @@ export default class NacosConfigLoader extends BaseLoader {
      * @protected
      */
     protected async loadFile(fileName: string): Promise<string> {
-        return await this.client.getConfig(fileName, this.group);
+        const content = await this.client.getConfig(fileName, this.group);
+        if (content == null) {
+            logger.warn({ dataId: fileName, group: this.group }, 'Nacos data ID is missing or has no content');
+        }
+        return content;
     }
 }

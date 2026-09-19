@@ -111,20 +111,21 @@ console.log(value); // 'testValue'
 - **`getInstance(name?)`**：如果对应名字的实例从未 `init()` 过，会抛出 `Error`，不再静默返回 `undefined`。
 - **`hset` / `sadd` / `rpush`** 在带 `seconds` TTL 时走 ioredis pipeline；pipeline 内命令出错现在会被抛出，与不带 TTL 的分支行为保持一致。
 - **`subscribe` / `unsubscribe`** 按函数引用匹配 handler —— `unsubscribe` 时必须传入与 `subscribe` 时完全相同的函数引用，不能是新的匿名/内联函数。
-- **`init(conf, name?)`** 对已存在的名字再次调用时，返回已有实例并**忽略新的 `conf`**，同时记一条 `warn` 日志；若已有实例处于关闭状态，则会被替换。
-- **`resetInstances()`** 只清空注册表，不会关闭连接——需要真正断开时请调用 `close()` 或 `closeInstance()`。
+- **`init(conf, name?, options?)`** 对已存在的名字再次调用时，返回已有实例并**忽略新的 `conf`**，同时记一条 `warn` 日志；若已有实例处于关闭状态，则会被替换。
+- **`resetInstances()`** 会主动断开所有活动实例的连接并清空注册表（主要用于测试环境）。业务代码中如需优雅停机请调用 `close()` 或 `closeInstance()`。
 - **`hsetnx`** 设置成功返回 `true`，字段已存在返回 `false`。
-- **`conf`** 参数（`RedisClient.create()` / `RedisClient.init()` / `new RedisClient()`）类型为 ioredis 的 `RedisOptions | null`（传 `null` 使用 Mock Redis）。
+- **`conf`** 参数（`RedisClient.create()` / `RedisClient.init()` / `new RedisClient()`）类型为 `RedisConnection`（`RedisOptions | string | null`，传 `null` 使用 Mock Redis）。同时支持传入可选的 `options?: RedisOptions` 追加额外连接参数。
 
 
 ### 连接串
 
-`create()` 与 `init()` 除选项对象外也接受连接串：
+`create()`、`init()` 与 `new RedisClient()` 除选项对象外也接受连接串，并支持追加额外的 `options` 选项：
 
 ```typescript
-await RedisClient.init(process.env.REDIS_URL!);          // redis:// 或 rediss://
+await RedisClient.init(process.env.REDIS_URL!);                               // redis:// 或 rediss://
+await RedisClient.init(process.env.REDIS_URL!, 'app', { lazyConnect: true }); // 带额外连接选项
 await RedisClient.init({ host: 'localhost', port: 6379 });
-await RedisClient.init(null);                            // mock 客户端
+await RedisClient.init(null);                                                 // mock 客户端
 ```
 
 URL 里内嵌的凭据在日志中同样会被脱敏，与选项对象一致。
@@ -204,28 +205,37 @@ setLoggerProvider(getPinoLogger);
 
 ### 核心方法
 
+#### 实例与生命周期管理
+- `RedisClient.init(conf, name?, options?)` - 初始化或替换具名单例实例
+- `RedisClient.getInstance(name?)` - 获取已初始化的单例实例（未初始化时抛异常）
+- `RedisClient.create(conf, options?)` - 创建独立的非单例实例
+- `RedisClient.closeInstance(name?)` - 关闭并注销指定名字的单例实例
+- `RedisClient.resetInstances()` - 强制断开并清空全部单例实例（测试环境使用）
+- `close()` - 关闭当前客户端连接并从单例注册表中注销自身
+
 #### 字符串与 JSON 操作
-- `set(key, value, seconds?)` - 设置键值对，可选 TTL
+- `set(key, value, seconds?)` - 设置键值对，可选 TTL（对象自动转 JSON，字符串/数字保持原样）
 - `get(key)` - 获取字符串值
 - `getBuffer(key)` - 获取原始 `Buffer` 值（二进制安全；用于读回通过 `set()` 存入的 `Buffer` 数据，因为 `get()` 会按字符串解码）
-- `getObject<T>(key)` - 获取并解析 JSON 对象
-- `getOrSet<T>(key, fetchFn, seconds?)` - 优先读缓存，未命中则调用 `fetchFn` 回填
+- `setObject(key, value, seconds?)` - 以 JSON 序列化形式存入值（与 `getObject` 对称）
+- `getObject<T>(key)` - 获取并解析 JSON 对象（与 `setObject` 对称）
+- `getOrSet<T>(key, fetchFn, seconds?)` - 优先读缓存，未命中则调用 `fetchFn` 回填（走 `setObject`/`getObject`，带并发防击穿）
 - `del(key)` - 删除指定键
-- `expiry(key, seconds)` - 设置过期时间
+- `expiry(key, seconds)` / `expire(key, seconds)` - 设置过期时间
 
 #### Hash 操作
-- `hset(key, data, seconds?)` - 设置哈希表字段
+- `hset(key, data, seconds?)` - 设置哈希表字段（`seconds > 0` 时走原子管道）
 - `hget(key, field)` - 获取哈希表字段值
 - `hgetall(key)` - 获取哈希表所有字段
-- `hsetnx(key, field, value)` - 当字段不存在时设置值
+- `hsetnx(key, field, value)` - 当字段不存在时设置值（返回 `Promise<boolean>`：设置成功返回 `true`，已存在返回 `false`）
 
 #### Set 操作
-- `sadd(key, members, seconds?)` - 向集合添加元素
+- `sadd(key, members, seconds?)` - 向集合添加元素（`seconds > 0` 时走原子管道）
 - `scard(key)` - 获取集合元素数量
 - `isSetMember(key, value)` - 判断元素是否存在于集合
 
 #### List 操作
-- `rpush(key, data, seconds?)` - 向列表尾部追加元素
+- `rpush(key, data, seconds?)` - 向列表尾部追加元素（`seconds > 0` 时走原子管道）
 - `lrange(key, start, end)` - 获取列表指定范围元素
 - `lrangeObject(key, start, end)` - 获取列表指定范围元素并解析为 JSON
 - `llen(key)` - 获取列表长度
@@ -266,15 +276,24 @@ class UserCache extends AbstractCachedData<User> {
 
 #### CachedDataManager
 
-缓存管理器单例，用于注册和统一获取缓存实例：
+缓存管理器单例，用于注册和统一获取缓存实例。支持使用抽象基类作为注册 Token：
 
 ```typescript
-import { CachedDataManager } from '@ticatec/redis-client';
+import { CachedDataManager, AbstractCachedData } from '@ticatec/redis-client';
+
+abstract class UserCacheToken extends AbstractCachedData<User> {}
+
+class UserCache extends UserCacheToken {
+  constructor() {
+    super((key: Partial<User>) => `user:${key.id}`, 3600);
+  }
+}
 
 const manager = CachedDataManager.getInstance();
 const userCache = new UserCache();
 
-manager.register(UserCache, userCache);
-// 自动推断返回类型为 UserCache | undefined：
-const retrievedCache = manager.get(UserCache);
+// 使用抽象 Token 注册具体实现实例：
+manager.register(UserCacheToken, userCache);
+// 自动推断返回类型为 UserCacheToken | undefined：
+const retrievedCache = manager.get(UserCacheToken);
 ```

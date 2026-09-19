@@ -17,13 +17,24 @@
 - **📡 多种配置源**: 支持本地文件、Consul KV 存储和 Nacos 配置中心
 - **⚙️ 环境变量配置**: 通过环境变量轻松配置
 - **🔄 后处理**: 使用 PostLoader 函数进行自定义内容转换
+- **📝 可观测**: 加载过程经 `@ticatec/logger-api` 契约记录，配置内容不进日志
 
 ## 安装
 
 ```bash
-pnpm add @ticatec/config-loader
+pnpm add @ticatec/config-loader @ticatec/logger-api
 # 或 npm
-npm install @ticatec/config-loader
+npm install @ticatec/config-loader @ticatec/logger-api
+```
+
+`@ticatec/logger-api` 是 peer dependency——一份零依赖的日志契约。未注入 provider 时
+退回写控制台，因此不需要再装别的东西。
+
+`consul` 与 `nacos` 是可选 peer，按你实际使用的配置源安装其一即可：
+
+```bash
+pnpm add consul     # CONFIG_MODE=consul
+pnpm add nacos      # CONFIG_MODE=nacos
 ```
 
 ## 快速开始
@@ -184,6 +195,54 @@ const postProcessor = (content: string): string => {
 };
 
 const config = await loadConfig('local', 'app.yaml', 'logger.yaml', postProcessor);
+```
+
+## 日志
+
+本加载器通过 [`@ticatec/logger-api`](https://www.npmjs.com/package/@ticatec/logger-api)
+输出——那是一份零依赖的契约，而非某个具体的日志库。
+
+这个包跑在启动链的最前面——它产出的正是 logger 自身的配置——因此它写的头几条记录
+多半发生在 `setLoggerProvider()` 之前。这是预期行为：那些记录会落到控制台兜底上并按
+`LOG_LEVEL` 过滤，而 logger 代理在 provider 注册后会自动切换过去。
+
+| 事件 | 级别 | 内容 |
+|---|---|---|
+| 进入 `loadConfig()` | `debug` | 模式、配置文件、日志配置文件 |
+| 选定 loader | `debug` | 模式 |
+| 解析出本地配置目录 | `debug` | 绝对路径 |
+| 连接 Consul / Nacos | `debug` | 目标地址，以及是否配置了认证 / TLS |
+| 配置加载完成 | `debug` | 文件、来源、顶层键数量、耗时 |
+| 解析 include | `debug` | 父文件、被包含文件、挂载键 |
+| 配置源返回空内容 | `warn` | 文件、来源 |
+| Consul key / Nacos dataId 不存在 | `warn` | key 或 dataId |
+| 路径越出配置目录 | `warn` | 请求路径、根目录 |
+
+**配置内容绝不写入日志。** 配置文件恰恰就是数据库口令与 API 密钥所在之处——本仓库的
+示例 `config/db.yaml` 里就有一行 `password:`。日志只带文件名、include 关系、键的
+*数量*与耗时，不带解析出来的内容。`CONSUL_TOKEN` 同样只报告为 `authenticated: true`。
+
+```
+DEBUG [ConfigLoader] Loading application and logger configuration {"mode":"local","configFile":"app.yaml","logFile":"logger.yaml"}
+DEBUG [ConfigLoader] Selecting configuration loader {"mode":"local"}
+DEBUG [LocalFileLoader] Resolved local configuration directory {"root":"/srv/app/config"}
+DEBUG [ConfigLoader] Resolving include {"parent":"app.yaml","include":"db.yaml","key":"database"}
+DEBUG [ConfigLoader] Configuration loaded {"file":"app.yaml","source":"LocalFileLoader","keys":3,"ms":4}
+```
+
+每次 `load()` 调用写一条汇总，外加每个 include 一条 trace——而不是每个文件一条汇总，
+后者在 include 层级较深时会让日志难以阅读。
+
+若要接入真正的日志库，在日志配置加载完成后注册一次 provider：
+
+```typescript
+import { loadConfig } from '@ticatec/config-loader';
+import { setLoggerProvider } from '@ticatec/logger-api';
+import { initialize, getPinoLogger } from '@ticatec/logger-pino';
+
+const { appConf, loggerConf } = await loadConfig('local', 'app.yaml', 'logger.yaml');
+initialize(loggerConf);
+setLoggerProvider(getPinoLogger);
 ```
 
 ## API 参考
@@ -586,22 +645,23 @@ export default class RobustEtcdLoader extends BaseLoader {
 
 ## 贡献
 
-我们欢迎贡献！请查看我们的[贡献指南](CONTRIBUTING.md)了解详情。
+本包位于 [Keelson](https://github.com/ticatec/keelson) monorepo，欢迎在该仓库提交 issue 与 PR。
 
 ### 开发环境设置
 
 ```bash
-git clone https://github.com/ticatec/config-loader.git
-cd config-loader
-npm install
-npm run build
+git clone https://github.com/ticatec/keelson.git
+cd keelson
+pnpm install
+cd packages/config-loader
+
+pnpm build       # 同时构建 CJS 与 ESM（构建前先跑 lint）
+pnpm test
+pnpm typecheck
+pnpm lint
 ```
 
-### 运行测试
-
-```bash
-npm test
-```
+在 monorepo 根目录执行 `pnpm verify`，会对全部包做构建、类型检查与测试。
 
 ## 许可证
 
@@ -612,5 +672,9 @@ npm test
 ## 支持
 
 - 📧 邮箱: huili.f@gmail.com
-- 🐛 问题反馈: [GitHub Issues](https://github.com/ticatec/config-loader/issues)
-- 📖 文档: [GitHub Pages](https://ticatec.github.io/config-loader)
+- 📦 源码: [github.com/ticatec/keelson/tree/main/packages/config-loader](https://github.com/ticatec/keelson/tree/main/packages/config-loader)
+- 🐛 问题反馈: [github.com/ticatec/keelson/issues](https://github.com/ticatec/keelson/issues)
+
+## 变更日志
+
+版本历史与变更内容见 [CHANGELOG.md](CHANGELOG.md)。

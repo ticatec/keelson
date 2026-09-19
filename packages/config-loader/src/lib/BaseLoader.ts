@@ -1,4 +1,15 @@
 import YAML from "yaml";
+import { getLogger } from "@ticatec/logger-api";
+import type { Logger } from "@ticatec/logger-api";
+
+/**
+ * `getLogger` 返回惰性解析的代理，因此放在模块作用域是安全的。
+ *
+ * 这个包跑在启动链的最前面——它产出的正是 logger 的配置——所以它写的头几条记录
+ * 多半发生在 setLoggerProvider() 之前，会落到 logger-api 的控制台兜底上，并按
+ * LOG_LEVEL 过滤。这是预期行为：代理在 provider 注册后会自动重新解析。
+ */
+const logger: Logger = getLogger('ConfigLoader');
 
 export type PostLoader = ((content: string) => string) | null;
 export type ConfigMode = 'local' | 'consul' | 'nacos';
@@ -80,6 +91,10 @@ export default abstract class BaseLoader {
 
                 const key = includeItem.key;
                 const params = includeItem.params || {};
+                logger.debug(
+                    { parent: fileName, include: file.trim(), key: includeItem.key ?? null },
+                    'Resolving include'
+                );
                 const nestedContent = await this.loadInternal(file.trim(), postLoader, newChain);
 
                 let nestConfig: any = {};
@@ -107,7 +122,23 @@ export default abstract class BaseLoader {
      * @returns Promise that resolves to the complete configuration object with includes merged
      */
     async load(fileName: string, postLoader: PostLoader = null): Promise<any> {
-        return await this.loadInternal(fileName, postLoader, new Set<string>());
+        const startedAt = Date.now();
+        const config = await this.loadInternal(fileName, postLoader, new Set<string>());
+        if (config == null) {
+            // loadConfig() 在内容为空时返回 null 而不抛错，调用方很容易在毫不知情的
+            // 情况下拿到一份空配置。
+            logger.warn({ file: fileName, source: this.constructor.name }, 'Configuration source returned no content');
+        } else {
+            // 只记文件名、顶层键名与耗时。配置文件里放的是数据库口令、API 密钥，
+            // 内容绝不能进日志。
+            logger.debug({
+                file: fileName,
+                source: this.constructor.name,
+                keys: this.isPlainObject(config) ? Object.keys(config).length : 0,
+                ms: Date.now() - startedAt
+            }, 'Configuration loaded');
+        }
+        return config;
     }
 
     /**
@@ -161,16 +192,22 @@ export default abstract class BaseLoader {
  */
 const getLoader = async (type: string = 'local'): Promise<BaseLoader> => {
     const normalizedType = (type || 'local').toLowerCase();
+    logger.debug({ mode: normalizedType }, 'Selecting configuration loader');
+    // 每个 case 单独加花括号：此前 `case 'local': let X = ...` 让三个 let 共享
+    // switch 这一个块作用域，既是 no-case-declarations 违规，也留下了 TDZ 隐患。
     switch (normalizedType) {
-        case 'local':
-            let LocalFileLoader = (await import('./local-file/LocalFileLoader.js')).default;
+        case 'local': {
+            const LocalFileLoader = (await import('./local-file/LocalFileLoader.js')).default;
             return new LocalFileLoader();
-        case 'nacos':
-            let NacosLoader = (await import('./nacos/NacosConfigLoader.js')).default;
+        }
+        case 'nacos': {
+            const NacosLoader = (await import('./nacos/NacosConfigLoader.js')).default;
             return new NacosLoader();
-        case 'consul':
-            let ConsulLoader = (await import('./consul/ConsulLoader.js')).default;
+        }
+        case 'consul': {
+            const ConsulLoader = (await import('./consul/ConsulLoader.js')).default;
             return new ConsulLoader();
+        }
         default:
             throw new Error(`Unknown or unsupported config mode '${type}'. Allowed modes: 'local', 'consul', 'nacos'`);
     }
@@ -185,9 +222,10 @@ const getLoader = async (type: string = 'local'): Promise<BaseLoader> => {
  * @returns Promise that resolves to an object containing appConf and loggerConf
  */
 const loadConfig = async (configMode: string, configFile: string, logFile: string, loggerPostLoader?: PostLoader): Promise<any> => {
-    let loader = await getLoader(configMode);
-    let loggerConf = await loader.load(logFile, loggerPostLoader ?? null);
-    let appConf = await loader.load(configFile);
+    logger.debug({ mode: configMode, configFile, logFile }, 'Loading application and logger configuration');
+    const loader = await getLoader(configMode);
+    const loggerConf = await loader.load(logFile, loggerPostLoader ?? null);
+    const appConf = await loader.load(configFile);
     return { appConf, loggerConf };
 }
 

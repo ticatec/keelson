@@ -111,20 +111,21 @@ console.log(value); // 'testValue'
 - **`getInstance(name?)`** throws an `Error` if no instance was `init()`-ed under that name, instead of silently returning `undefined`.
 - **`hset` / `sadd` / `rpush`** with a `seconds` TTL run inside an ioredis pipeline; command errors inside the pipeline are now surfaced (thrown), matching the non-TTL code path.
 - **`subscribe` / `unsubscribe`** match handlers by function reference — pass the exact same function reference to `unsubscribe` that you passed to `subscribe`, not a new inline/anonymous function.
-- **`init(conf, name?)`** called a second time for a name that already exists returns the existing instance and **ignores the new `conf`**, with a `warn` in the log. A *closed* instance is replaced instead.
-- **`resetInstances()`** clears the registry without closing the connections - call `close()` or `closeInstance()` when you need them shut down.
+- **`init(conf, name?, options?)`** called a second time for a name that already exists returns the existing instance and **ignores the new `conf`**, with a `warn` in the log. A *closed* instance is replaced instead.
+- **`resetInstances()`** disconnects all active instances and clears the registry (primarily for testing). Call `close()` or `closeInstance()` for graceful shutdown in application code.
 - **`hsetnx`** returns `true` when the field was set and `false` when it already existed.
-- **`conf`** on `RedisClient.create()` / `RedisClient.init()` / `new RedisClient()` is typed as ioredis's `RedisOptions | null` (pass `null` to use Mock Redis).
+- **`conf`** on `RedisClient.create()` / `RedisClient.init()` / `new RedisClient()` is typed as `RedisConnection` (`RedisOptions | string | null` - pass `null` to use Mock Redis). An optional `options?: RedisOptions` parameter is also accepted.
 
 
 ### Connection URL
 
-`create()` and `init()` accept a connection string as well as an options object:
+`create()`, `init()`, and `new RedisClient()` accept a connection string as well as an options object, with optional additional `options`:
 
 ```typescript
-await RedisClient.init(process.env.REDIS_URL!);          // redis:// or rediss://
+await RedisClient.init(process.env.REDIS_URL!);                               // redis:// or rediss://
+await RedisClient.init(process.env.REDIS_URL!, 'app', { lazyConnect: true }); // with extra options
 await RedisClient.init({ host: 'localhost', port: 6379 });
-await RedisClient.init(null);                            // mock client
+await RedisClient.init(null);                                                 // mock client
 ```
 
 Credentials embedded in the URL are redacted in the log exactly like those in an
@@ -208,28 +209,37 @@ setLoggerProvider(getPinoLogger);
 
 ### Core Methods
 
+#### Instance Management
+- `RedisClient.init(conf, name?, options?)` - Initialize or replace a named singleton instance
+- `RedisClient.getInstance(name?)` - Retrieve an initialized singleton instance (throws if uninitialized)
+- `RedisClient.create(conf, options?)` - Create an independent non-singleton instance
+- `RedisClient.closeInstance(name?)` - Close and unregister a specific singleton instance
+- `RedisClient.resetInstances()` - Disconnect and clear all singleton instances (for testing)
+- `close()` - Close client connection and unregister self from the singleton registry
+
 #### String & JSON Operations
-- `set(key, value, seconds?)` - Set key-value pair with optional TTL
+- `set(key, value, seconds?)` - Set key-value pair with optional TTL (objects serialized to JSON; strings/numbers stored verbatim)
 - `get(key)` - Get string value by key
 - `getBuffer(key)` - Get raw `Buffer` value by key (binary-safe; use this to read back values stored as a `Buffer` via `set()`, since `get()` decodes as a string)
-- `getObject<T>(key)` - Get and parse JSON object
-- `getOrSet<T>(key, fetchFn, seconds?)` - Fetch from cache or populate via `fetchFn`
+- `setObject(key, value, seconds?)` - Set value with JSON serialization (symmetric with `getObject`)
+- `getObject<T>(key)` - Get and parse JSON object (symmetric with `setObject`)
+- `getOrSet<T>(key, fetchFn, seconds?)` - Fetch from cache or populate via `fetchFn` (uses `setObject`/`getObject` with in-flight deduplication)
 - `del(key)` - Delete key
-- `expiry(key, seconds)` - Set expiration time
+- `expiry(key, seconds)` / `expire(key, seconds)` - Set expiration time
 
 #### Hash Operations
-- `hset(key, data, seconds?)` - Set hash fields
+- `hset(key, data, seconds?)` - Set hash fields (uses atomic pipeline with TTL when `seconds > 0`)
 - `hget(key, field)` - Get hash field value
 - `hgetall(key)` - Get all hash fields as object
-- `hsetnx(key, field, value)` - Set hash field if not exists
+- `hsetnx(key, field, value)` - Set hash field if not exists (returns `Promise<boolean>`: `true` if set, `false` if already existed)
 
 #### Set Operations
-- `sadd(key, members, seconds?)` - Add members to set
+- `sadd(key, members, seconds?)` - Add members to set (uses atomic pipeline with TTL when `seconds > 0`)
 - `scard(key)` - Get set cardinality
 - `isSetMember(key, value)` - Check if value is in set
 
 #### List Operations
-- `rpush(key, data, seconds?)` - Push element to list tail
+- `rpush(key, data, seconds?)` - Push element to list tail (uses atomic pipeline with TTL when `seconds > 0`)
 - `lrange(key, start, end)` - Get list range
 - `lrangeObject(key, start, end)` - Get list range and parse JSON
 - `llen(key)` - Get list length
@@ -270,15 +280,24 @@ class UserCache extends AbstractCachedData<User> {
 
 #### CachedDataManager
 
-Singleton manager for registering and managing cache instances:
+Singleton manager for registering and managing cache instances. Supports abstract base classes as registration tokens:
 
 ```typescript
-import { CachedDataManager } from '@ticatec/redis-client';
+import { CachedDataManager, AbstractCachedData } from '@ticatec/redis-client';
+
+abstract class UserCacheToken extends AbstractCachedData<User> {}
+
+class UserCache extends UserCacheToken {
+  constructor() {
+    super((key: Partial<User>) => `user:${key.id}`, 3600);
+  }
+}
 
 const manager = CachedDataManager.getInstance();
 const userCache = new UserCache();
 
-manager.register(UserCache, userCache);
-// Automatically infers return type as UserCache | undefined:
-const retrievedCache = manager.get(UserCache);
+// Register concrete instance with abstract token:
+manager.register(UserCacheToken, userCache);
+// Automatically infers return type as UserCacheToken | undefined:
+const retrievedCache = manager.get(UserCacheToken);
 ```

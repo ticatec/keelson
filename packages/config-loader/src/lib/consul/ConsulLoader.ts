@@ -1,5 +1,9 @@
 import BaseLoader from "../BaseLoader.js";
 import Consul from "consul";
+import { getLogger } from "@ticatec/logger-api";
+import type { Logger } from "@ticatec/logger-api";
+
+const logger: Logger = getLogger('ConsulLoader');
 
 function parsePort(portStr: string | undefined, envName: string): number | undefined {
     if (portStr == null || portStr.trim() === '') {
@@ -38,6 +42,14 @@ export default class ConsulLoader extends BaseLoader {
             config.port = config.secure ? 443 : 8500;
         }
 
+        // 按白名单记录：CONSUL_TOKEN 是访问凭据，只报告「是否配置了」。
+        logger.debug({
+            host: config.host ?? '127.0.0.1',
+            port: config.port,
+            secure: config.secure,
+            authenticated: config.defaults.token != null
+        }, 'Connecting to Consul');
+
         this.consul = new Consul(config);
     }
 
@@ -48,7 +60,11 @@ export default class ConsulLoader extends BaseLoader {
      * @protected
      */
     protected async loadFile(fileName: string): Promise<string> {
-        let result = await this.consul.kv.get(fileName);
-        return result === null ? null : result?.Value;
+        const result = await this.consul.kv.get(fileName) as { Value?: string } | null;
+        if (result == null || result.Value == null) {
+            logger.warn({ key: fileName }, 'Consul KV key is missing or has no value');
+            return null as unknown as string;
+        }
+        return result.Value;
     }
 }
