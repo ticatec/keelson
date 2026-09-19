@@ -111,6 +111,17 @@ pnpm lint        # 仅 lint
 pnpm publish:public   # prepublishOnly 会先跑 typecheck、test 与 build
 ```
 
-## 开源协议
+## 授权协议
 
-MIT © [Ticatec](https://github.com/ticatec)
+MIT —— 详见 [LICENSE](LICENSE) 文件。
+
+## 👨‍💻 作者
+
+**Henry Feng** —— [huili.f@gmail.com](mailto:huili.f@gmail.com)
+
+## 🔗 相关链接
+
+- [GitHub 仓库](https://github.com/ticatec/keelson/tree/main/packages/keelson-pg)
+- [NPM 包](https://www.npmjs.com/package/@ticatec/keelson-pg)
+- [问题反馈](https://github.com/ticatec/keelson/issues)
+- [变更日志](CHANGELOG.md)

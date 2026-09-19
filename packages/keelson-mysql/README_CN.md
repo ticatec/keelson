@@ -237,17 +237,17 @@ pnpm lint        # 仅 lint
 pnpm publish:public   # prepublishOnly 会先跑 typecheck、test 与 build
 ```
 
-## 许可证
+## 授权协议
 
-该项目使用 MIT 许可证 - 详情请查看 [LICENSE](LICENSE) 文件。
+MIT —— 详见 [LICENSE](LICENSE) 文件。
 
-## 支持
+## 👨‍💻 作者
 
-- 📧 邮箱: huili.f@gmail.com
-- 🐛 问题反馈: [GitHub Issues](https://github.com/ticatec/keelson/issues)
-- 📖 文档: [GitHub 仓库](https://github.com/ticatec/keelson/tree/main/packages/keelson-mysql)
+**Henry Feng** —— [huili.f@gmail.com](mailto:huili.f@gmail.com)
 
-## 相关包
+## 🔗 相关链接
 
-- [@ticatec/keelson-core](https://www.npmjs.com/package/@ticatec/keelson-core) - 核心框架库
-- [mysql2](https://www.npmjs.com/package/mysql2) - Node.js 的 MySQL 客户端
+- [GitHub 仓库](https://github.com/ticatec/keelson/tree/main/packages/keelson-mysql)
+- [NPM 包](https://www.npmjs.com/package/@ticatec/keelson-mysql)
+- [问题反馈](https://github.com/ticatec/keelson/issues)
+- [变更日志](CHANGELOG.md)

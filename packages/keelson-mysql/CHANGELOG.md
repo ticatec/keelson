@@ -84,6 +84,13 @@ npm with a pointer here.
 
 ### Changed
 
+- **README tails unified across the three drivers.** `License` is followed by `Author`
+  and `Links` (source, npm, issues, changelog), matching `@ticatec/keelson-core`.
+  `Related Packages` is gone - `Installation` and `Peer Dependencies` already name those
+  packages at the top, where a reader looks for them, and a second list at the bottom only
+  goes stale. `CHANGELOG.md` is now in `files`, so the link resolves inside the published
+  tarball too.
+
 - Installation examples use `pnpm add`, matching the rest of the monorepo.
 
 - **`strict` is on.** The build configs (`tsconfig.cjs.json` / `tsconfig.esm.json`)

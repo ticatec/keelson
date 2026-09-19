@@ -76,6 +76,13 @@ npm with a pointer here.
 
 ### Changed
 
+- **README tails unified across the three drivers.** `License` is followed by `Author`
+  and `Links` (source, npm, issues, changelog), matching `@ticatec/keelson-core`.
+  `Related Packages` is gone - `Installation` and `Peer Dependencies` already name those
+  packages at the top, where a reader looks for them, and a second list at the bottom only
+  goes stale. `CHANGELOG.md` is now in `files`, so the link resolves inside the published
+  tarball too.
+
 - Both READMEs gained the Contributing / development-setup section the rest of the
   monorepo carries, including the note that the workspace is pnpm-only (`workspace:*` is
   not a protocol npm implements, so `npm install` fails with `EUNSUPPORTEDPROTOCOL`).

@@ -244,15 +244,15 @@ pnpm publish:public   # runs typecheck, test and build first, via prepublishOnly
 
 ## License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+MIT - see the [LICENSE](LICENSE) file.
 
-## Support
+## 👨‍💻 Author
 
-- 📧 Email: huili.f@gmail.com
-- 🐛 Issues: [GitHub Issues](https://github.com/ticatec/keelson/issues)
-- 📖 Documentation: [GitHub Repository](https://github.com/ticatec/keelson/tree/main/packages/keelson-mysql)
+**Henry Feng** — [huili.f@gmail.com](mailto:huili.f@gmail.com)
 
-## Related Packages
+## 🔗 Links
 
-- [@ticatec/keelson-core](https://www.npmjs.com/package/@ticatec/keelson-core) - Core framework library
-- [mysql2](https://www.npmjs.com/package/mysql2) - MySQL client for Node.js
+- [GitHub Repository](https://github.com/ticatec/keelson/tree/main/packages/keelson-mysql)
+- [NPM Package](https://www.npmjs.com/package/@ticatec/keelson-mysql)
+- [Issues](https://github.com/ticatec/keelson/issues)
+- [CHANGELOG](CHANGELOG.md)

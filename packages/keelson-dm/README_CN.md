@@ -185,4 +185,15 @@ pnpm publish:public   # prepublishOnly 会先跑 typecheck、test 与 build
 
 ## 授权协议
 
-本项目采用 MIT 许可证，详情请参阅 [LICENSE](LICENSE)。
+MIT —— 详见 [LICENSE](LICENSE) 文件。
+
+## 👨‍💻 作者
+
+**Henry Feng** —— [huili.f@gmail.com](mailto:huili.f@gmail.com)
+
+## 🔗 相关链接
+
+- [GitHub 仓库](https://github.com/ticatec/keelson/tree/main/packages/keelson-dm)
+- [NPM 包](https://www.npmjs.com/package/@ticatec/keelson-dm)
+- [问题反馈](https://github.com/ticatec/keelson/issues)
+- [变更日志](CHANGELOG.md)

@@ -117,4 +117,15 @@ pnpm publish:public   # runs typecheck, test and build first, via prepublishOnly
 
 ## License
 
-MIT © [Ticatec](https://github.com/ticatec)
+MIT - see the [LICENSE](LICENSE) file.
+
+## 👨‍💻 Author
+
+**Henry Feng** — [huili.f@gmail.com](mailto:huili.f@gmail.com)
+
+## 🔗 Links
+
+- [GitHub Repository](https://github.com/ticatec/keelson/tree/main/packages/keelson-pg)
+- [NPM Package](https://www.npmjs.com/package/@ticatec/keelson-pg)
+- [Issues](https://github.com/ticatec/keelson/issues)
+- [CHANGELOG](CHANGELOG.md)
