@@ -687,6 +687,50 @@ declare module '@ticatec/keelson-express' {
 
 `req.user` 已由本包声明在 Express 的 `Request` 上，无需再单独增强 `Express.Request`。
 
+### 用户解析
+
+每个请求在进入路由之前，由 `UserResolver` 解析出调用者。默认实现 `HeaderUserResolver`
+读取 API 网关注入的 `user` 头（URL 编码的 JSON）与 `x-language` 头。
+
+> **这个头是被信任的。** 头里是什么，调用者就是谁。因此服务必须只能经由网关访问，
+> 而网关要自己设置这个头并剥掉客户端带来的同名头。直接暴露出去，任何客户端都能
+> 把自己声明成任何人。
+
+每个环节都是独立方法，改其中一个不必把其余的重写一遍：
+
+```typescript
+import { HeaderUserResolver, setUserResolver } from '@ticatec/keelson-express';
+
+class BearerResolver extends HeaderUserResolver {
+    protected override userHeader(): string {
+        return 'authorization';
+    }
+    protected override decode(raw: string): unknown {
+        return verifyJwt(raw.replace(/^Bearer /, ''));
+    }
+}
+
+setUserResolver(new BearerResolver());   // 在应用入口调用一次
+```
+
+身份来自完全不同的地方时，直接继承 `UserResolver`：
+
+```typescript
+import UserResolver, { setUserResolver } from '@ticatec/keelson-express';
+
+class SessionResolver extends UserResolver {
+    async resolve(req: Request) {
+        return sessions.get(req.cookies.sid);
+    }
+}
+
+setUserResolver(new SessionResolver());
+```
+
+解析器不负责拒绝请求。返回 `undefined` 表示匿名，公开路由正是靠这个保持公开；
+头格式不对时会记一条日志并同样按匿名处理。授权是 `isValidUser()` 的职责，
+把匿名请求变成 401 的是 `routerHelper.checkLoggedUser()`。
+
 ### 后台处理器
 
 ```typescript

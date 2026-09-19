@@ -2,21 +2,39 @@
 
 ## [1.0.0] - 2026-09-19
 
-### ⚠️ Security
+### ⚠️ Breaking Changes
 
-- **An override of `userCheck()` stopped guarding anything, silently.** `bind()` called
-  `userCheck()` up to `@ticatec/common-express-server@0.4.9`; by `0.5.4` the call site had
-  become `isValidUser()` and `userCheck()` was left behind - still declared, still carrying
-  a `@deprecated ... will be removed in a future version` note and three worked examples
-  showing it used for authorization, but never invoked by anything. An application that
-  implemented its access control by overriding `userCheck()` therefore lost that check on
-  upgrade: `isValidUser()` defaults to `return true`, so every request passed, with no
-  error and nothing in the log. Verified against the published tarballs of 0.4.9 and 0.5.4.
+- **`CommonRoutes.userCheck()` is removed.** It had no call site since
+  `@ticatec/common-express-server@0.5.4` - `bind()` called it up to 0.4.9, then switched to
+  `isValidUser()` and left the method behind, still carrying a `@deprecated` note and three
+  worked examples showing it used for authorization. An application that implemented its
+  access control by overriding it lost that check on upgrade without a word: `isValidUser()`
+  defaults to `return true`, so every request passed. Verified against the published
+  tarballs of 0.4.9 and 0.5.4.
 
-  `bind()` now calls `userCheck()` again when a subclass overrides it, and requires **both**
-  it and `isValidUser()` to pass - whatever it was protecting, it keeps protecting. Binding
-  such a router logs one warning naming the router and the path. Leave `userCheck()` alone
-  and nothing changes.
+  Move the body of `userCheck()` into `isValidUser()`; the signature is identical. Note
+  that removing a `protected` method is **not** a compile error for code that overrides it
+  - the override simply becomes a method nobody calls. Search for `userCheck` before
+  upgrading.
+
+### Added
+
+- **`UserResolver`, an extension point for turning a request into its caller.** Resolution
+  used to be three hard-coded lines inside the `routerHelper` singleton: the header had to
+  be named `user`, the language header `x-language`, and the encoding had to be
+  URL-encoded JSON. Changing any of it meant forking the class.
+
+  `HeaderUserResolver` is the default and keeps that behaviour, with each step - header
+  name, language header, decoding, language application - as its own overridable method.
+  `UserResolver` is the base for an identity that comes from somewhere else entirely: a
+  bearer token, a cookie, a session store. `setUserResolver()` installs one at the
+  composition root, and the installed resolver lives on a `Symbol.for()` key on
+  `globalThis`, so the CommonJS and ESM builds share it.
+
+  Two behaviours came along with the rewrite: a header sent twice arrives as an array from
+  Express and used to reach `JSON.parse` as one, which throws; and a header that decodes to
+  a string or a number was previously assigned to `req.user` as-is. Both are now treated as
+  anonymous, with a warning.
 
 ### Fixed
 

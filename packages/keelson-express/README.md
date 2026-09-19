@@ -689,6 +689,52 @@ declare module '@ticatec/keelson-express' {
 `req.user` is declared on Express's `Request` by this package, so no separate
 augmentation of `Express.Request` is needed.
 
+### Resolving the user
+
+The caller is resolved by a {@link UserResolver} before any route runs. The default,
+`HeaderUserResolver`, reads a user an API gateway injected as the `user` header
+(URL-encoded JSON) plus an `x-language` header.
+
+> **That header is trusted.** Whatever arrives in it becomes the caller, so the service
+> must be unreachable except through a gateway that sets the header itself and strips any
+> client-supplied copy. Exposed directly, any client can name itself anyone.
+
+Every step is its own method, so changing one does not mean restating the rest:
+
+```typescript
+import { HeaderUserResolver, setUserResolver } from '@ticatec/keelson-express';
+
+class BearerResolver extends HeaderUserResolver {
+    protected override userHeader(): string {
+        return 'authorization';
+    }
+    protected override decode(raw: string): unknown {
+        return verifyJwt(raw.replace(/^Bearer /, ''));
+    }
+}
+
+setUserResolver(new BearerResolver());   // once, at the composition root
+```
+
+When the identity comes from somewhere else entirely, extend `UserResolver` directly:
+
+```typescript
+import UserResolver, { setUserResolver } from '@ticatec/keelson-express';
+
+class SessionResolver extends UserResolver {
+    async resolve(req: Request) {
+        return sessions.get(req.cookies.sid);
+    }
+}
+
+setUserResolver(new SessionResolver());
+```
+
+A resolver never rejects a request. Returning `undefined` leaves it anonymous, which is
+how a public route stays public; a malformed header is logged and treated the same way.
+Authorization is `isValidUser()`'s job, and `routerHelper.checkLoggedUser()` is what turns
+an anonymous request into a 401.
+
 ### Background processors
 
 ```typescript

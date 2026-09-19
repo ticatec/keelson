@@ -1,6 +1,7 @@
 import {NextFunction, Request, Response} from "express";
 import {ActionNotFoundError, handleError, UnauthenticatedError} from '@ticatec/node-exception';
 import {getLogger} from "@ticatec/logger-api";
+import {getUserResolver} from "./UserResolver.js";
 
 
 /**
@@ -186,43 +187,22 @@ class RouterHelper {
     }
 
     /**
-     * Retrieves user information from request headers
+     * Resolves the caller through the configured {@link UserResolver} and attaches it to
+     * `req.user`. A request that carries no identity is left anonymous - that is how a
+     * public route stays public.
      *
-     * This method:
-     * 1. Parses the 'user' header (URL-encoded JSON)
-     * 2. Adds language from 'x-language' header if present
-     * 3. Supports user impersonation via 'actAs' field
-     * 4. Sets the processed user to req['user']
-     *
-     * Note: If the user header is missing or invalid, this method silently does nothing
-     * (allowing public routes to work without authentication).
-     *
+     * 提取逻辑此前直接写在这里：固定的 user 头、固定的 x-language、固定的
+     * decodeURIComponent + JSON.parse。想换个头名、换个编码或换一套认证方式，
+     * 只能连这个单例一起改。现在交给 UserResolver，应用侧用 setUserResolver() 替换。
      * @param req Express request object
+     * @protected
      */
-    protected async retrieveUserFormHeader(req: Request): Promise<void> {
-        const userStr: string = req.headers['user'] as string;
-        if (userStr != null) {
-            try {
-                const user = JSON.parse(decodeURIComponent(userStr));
-                const language = req.headers['x-language'];
-                if (language) {
-                    if (user.actAs) {
-                        user.actAs['language'] = language
-                    }
-                    user['language'] = language
-                }
-
-                req.user = user;
-
-                // 不再把 accountCode 写进日志：CommonUser / LoggedUser 里根本没有
-                // 声明这个字段，框架读的是一个契约之外的属性——换一种用户模型就是
-                // undefined；而且这条日志对每个带 user 头的请求都会打一次，等于把
-                // 用户标识铺满 debug 日志。需要按用户追踪请求，应当在应用层的
-                // 中间件里做，而不是烧进框架。
-                this.logger.debug({ path: req.path, impersonating: user.actAs != null }, 'User attached from request header');
-            } catch (ex) {
-                this.logger.warn({error: ex instanceof Error ? ex.message : String(ex), path: req.path}, 'Invalid user header format');
-            }
+    protected async resolveUser(req: Request): Promise<void> {
+        const user = await getUserResolver().resolve(req);
+        if (user != null) {
+            req.user = user;
+            this.logger.debug({ path: req.path, impersonating: (user as any).actAs != null },
+                'User attached to request');
         }
     }
 
@@ -256,7 +236,7 @@ class RouterHelper {
      */
     retrieveUser() {
         return async (req: Request, _res: Response, next: any) => {
-            await this.retrieveUserFormHeader(req);
+            await this.resolveUser(req);
             next();
         }
     }
@@ -288,7 +268,7 @@ class RouterHelper {
      */
     checkLoggedUser() {
         return async (req: Request, res: Response, next: any) => {
-            await this.retrieveUserFormHeader(req);
+            await this.resolveUser(req);
             if (req.user == null) {
                 this.logger.warn({path: req.path, method: req.method}, 'Unauthenticated request');
                 handleError(new UnauthenticatedError(), req, res, null);

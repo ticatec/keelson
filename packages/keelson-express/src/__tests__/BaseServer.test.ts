@@ -8,6 +8,7 @@ import AppConf from '../AppConf.js';
 import ProcessorManager from '../ProcessorManager.js';
 import CommonProcessor from '../CommonProcessor.js';
 import routerHelper from '../RouterHelper.js';
+import UserResolver, { HeaderUserResolver, setUserResolver, resetUserResolver, getUserResolver } from '../UserResolver.js';
 import CommonController from '../common/CommonController.js';
 import Controller from '../common/Controller.js';
 import CommonSearchController from '../common/CommonSearchController.js';
@@ -19,7 +20,6 @@ import { HealthCheckRegistry } from '../health/HealthCheckRegistry.js';
 import { createSystemHealthIndicator } from '../health/BuiltinHealthIndicators.js';
 import { HealthRoutes } from '../health/HealthRoutes.js';
 import { StringValidator, NumberValidator } from '@ticatec/bean-validator';
-import { UnauthenticatedError } from '@ticatec/node-exception';
 
 /** Silences framework logging for the duration of the suite. */
 const SILENT: Logger = (() => {
@@ -569,86 +569,107 @@ describe('keelson-express comprehensive test suite', () => {
     });
 
 
-    describe('deprecated userCheck()', () => {
+    describe('user resolution', () => {
 
-        /** Builds the router, runs its validation middleware, and reports what happened. */
-        const runValidation = async (routes: CommonRoutes, user: any) => {
-            const app: any = { use: jest.fn() };
-            await routes.bind(app, '/test');
-            const routerInstance = app.use.mock.calls[0][1];
-            const layers = routerInstance.stack.filter((l: any) => l.handle && l.handle.length === 3);
+        const runResolver = async (req: any) => {
             const next = jest.fn();
-            for (const layer of layers) {
-                await layer.handle({ user }, {}, next);
-            }
-            const errors = next.mock.calls.filter((c: any[]) => c[0] != null).map((c: any[]) => c[0]);
-            return { passed: errors.length === 0, errors };
+            await routerHelper.retrieveUser()(req, {} as any, next);
+            return { req, next };
         };
 
-        test('an override of userCheck() still guards the route', async () => {
-            // userCheck() 自 0.5.x 起就没有任何调用点了（0.4.9 里还在调），却保留着
-            // @deprecated "will be removed in a future version" 的文档和三段把它当成
-            // 授权检查使用的示例。靠覆写 userCheck 做授权的应用升级后，检查被静默
-            // 跳过——isValidUser 的默认实现返回 true，于是每个请求都放行。
-            const seen: any[] = [];
-            class LegacyRoutes extends CommonRoutes {
-                protected override userCheck(user: any): boolean {
-                    seen.push(user);
-                    return user?.role === 'admin';
-                }
-            }
-
-            const denied = await runValidation(new LegacyRoutes(), { role: 'guest' });
-            expect(seen).toEqual([{ role: 'guest' }]);
-            expect(denied.passed).toBe(false);
-            expect(denied.errors[0]).toBeInstanceOf(UnauthenticatedError);
-
-            const allowed = await runValidation(new LegacyRoutes(), { role: 'admin' });
-            expect(allowed.passed).toBe(true);
+        afterEach(() => {
+            resetUserResolver();
         });
 
-        test('both checks must pass when userCheck() and isValidUser() are overridden', async () => {
-            class BothRoutes extends CommonRoutes {
-                protected override userCheck(user: any): boolean {
-                    return user?.role === 'admin';
+        test('the built-in resolver reads the gateway header and the language header', async () => {
+            const req: any = {
+                path: '/x',
+                headers: {
+                    user: encodeURIComponent(JSON.stringify({ accountCode: 'U1', actAs: { accountCode: 'U2' } })),
+                    'x-language': 'zh-CN'
                 }
-                protected override isValidUser(user: any): boolean {
-                    return user?.tenantActive === true;
-                }
-            }
-
-            expect((await runValidation(new BothRoutes(), { role: 'admin', tenantActive: true })).passed).toBe(true);
-            expect((await runValidation(new BothRoutes(), { role: 'guest', tenantActive: true })).passed).toBe(false);
-            expect((await runValidation(new BothRoutes(), { role: 'admin', tenantActive: false })).passed).toBe(false);
+            };
+            await runResolver(req);
+            expect(req.user.accountCode).toBe('U1');
+            expect(req.user.language).toBe('zh-CN');
+            expect(req.user.actAs.language).toBe('zh-CN');
         });
 
-        test('warns once per router when userCheck() is overridden', async () => {
-            const warnings: any[] = [];
-            setLoggerProvider(() => ({ ...SILENT, warn: (...args: any[]) => { warnings.push(args); } } as any));
-            try {
-                class LegacyRoutes extends CommonRoutes {
-                    protected override userCheck(): boolean {
-                        return true;
-                    }
-                }
-                await runValidation(new LegacyRoutes(), { role: 'admin' });
-                const deprecation = warnings.filter(w => String(w[1]).includes('userCheck()'));
-                expect(deprecation).toHaveLength(1);
-            } finally {
-                setLoggerProvider(() => SILENT);
-            }
+        test('a malformed header leaves the request anonymous instead of failing it', async () => {
+            const req: any = { path: '/x', headers: { user: '%%%not-json%%%' } };
+            const { next } = await runResolver(req);
+            expect(req.user).toBeUndefined();
+            expect(next).toHaveBeenCalledWith();
         });
 
-        test('says nothing when userCheck() is left alone', async () => {
-            const warnings: any[] = [];
-            setLoggerProvider(() => ({ ...SILENT, warn: (...args: any[]) => { warnings.push(args); } } as any));
-            try {
-                class PlainRoutes extends CommonRoutes {}
-                await runValidation(new PlainRoutes(), { role: 'admin' });
-                expect(warnings.filter(w => String(w[1]).includes('userCheck()'))).toHaveLength(0);
-            } finally {
-                setLoggerProvider(() => SILENT);
+        test('a header that decodes to a non-object is rejected', async () => {
+            const req: any = { path: '/x', headers: { user: encodeURIComponent('"just-a-string"') } };
+            await runResolver(req);
+            expect(req.user).toBeUndefined();
+        });
+
+        test('a repeated header is read as its first value, not as an array', async () => {
+            // 客户端可以把同一个头发两次；Express 会给出数组，直接 JSON.parse 会抛。
+            const req: any = {
+                path: '/x',
+                headers: { user: [encodeURIComponent(JSON.stringify({ accountCode: 'U1' })), 'junk'] }
+            };
+            await runResolver(req);
+            expect(req.user.accountCode).toBe('U1');
+        });
+
+        test('a subclass can change one step and keep the rest', async () => {
+            class BearerResolver extends HeaderUserResolver {
+                protected override userHeader(): string {
+                    return 'authorization';
+                }
+                protected override decode(raw: string): unknown {
+                    return { accountCode: raw.replace(/^Bearer /, '') };
+                }
             }
+            setUserResolver(new BearerResolver());
+
+            const req: any = { path: '/x', headers: { authorization: 'Bearer U9', 'x-language': 'en' } };
+            await runResolver(req);
+            expect(req.user).toEqual({ accountCode: 'U9', language: 'en' });
+        });
+
+        test('a resolver from a different source entirely can replace the header pipeline', async () => {
+            class SessionResolver extends UserResolver {
+                async resolve(req: any) {
+                    return req.session?.user;
+                }
+            }
+            setUserResolver(new SessionResolver());
+
+            const req: any = { path: '/x', headers: {}, session: { user: { accountCode: 'S1' } } };
+            await runResolver(req);
+            expect(req.user).toEqual({ accountCode: 'S1' });
+        });
+
+        test('the installed resolver is shared across the CommonJS and ESM builds', () => {
+            const key = Symbol.for('@ticatec/keelson-express.user-resolver');
+            class Custom extends UserResolver {
+                resolve() { return undefined; }
+            }
+            const custom = new Custom();
+            setUserResolver(custom);
+
+            // 解析器若存在模块级变量里，两份产物各有一个：应用在 ESM 侧换掉解析器，
+            // CJS 侧的 RouterHelper 仍用默认实现，自定义认证静默失效。
+            expect((globalThis as any)[key].resolver).toBe(custom);
+            expect(getUserResolver()).toBe(custom);
+        });
+
+        test('checkLoggedUser rejects a request the resolver left anonymous', async () => {
+            const req: any = { path: '/x', method: 'GET', headers: {}, accepts: jest.fn().mockReturnValue('json') };
+            const res: any = { status: jest.fn().mockReturnThis(), json: jest.fn(), setHeader: jest.fn() };
+            const next = jest.fn();
+
+            await routerHelper.checkLoggedUser()(req, res, next);
+
+            expect(next).not.toHaveBeenCalled();
+            expect(res.status).toHaveBeenCalledWith(401);
         });
     });
 

@@ -1,59 +1,30 @@
 import {Express, NextFunction, Request, RequestHandler, Response, Router} from "express";
 import {getLogger, Logger} from "@ticatec/logger-api";
 import {UnauthenticatedError} from "@ticatec/node-exception";
-
-/**
- * Abstract base class for defining common routes
- *
- * Provides a structured way to define routes with support for:
- * - User authentication checks
- * - Custom user validation checks
- * - Custom user processing hooks
- * - Global middleware handlers
- *
- * The middleware execution order is:
- * 1. User hook processing (if `getUserHook()` returns a function)
- * 2. Custom user validation check (via `isValidUser()`)
- * 3. Global middleware (if `getGlobalHandler()` returns a handler)
- * 4. Route handlers (defined in `bindRoutes()`)
- *
- * @example
- * ```typescript
- * class UserRoutes extends CommonRoutes {
- *   // Load additional user data
- *   protected getUserHook(): ((user: any) => any) | null {
- *     return async (user) => {
- *       // Load user preferences
- *       user.preferences = await loadPreferences(user.accountCode);
- *       return user;
- *     };
- *   }
- *
- *   // Enable authentication and validation
- *   protected async isValidUser(user: CommonUser): Promise<boolean> {
- *     // Check if user exists and account is active
- *     if (!user) {
- *       return false;
- *     }
- *     const account = await database.getAccount(user.accountCode);
- *     return account && account.status === 'active';
- *   }
- *
- *   // Define routes
- *   protected bindRoutes() {
- *     this.get('/profile', routerHelper.invokeRestfulAction(this.getProfile));
- *   }
- *
- *   private getProfile = async (req: Request) => {
- *     return req['user'];
- *   };
- * }
- * ```
- */
 import { RegisteredUser } from "./LoggedUser.js";
 
 /**
- * Abstract base class for defining common routes
+ * Base class for a group of routes mounted under one path.
+ *
+ * Middleware runs in this order, and every step is optional except the last:
+ *
+ * 1. `getUserHook()` — enrich `req.user` (load permissions, profile, tenant)
+ * 2. `isValidUser()` — authorize; returning false produces a 401
+ * 3. `getGlobalHandler()` — anything that applies to the whole group
+ * 4. the routes registered in `bindRoutes()`
+ *
+ * @example
+ * ```typescript
+ * class UserRoutes extends AuthenticatedRoutes {
+ *     protected async isValidUser(user: RegisteredUser): Promise<boolean> {
+ *         return (await accounts.find(user.accountCode))?.status === 'active';
+ *     }
+ *
+ *     protected bindRoutes() {
+ *         this.get('/profile', routerHelper.invokeRestfulAction(req => req.user));
+ *     }
+ * }
+ * ```
  */
 export default class CommonRoutes {
 
@@ -100,24 +71,11 @@ export default class CommonRoutes {
                 }
             });
         }
-        // userCheck() 自 0.5.x 起就没有调用点了（0.4.9 还在调），却一直保留着
-        // @deprecated "will be removed in a future version" 的文档和三段把它当作
-        // 授权检查使用的示例。靠覆写 userCheck 做授权的应用升级后，检查被静默跳过，
-        // 而 isValidUser 的默认实现返回 true——每个请求都放行，没有任何报错。
-        // 这里恢复调用：覆写了就执行，并与 isValidUser 取与（原本在保护什么，
-        // 继续保护什么），同时在绑定时告警一次，提示迁移。
-        const legacyUserCheck = this.userCheck !== CommonRoutes.prototype.userCheck;
-        if (legacyUserCheck) {
-            this.logger.warn({ path, router: this.constructor.name },
-                'This router overrides the deprecated userCheck(); it is being called together with isValidUser(). Move the logic into isValidUser() - userCheck() will be removed.');
-        }
         this.router.use(async (req: Request, res: Response, next: NextFunction) => {
             try {
                 const user = req.user as RegisteredUser | undefined;
                 const subject = ((user as any)?.actAs ?? user) as RegisteredUser;
-                const valid = await this.isValidUser(subject)
-                    && (!legacyUserCheck || await this.userCheck(subject));
-                if (!valid) {
+                if (!await this.isValidUser(subject)) {
                     // 这里原先记的是整个 user 对象——账号、角色、租户，网关塞进头里的
                     // 一切都会落到日志上。校验失败要定位的是哪条路由被拒了，不是这个人是谁。
                     this.logger.debug({ path, impersonating: (user as any)?.actAs != null }, 'User validation failed');
@@ -137,66 +95,6 @@ export default class CommonRoutes {
         this.bindRoutes();
         app.use(path, this.router);
         this.logger.info({ path }, 'Router bound successfully');
-    }
-
-    /**
-     * Performs custom user validation check
-     *
-     * @deprecated Use {@link isValidUser} instead. This method will be removed in a future version.
-     *
-     * Override this method to implement custom user validation logic.
-     * This method is called after the user hook (if any) and before the global middleware.
-     * It receives the user object (or the actAs user if impersonation is active) and
-     * should return true if the user is valid, or false/throw an error otherwise.
-     *
-     * When this method returns false, an UnauthenticatedError is thrown automatically.
-     * If an error is thrown, it will be passed to Express's error handling middleware.
-     *
-     * This is useful for:
-     * - Additional authorization checks beyond authentication
-     * - Validating user permissions or roles
-     * - Checking account status (e.g., active, suspended)
-     * - Tenant-specific validation
-     * - Custom business rules for user access
-     *
-     * @returns true if the user passes validation, false otherwise
-     * @protected
-     *
-     * @example
-     * ```typescript
-     * // Check if user account is active
-     * protected async userCheck(user: any): Promise<boolean> {
-     *   if (!user) {
-     *     return false;
-     *   }
-     *   const account = await database.getAccount(user.accountCode);
-     *   return account && account.status === 'active';
-     * }
-     * ```
-     *
-     * @example
-     * ```typescript
-     * // Check if user has required role
-     * protected userCheck(user: any): boolean {
-     *   return user && user.roles && user.roles.includes('admin');
-     * }
-     * ```
-     *
-     * @example
-     * ```typescript
-     * // Check tenant-specific access
-     * protected async userCheck(user: any): Promise<boolean> {
-     *   if (!user || !user.tenant) {
-     *     return false;
-     *   }
-     *   const tenant = await database.getTenant(user.tenant.code);
-     *   return tenant && tenant.isActive;
-     * }
-     * ```
-     * @param _user
-     */
-    protected userCheck(_user: RegisteredUser): boolean | Promise<boolean> {
-        return true;
     }
 
     protected isValidUser(_user: RegisteredUser): boolean | Promise<boolean> {
@@ -370,32 +268,6 @@ export default class CommonRoutes {
         this.logger.debug({ method: 'DELETE', path }, 'Registered route');
     }
 
-    /**
-     * Gets the custom user hook function
-     *
-     * Override this method to provide custom user processing logic.
-     * The hook function receives the user object (from `req['user']`) and returns a
-     * processed user object. The returned value will replace `req['user']`.
-     *
-     * This hook is executed in the middleware pipeline **before the user validation check**
-     * (via `isValidUser()`). It is wrapped with automatic error handling - any errors thrown
-     * will be passed to Express's error handling middleware.
-     *
-     * **Middleware execution order:**
-     * 1. User hook processing (if `getUserHook()` returns a function)
-     * 2. User validation check (via `isValidUser()`)
-     * 3. Global handler middleware (if `getGlobalHandler()` returns a handler)
-     * 4. Route handlers (defined in `bindRoutes()`)
-     *
-     * This hook is useful for:
-     * - Loading additional user-specific data from database
-     * - Adding user permissions or roles
-     * - Enriching user profile information
-     * - Setting request context based on user
-     * - Preparing user data before validation
-     *
-     * @returns A function that processes the user object, or null if no hook is needed
-     */
 }
 
 /**
