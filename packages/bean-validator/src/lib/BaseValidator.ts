@@ -113,12 +113,34 @@ export default abstract class BaseValidator {
                     if (this.checkFun != null) {
                         const checkError = this.checkFun(value, data, prefix);
                         if (checkError != null) {
-                            result.appendError(checkError);
+                            result.appendError(this.normalizeCheckError(checkError, prefix));
                         }
                     }
                 }
             }
         }
+    }
+
+    /**
+     * 规整 `check` 回调返回的错误。
+     *
+     * 回调是挂在某个具体字段上的，字段名校验器自己就知道，因此纯字符串一律补上
+     * 本字段的标签。此前是直接丢给 ValidationResult.appendError，由它按冒号切分
+     * 猜字段名——结果要么 field 为空串（前端无法把红框标到对应输入框上），要么把
+     * 消息本身截断：'时间格式: HH:mm 不正确' 会被切成
+     * { field: '时间格式', message: 'HH:mm 不正确' }。
+     *
+     * 回调若返回 ValidationError 对象则原样透传，字段名由回调自己决定。
+     *
+     * @param error - 回调的返回值
+     * @param prefix - 嵌套校验的字段前缀
+     * @protected
+     */
+    protected normalizeCheckError(error: any, prefix: string | null): ValidationError | string {
+        if (typeof error === 'string') {
+            return {field: this.getFieldLabel(prefix), message: error};
+        }
+        return error;
     }
 
     /**
@@ -218,6 +240,12 @@ export default abstract class BaseValidator {
      * @private
      */
     private setFieldValue(data: any, value: any) {
+        if (data == null || typeof data !== 'object') {
+            // 待校验的根对象本身不是对象（客户端提交了字面量 null、数组以外的基本
+            // 类型，或干脆什么都没提交）。此前会直接在这里抛 TypeError，把整个
+            // 请求打成未捕获异常，而不是优雅地返回一条校验错误。
+            return;
+        }
         const UNSAFE_KEYS = new Set(["__proto__", "prototype", "constructor"]);
         const names = this.field.split(".");
         if (names.some((key) => UNSAFE_KEYS.has(key))) {

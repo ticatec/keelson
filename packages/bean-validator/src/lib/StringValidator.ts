@@ -57,9 +57,16 @@ export default class StringValidator extends BaseValidator {
 
     protected checkField(value: any, result: ValidationResult, prefix: string | null): boolean {
         const field = this.getFieldLabel(prefix);
-        if (this.required && value.length == 0) {
-            result.appendError(this.createError(field, getMessage().REQUIRED));
-            return false;
+        if (value.length == 0) {
+            if (this.required) {
+                result.appendError(this.createError(field, getMessage().REQUIRED));
+                return false;
+            }
+            // 非必填字段留空就是没填，不应该再触发 minLen 与 format。
+            // 此前 { website: '' } 会被 format 判为「网址格式不正确」、
+            // { bio: '' } 会被 minLen 判为长度不足——而同样一个字段只要把键去掉
+            // 就能通过，两者行为并不一致。
+            return true;
         }
         if (this.minLen != null && value.length < this.minLen) {
             result.appendError(this.createError(field, getMessage().STRING_LENGTH_SHORTAGE, {minLength: this.minLen}));

@@ -19,11 +19,8 @@ export interface LocaleMessages {
     NUMBER_SHORTAGE: string;
     ARRAY_EXCEED: string;
     ARRAY_SHORTAGE: string;
-    INVALID_ARRAY: string;
     IS_NOT_ARRAY: string;
     IS_NOT_OBJECT: string;
-    INVALID_OBJECT: string;
-    INVALID_ARRAY_ITEM: string;
 }
 
 const DEFAULT_MESSAGES: LocaleMessages = {
@@ -41,11 +38,8 @@ const DEFAULT_MESSAGES: LocaleMessages = {
     NUMBER_SHORTAGE: `cannot be less than the minimum value {{min}}`,
     ARRAY_EXCEED: `array exceeds {{max}} records`,
     ARRAY_SHORTAGE: `array must contain at least {{min}} records`,
-    INVALID_ARRAY: 'is not a valid array [{{error}}]',
     IS_NOT_ARRAY: 'is not an array',
     IS_NOT_OBJECT: 'is not an object',
-    INVALID_OBJECT: 'contains an error [{{error}}]',
-    INVALID_ARRAY_ITEM: 'Row [{{rowIdx}}] in the array contains an error [{{error}}]'
 };
 
 interface LocaleState {

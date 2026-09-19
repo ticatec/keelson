@@ -269,6 +269,9 @@ new BooleanValidator('isActive', {
 });
 
 // Accepts: true, false, 0, 1, "true", "false", "1", "0"
+//           (strings are trimmed and case-insensitive)
+// Rejects everything else, including other numbers: 42 and "42" are both
+// a type error, rather than 42 quietly becoming true.
 ```
 
 ### ObjectValidator
@@ -356,6 +359,10 @@ validators treat that as "not filled in":
 | `''` | `cannot be empty` | skipped |
 | `'   '` (whitespace only) | `cannot be empty` | skipped |
 
+A field left blank is not checked against `minLen`, `maxLen` or `format`
+either - leaving an optional field empty and omitting it entirely behave the
+same way.
+
 ```typescript
 const rules = [new NumberValidator('age', { required: true })];
 
@@ -373,8 +380,12 @@ still reports `cannot be empty`; with `trim: false` the whitespace is preserved
 and counts toward the length.
 
 ```typescript
-beanValidator.validate({ note: '' }, [new StringValidator('note', { minLen: 3 })]).errorMessage;
-// "note: length must be at least 3 characters"
+// An optional field left blank is not held to minLen or format
+beanValidator.validate({ note: '' }, [new StringValidator('note', { minLen: 3 })]).valid;      // true
+beanValidator.validate({ note: 'ab' }, [new StringValidator('note', { minLen: 3 })]).valid;    // false
+
+// With trim: false, whitespace is preserved and counts toward the length
+beanValidator.validate({ note: '   ' }, [new StringValidator('note', { minLen: 3, trim: false })]).valid;  // true
 ```
 
 A `defaultValue` takes precedence over all of this: an empty value is replaced by
@@ -424,6 +435,23 @@ new StringValidator('username', {
         return null; // null means validation passed
     }
 });
+```
+
+A plain string is reported against the field the check is attached to, so
+`error.field` is usable for highlighting the right input:
+
+```typescript
+beanValidator.validate({ username: 'a b' }, rules).errors;
+// [ { field: 'username', message: 'Username cannot contain spaces' } ]
+```
+
+Return a `ValidationError` object instead when the problem belongs to a
+different field - a cross-field rule, say:
+
+```typescript
+check: (value, data) => (value < data.startDate
+    ? { field: 'endDate', message: 'must be after the start date' }
+    : null)
 ```
 
 ### Conditional Validation
@@ -824,7 +852,10 @@ app.listen(3000);
 Validates data against the provided rules.
 
 **Parameters:**
-- `data`: The object to validate
+- `data`: The object to validate. A root that is not an object (`null`, a
+  primitive - a client posting a bare `null` JSON body, for example) is handled
+  without throwing: writes are skipped and required fields simply report
+  `cannot be empty`.
 - `rules`: Array of validation rules
 - `prefix`: Internal use for nested validation
 

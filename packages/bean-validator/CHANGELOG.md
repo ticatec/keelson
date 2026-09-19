@@ -9,6 +9,37 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **A non-object root crashed the process.** `setFieldValue` wrote straight into
+  `data`, so validating `null` - a client posting a bare `null` JSON body - threw
+  an uncaught `TypeError` as soon as any rule wrote back (a `defaultValue`, or a
+  type conversion), taking the request down instead of returning a validation
+  error. The same applied to `undefined` and to a primitive root. Writes into a
+  non-object root are now skipped, and required fields still report
+  `cannot be empty`.
+
+- **An optional string left blank failed `minLen` and `format`.** Leaving an
+  optional field empty posts `''`, which went straight into the length and pattern
+  checks: `{ website: '' }` came back as "invalid url" and `{ bio: '' }` as "length
+  must be at least 10 characters" - while omitting the key entirely passed. Blank
+  now skips those checks, so an empty optional field and an absent one behave the
+  same. A required field is unaffected and still reports `cannot be empty`.
+
+- **A `check` callback returning a plain string lost the field name.** The string
+  went to `ValidationResult.appendError`, whose back-compatibility shim splits on
+  the first colon to guess a field - so the result was `{ field: '', message }`,
+  leaving a UI with nothing to attach the error to. Worse, a message that
+  legitimately contained a colon was truncated: `'expected format: HH:mm'` became
+  `{ field: 'expected format', message: 'HH:mm' }`. A callback is attached to a
+  known field, so a plain string is now reported against that field (alias and
+  nesting prefix included) and the message is kept whole. Returning a
+  `ValidationError` object still passes through untouched, for cross-field rules.
+
+- **`BooleanValidator` accepted any non-zero number.** `value != 0` turned 42, -1,
+  2.5 and `Infinity` into `true`, while the string `'42'` was a type error - the
+  same value giving opposite verdicts depending on how it was written, and neither
+  matching the documented `true, false, 0, 1, "true", "false", "1", "0"`. Only 0
+  and 1 are accepted now.
+
 - **An empty field reported a type error instead of "cannot be empty".** An
   untouched input in an HTML form posts `''`, not `null`. Every validator except
   `StringValidator` ran that through its type check and answered
@@ -73,7 +104,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `NumberValidatorOptions`, `DateValidatorOptions`, `EnumValidatorOptions`,
   `ArrayValidatorOptions`, `ObjectValidatorOptions`, `ValidatorOptions`,
   `CustomCheck`, `IgnoreCheck`, `LocaleMessages`), plus `CommonValidator`.
-- 90 new tests (43 -> 133), including a regression test for each defect above.
+- 123 new tests (43 -> 166), including a regression test for each defect above.
+
+### Removed
+
+- The `INVALID_ARRAY`, `INVALID_OBJECT` and `INVALID_ARRAY_ITEM` message templates.
+  Nothing in the package referenced them; `ArrayValidator` and `ObjectValidator`
+  report through `IS_NOT_ARRAY` / `IS_NOT_OBJECT` and merge their children's
+  errors. They are gone from `LocaleMessages`, which is first exported in this
+  release, so no published type is affected.
+- The `dayjs` dev dependency. Date handling is native throughout; nothing imported it.
 
 ### Changed
 

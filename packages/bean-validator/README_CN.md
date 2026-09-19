@@ -262,6 +262,9 @@ new BooleanValidator('isActive', {
 });
 
 // 接受: true, false, 0, 1, "true", "false", "1", "0"
+//       （字符串会去除两端空白，且不区分大小写）
+// 其余一律视为类型错误，包括别的数字：42 与 "42" 都报错，
+// 而不是 42 悄悄变成 true。
 ```
 
 ### 对象验证器 (ObjectValidator)
@@ -348,6 +351,9 @@ HTML 表单里未填写的输入框提交上来的是空字符串，不是 `null
 | `''` | `cannot be empty` | 跳过 |
 | `'   '`（纯空白） | `cannot be empty` | 跳过 |
 
+留空的字段也不会再去比对 `minLen`、`maxLen` 与 `format`——非必填字段留空与
+干脆不传这个键，行为是一致的。
+
 ```typescript
 const rules = [new NumberValidator('age', { required: true })];
 
@@ -363,8 +369,12 @@ beanValidator.validate({ age: '' }, [new NumberValidator('age', {})]).valid;
 必填仍报 `cannot be empty`；`trim: false` 时空白被保留并计入长度。
 
 ```typescript
-beanValidator.validate({ note: '' }, [new StringValidator('note', { minLen: 3 })]).errorMessage;
-// "note: length must be at least 3 characters"
+// 非必填字段留空，不受 minLen / format 约束
+beanValidator.validate({ note: '' }, [new StringValidator('note', { minLen: 3 })]).valid;      // true
+beanValidator.validate({ note: 'ab' }, [new StringValidator('note', { minLen: 3 })]).valid;    // false
+
+// trim: false 时空白被保留并计入长度
+beanValidator.validate({ note: '   ' }, [new StringValidator('note', { minLen: 3, trim: false })]).valid;  // true
 ```
 
 `defaultValue` 优先于以上全部规则：空值会先被默认值替换，再按正常流程校验。
@@ -413,6 +423,22 @@ new StringValidator('username', {
         return null; // null 表示验证通过
     }
 });
+```
+
+返回纯字符串时，错误会归到该 check 所挂载的字段上，因此 `error.field` 可以直接用来
+把红框标到对应的输入组件：
+
+```typescript
+beanValidator.validate({ username: 'a b' }, rules).errors;
+// [ { field: 'username', message: '用户名不能包含空格' } ]
+```
+
+若问题其实属于另一个字段（例如跨字段校验），返回 `ValidationError` 对象：
+
+```typescript
+check: (value, data) => (value < data.startDate
+    ? { field: 'endDate', message: '结束日期必须晚于开始日期' }
+    : null)
 ```
 
 ### 条件性验证
@@ -803,7 +829,9 @@ app.listen(3000);
 根据提供的规则验证数据。
 
 **参数:**
-- `data`: 要验证的对象
+- `data`: 要验证的对象。根对象若不是对象（`null` 或基本类型——例如客户端把
+  JSON 报文体直接发成了一个 `null`），不会抛异常：写回动作被跳过，必填字段照常
+  报 `cannot be empty`。
 - `rules`: 验证规则数组
 - `prefix`: 内部使用，用于嵌套验证
 

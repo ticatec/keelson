@@ -65,10 +65,17 @@ describe('empty values', () => {
             expect(data.v).toBe('   ');
         });
 
-        it('still applies minLen to an optional empty string', () => {
-            const res = beanValidator.validate({v: ''}, [new StringValidator('v', {minLen: 3})]);
+        // Superseded: an optional field left blank no longer trips minLen or
+        // format. See review-1.1.0.test.ts - 'an optional string left blank'.
+        it('applies minLen to a non-empty optional string', () => {
+            const res = beanValidator.validate({v: 'ab'}, [new StringValidator('v', {minLen: 3})]);
             expect(res.valid).toBe(false);
             expect(res.errors[0].message).toBe('length must be at least 3 characters');
+        });
+
+        it('applies minLen to a required empty string only as "cannot be empty"', () => {
+            const res = beanValidator.validate({v: ''}, [new StringValidator('v', {required: true, minLen: 3})]);
+            expect(res.errors[0].message).toBe('cannot be empty');
         });
     });
 
