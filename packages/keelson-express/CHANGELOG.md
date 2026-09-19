@@ -19,6 +19,12 @@
 
 ### Added
 
+- **`BaseServer.registerHealthCheck()` / `unregisterHealthCheck()`.** Both READMEs showed
+  `this.registerHealthCheck('database', ...)` in `beforeStart()` as the way to add a probe,
+  and the method did not exist - copying the documented example produced
+  `Property 'registerHealthCheck' does not exist`. The only way in was the `protected`
+  `healthRegistry` field, which is what this package's own test resorted to, through a cast.
+
 - **`UserResolver`, an extension point for turning a request into its caller.** Resolution
   used to be three hard-coded lines inside the `routerHelper` singleton: the header had to
   be named `user`, the language header `x-language`, and the encoding had to be
@@ -96,6 +102,10 @@
   logged by status class since `@ticatec/node-exception@2.1.0`.
 
 - Every log call passes a context object first, matching the rest of the monorepo.
+
+- The README's links to the controller guide are absolute GitHub URLs. They were relative
+  (`../../docs/prompts/...`), which resolves on GitHub and on npmjs.com but not in a
+  downloaded tarball, where nothing sits two levels up.
 
 - `publish-public` is renamed `publish:public`, the only package that spelled it with a
   hyphen. `types` points at the CommonJS declarations, as it does everywhere else. `pino`

@@ -6,6 +6,7 @@ import net from "net";
 import { getLogger, Logger } from "@ticatec/logger-api";
 import CommonRoutes from "./CommonRoutes.js";
 import { HealthCheckRegistry } from "./health/HealthCheckRegistry.js";
+import type { HealthCheckIndicator } from "./health/HealthCheckRegistry.js";
 import { createSystemHealthIndicator } from "./health/BuiltinHealthIndicators.js";
 import { HealthRoutes } from "./health/HealthRoutes.js";
 
@@ -114,6 +115,30 @@ export default abstract class BaseServer {
      */
     protected async beforeStart(): Promise<void> {
 
+    }
+
+    /**
+     * Registers a health check indicator on this server's registry.
+     *
+     * 两份 README 的核心示例一直教人在 beforeStart() 里调这个方法，但它此前并不存在
+     * ——照着文档抄会直接撞上 "Property 'registerHealthCheck' does not exist"，
+     * 连本包自己的测试也只能强转到 healthRegistry 上绕过去。
+     * @param name Indicator name, unique per server (e.g. `database`, `redis`).
+     * @param indicator Function returning the component's health.
+     * @param isCritical When true (the default), `DOWN` makes the whole readiness probe
+     *   `DOWN` and `/health/ready` answers 503; when false it answers `DEGRADED` with a 200.
+     * @param timeoutMs How long the indicator may take before it counts as `DOWN`. Default 3000.
+     */
+    public registerHealthCheck(name: string, indicator: HealthCheckIndicator, isCritical: boolean = true, timeoutMs: number = 3000): void {
+        this.healthRegistry.register(name, indicator, isCritical, timeoutMs);
+    }
+
+    /**
+     * Removes a previously registered health check indicator.
+     * @param name Indicator name.
+     */
+    public unregisterHealthCheck(name: string): void {
+        this.healthRegistry.unregister(name);
     }
 
     /**

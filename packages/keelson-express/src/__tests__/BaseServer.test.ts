@@ -121,6 +121,29 @@ class SlowServer extends BaseServer {
     }
 }
 
+/**
+ * Races a promise against a deadline and **clears the timer** when the promise wins.
+ *
+ * 裸写 `Promise.race([p, new Promise((_, r) => setTimeout(r, 5000))])` 的问题是：
+ * p 先完成时那个 setTimeout 没人清，它会把事件循环多撑 5 秒，于是 Jest 打出
+ * "Jest did not exit one second after the test run has completed"。
+ */
+const withDeadline = async <T>(promise: Promise<T>, ms: number, message: string): Promise<T> => {
+    let timer: NodeJS.Timeout | undefined;
+    try {
+        return await Promise.race([
+            promise,
+            new Promise<never>((_, reject) => {
+                timer = setTimeout(() => reject(new Error(message)), ms);
+            })
+        ]);
+    } finally {
+        if (timer) {
+            clearTimeout(timer);
+        }
+    }
+};
+
 class TestServer extends BaseServer {
     public listenPort: number = 0;
     public failPostCreate: boolean = false;
@@ -338,16 +361,10 @@ describe('keelson-express comprehensive test suite', () => {
         await server.inFlight;      // 请求已进入处理函数
         const shutdown = server.shutdown();
 
-        const body = await Promise.race([
-            responded,
-            new Promise<string>((_, reject) => setTimeout(() => reject(new Error('in-flight request was cut off by shutdown')), 5000))
-        ]);
+        const body = await withDeadline(responded, 5000, 'in-flight request was cut off by shutdown');
         expect(body).toContain('"done":true');
 
-        await Promise.race([
-            shutdown,
-            new Promise((_, reject) => setTimeout(() => reject(new Error('shutdown() never resolved')), 5000))
-        ]);
+        await withDeadline(shutdown, 5000, 'shutdown() never resolved');
     }, 15000);
 
     test('contextRoot and app report a usable error before startup', async () => {
@@ -779,7 +796,7 @@ describe('keelson-express comprehensive test suite', () => {
 
         test('should register custom health check on BaseServer and expose HealthRoutes', async () => {
             const server = new TestServer();
-            ((server as any).healthRegistry as HealthCheckRegistry).register('custom', async () => ({ status: 'UP' }));
+            server.registerHealthCheck('custom', async () => ({ status: 'UP' }));
 
             const registry = (server as any).healthRegistry as HealthCheckRegistry;
             expect(registry.getRegisteredNames()).toContain('system');
@@ -797,6 +814,34 @@ describe('keelson-express comprehensive test suite', () => {
             expect(mockRes.statusCode).toBe(200);
             expect(mockRes.body.status).toBe('UP');
             expect(mockRes.body.checks.custom.status).toBe('UP');
+        });
+
+        test('registerHealthCheck is the public API the README documents', async () => {
+            // 两份 README 的核心示例一直是 this.registerHealthCheck(...)，而这个方法
+            // 此前不存在——照文档抄会编译不过，连本用例自己都只能强转到私有的
+            // healthRegistry 上绕过去。
+            const server = new TestServer();
+
+            server.registerHealthCheck('database', async () => ({ status: 'UP', details: { latencyMs: 5 } }));
+            server.registerHealthCheck('redis', async () => ({ status: 'DOWN' }), false);
+
+            const registry = (server as any).healthRegistry as HealthCheckRegistry;
+            expect(registry.getRegisteredNames()).toEqual(expect.arrayContaining(['system', 'database', 'redis']));
+
+            // 非关键组件 DOWN 只降级，不把整体判成 DOWN
+            const readiness = await registry.checkReadiness();
+            expect(readiness.status).toBe('DEGRADED');
+            expect(readiness.checks.database.status).toBe('UP');
+
+            server.unregisterHealthCheck('redis');
+            expect(registry.getRegisteredNames()).not.toContain('redis');
+            expect((await registry.checkReadiness()).status).toBe('UP');
+        });
+
+        test('registerHealthCheck rejects an invalid timeout the same way the registry does', () => {
+            const server = new TestServer();
+            expect(() => server.registerHealthCheck('x', async () => ({ status: 'UP' }), true, 0))
+                .toThrow(/Invalid timeoutMs/);
         });
     });
 });
