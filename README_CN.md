@@ -303,6 +303,7 @@ import 'reflect-metadata';
 | [查询条件](docs/prompts/SEARCH_CRITERIA_CN.md) | 动态查询构造器——基线契约、条件辅助方法、生成的 SQL |
 | [控制器](docs/prompts/CONTROLLER_CN.md) | CRUD 与搜索控制器、校验规则、参数映射 |
 | [数据校验](docs/prompts/BEAN_VALIDATION_CN.md) | 各类校验器、选项、自定义检查、多语言消息 |
+| [AI 提示词](docs/prompts/AI_PROMPTS_CN.md) | 可粘贴进 AI 会话的分层规则块，以及按层组织的提示词 |
 
 去掉 `_CN` 后缀即是英文版。
 

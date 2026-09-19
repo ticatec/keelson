@@ -16,13 +16,17 @@ Nine chapters, each one topic, each readable on its own. Start wherever your que
 | 8 | [Configuration and cache](08-config-and-cache.md) | Local YAML, Nacos, Consul, Redis |
 | 9 | [Before you go live](09-production-checklist.md) | The checklist, with the reason behind each line |
 
-## How this relates to the guides
+## How this relates to docs/prompts guides
 
 `docs/prompts/` holds the **reference guides** — every method, every option, every edge
 case of a single layer. This tutorial is the other half: why the pieces are shaped the way
-they are, and how they fit together. Each chapter links to the guide that goes deeper.
+they are, and how they fit together. Chapters covering core layers (DAO, Service, DI,
+Controllers, and Bean Validation) link to the guide that goes deeper.
 
 Read the tutorial to understand the framework. Keep the guides open while you write code.
+
+If you drive an AI assistant, `docs/prompts/AI_PROMPTS.md` has the layer rules as a block to
+paste, plus ready prompts per layer.
 
 ## Conventions in these chapters
 
@@ -32,4 +36,4 @@ incomplete, it says so.
 Examples use PostgreSQL placeholders (`$1`, `$2`). For MySQL and Dameng they are `?` —
 chapter 2 explains how to write SQL that does not care.
 
-Chapters assume you read [the project README](../README.md) first. It is short.
+Chapters assume you read [the project README](../README.md) first for an overall architectural view.

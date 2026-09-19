@@ -321,6 +321,7 @@ For the exhaustive detail of a single layer, the reference guides:
 | [Search Criteria](docs/prompts/SEARCH_CRITERIA.md) | The dynamic query builder — baseline contract, condition helpers, generated SQL |
 | [Controllers](docs/prompts/CONTROLLER.md) | CRUD and search controllers, validation rules, argument mapping |
 | [Bean Validation](docs/prompts/BEAN_VALIDATION.md) | Validator types, options, custom checks, localised messages |
+| [AI Prompts](docs/prompts/AI_PROMPTS.md) | The layer rules as a block to paste into an AI session, plus prompts per layer |
 
 Each guide has a Chinese counterpart with a `_CN` suffix.
 

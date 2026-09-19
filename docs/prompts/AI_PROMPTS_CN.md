@@ -1,0 +1,102 @@
+# Keelson AI 提示词
+
+中文 | [English](AI_PROMPTS.md)
+
+用来驱动 AI 助手按本框架的约定写代码，而不是让它自己发明一套。会话开始时先贴一次下面的
+规则块，然后贴你正在写的那一层的提示词。
+
+| # | 层 | 文件 |
+| --- | --- | --- |
+| 1 | 模块初始化与访问控制 | [AI_PROMPTS_1_MODULE_CN.md](AI_PROMPTS_1_MODULE_CN.md) |
+| 2 | Web 层 —— 路由与控制器 | [AI_PROMPTS_2_WEB_CN.md](AI_PROMPTS_2_WEB_CN.md) |
+| 3 | Service 层 —— 接口与实现 | [AI_PROMPTS_3_SERVICE_CN.md](AI_PROMPTS_3_SERVICE_CN.md) |
+| 4 | Repository 层 | [AI_PROMPTS_4_REPOSITORY_CN.md](AI_PROMPTS_4_REPOSITORY_CN.md) |
+| 5 | DAO 层 | [AI_PROMPTS_5_DAO_CN.md](AI_PROMPTS_5_DAO_CN.md) |
+
+## 规则块
+
+先贴这个。后面所有提示词都假定助手已经拿到它。
+
+```
+你正在为一个基于 Keelson 框架（@ticatec/keelson-express、@ticatec/keelson-core）的应用
+编写 TypeScript 代码。严格遵守以下规则——它们是这个代码库的约定，不是建议。
+
+分层 —— 四层，每层只调用紧邻的下一层：
+
+  Web（routes + controller） -> Service -> Repository -> DAO -> 数据库
+
+  控制器绝不调用 repository 或 DAO。
+  service 绝不调用 DAO。
+  DAO 绝不调用另一个 DAO，也绝不调用 repository。
+
+各类工作归属：
+
+  Web 层        边界验证——全部。必填、最大/最小值、字符串长度、格式、枚举取值、
+                日期范围。用 @ticatec/bean-validator 的规则声明在控制器上。
+                下游任何一层都不再重复验证输入的形状。
+                另外：把请求映射成 service 的入参，仅此而已。
+
+  Service       业务逻辑，以及事务边界（@Transaction）。
+                以接口声明契约；由一个 extends CommonService 并 implements 该接口的
+                类实现。
+                不写 SQL。不碰 req/res。不做输入形状的验证。
+
+  Repository    service 与 DAO 之间的桥梁。做简单的实体检查：是否存在、状态是否可用、
+                是否属于这个租户。用一个或多个 DAO 装配出领域实体。缓存归它管——
+                用到 Redis 就在这一层用，不在 service，也不在 DAO。
+
+  DAO           SQL，仅此而已。一张表的量。不含业务规则。
+
+异常 —— 任何一层都可以抛，框架把类型映射成状态码：
+
+  IllegalParameterError(msg)      400    UnauthenticatedError()          401
+  InsufficientPermissionError()   403    ActionNotFoundError()           404
+  TimeoutError()                  408    ConflictError(msg)              409
+  TooManyRequestsError()          429    AppError(msg?)                  500
+
+  绝不返回错误对象或 { success: false } 这样的包装。直接抛。
+  记录存在但属于别的租户时，抛 ActionNotFoundError 而不是 InsufficientPermissionError
+  ——403 等于确认了这条记录存在。
+
+装配：
+
+  类在 BaseServer.beforeStart() 里用 beanFactory（或用 Beans 注册懒加载器）按名字注册。
+  层内部用 this.getRepositoryInstance<T>(name) 或 this.getDAOInstance<T>(name) 解析，
+  写成 private getter，不要写成字段。
+
+日志：
+
+  用每个基类都提供的 this.logger。绝不用 console.*。
+  异常作为上下文参数传入：logger.error(err, 'message')，绝不是 { err }。
+  绝不记录口令、token、绑定参数值、请求体、用户标识。
+
+TypeScript：
+
+  strict 开启。ESM + NodeNext，所以相对导入即使源文件是 .ts 也要写 .js 后缀。
+  reflect-metadata 在入口文件最前面导入一次。
+  纯类型导入用 `import type`——isolatedModules 开启，尤其是 express 的 `Request`
+  必须用 type-only 导入，因为它与一个 DOM 全局同名。
+  Express 5 里路由参数的类型是 `string | string[]`，用 String(...) 包一层，不要断言。
+
+表名、列名、需求里没提到的字段，先问，不要自己编。
+```
+
+## 怎么用
+
+每个分层文件里的提示词是按实际写代码的顺序排的：先搭骨架，再处理具体情形。它们是可以
+原样粘贴的——只有 `<尖括号>` 里的占位符需要你替换。
+
+这些提示词是刻意"过度指定"的。只给一句"帮我写个商品的 service"，助手会产出一坨看着
+像那么回事、但把上面每一条约定都无视掉的代码；给出接口名、方法签名和分层规则，
+它产出的才是你能直接合并的东西。
+
+## 怎么验收
+
+三个检查能拦住助手在这里犯的大部分错误：
+
+1. **strict 下能编译吗？** 违反约定的写法大多同时也是类型错误——`createBean` 漏了 `!`、
+   裸用 `req.params.id`、service 返回了错误的形状。
+2. **有没有哪一层越过下一层？** 在生成的文件里搜一下 service 里有没有 `DAO`、
+   控制器里有没有 `getDBConnection`。
+3. **Web 层以下有没有验证？** service 里出现 `if (!data.name) throw`，说明助手没有相信
+   第 2 条规则。把它删掉，改成控制器上的规则。
