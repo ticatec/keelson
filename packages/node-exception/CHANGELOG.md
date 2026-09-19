@@ -41,7 +41,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   while a client sending only `*/*` still gets JSON.
 - **`handleError` could throw `ERR_HTTP_HEADERS_SENT` out of the error handler.** The
   guard for an already-started response also required a callable `next`; callers that
-  invoke the handler directly pass `null` (common-express-server's `RouterHelper`
+  invoke the handler directly pass `null` (keelson-express's `RouterHelper`
   does), so they fell through to `res.status()` and crashed the process. The guard now
   returns regardless, and delegates to `next` only when there is one.
 - `handleError` delegates to `next(err)` when the response has already started,

@@ -1,0 +1,110 @@
+{
+  "name": "@ticatec/keelson-pg",
+  "version": "1.0.0",
+  "description": "Production-ready PostgreSQL driver for Node.js with connection pooling, automatic boolean type conversion, and seamless integration with @ticatec/keelson-core interfaces.",
+  "type": "module",
+  "main": "./lib/cjs/index.js",
+  "module": "./lib/esm/index.js",
+  "types": "./lib/cjs/index.d.ts",
+  "sideEffects": false,
+  "exports": {
+    ".": {
+      "import": {
+        "types": "./lib/esm/index.d.ts",
+        "default": "./lib/esm/index.js"
+      },
+      "require": {
+        "types": "./lib/cjs/index.d.ts",
+        "default": "./lib/cjs/index.js"
+      }
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "lib/**/*",
+    "README.md",
+    "README_CN.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "clean": "node -e \"require('fs').rmSync('lib',{recursive:true,force:true})\"",
+    "build:cjs": "tsc -p tsconfig.cjs.json",
+    "build:esm": "tsc -p tsconfig.esm.json",
+    "copy:pkg": "node -e \"const fs=require('fs');fs.copyFileSync('assets/cjs-package.json','lib/cjs/package.json');fs.copyFileSync('assets/esm-package.json','lib/esm/package.json')\"",
+    "build": "pnpm clean && pnpm build:cjs && pnpm build:esm && pnpm copy:pkg",
+    "prebuild": "pnpm lint",
+    "prepublishOnly": "pnpm typecheck && pnpm build",
+    "publish:public": "pnpm publish --access public --no-git-checks",
+    "test": "jest",
+    "lint": "eslint 'src/**/*.ts'",
+    "typecheck": "tsc -p tsconfig.cjs.json --noEmit && tsc -p tsconfig.esm.json --noEmit && tsc -p tsconfig.test.json --noEmit"
+  },
+  "keywords": [
+    "postgresql",
+    "postgres",
+    "pg",
+    "database",
+    "db",
+    "sql",
+    "connection",
+    "pool",
+    "connection-pool",
+    "transaction",
+    "typescript",
+    "nodejs",
+    "orm",
+    "query-builder",
+    "data-access",
+    "data-access-layer",
+    "dao",
+    "type-safe",
+    "boolean-conversion",
+    "ticatec",
+    "esm",
+    "commonjs",
+    "dual-module"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ticatec/keelson.git",
+    "directory": "packages/keelson-pg"
+  },
+  "author": {
+    "name": "Henry Feng",
+    "email": "huili.f@gmail.com",
+    "url": "https://github.com/ticatec"
+  },
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/ticatec/keelson/issues"
+  },
+  "homepage": "https://github.com/ticatec/keelson/tree/main/packages/keelson-pg",
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=6.0.0"
+  },
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org/"
+  },
+  "peerDependencies": {
+    "@ticatec/keelson-core": ">=1.0.0",
+    "pg": "^8.8.0"
+  },
+  "devDependencies": {
+    "@ticatec/logger-api": "workspace:*",
+    "@ticatec/keelson-core": "workspace:*",
+    "@types/jest": "^29.5.14",
+    "@types/node": "^22.8.6",
+    "@types/pg": "^8.10.0",
+    "@typescript-eslint/eslint-plugin": "^7.18.0",
+    "@typescript-eslint/parser": "^7.18.0",
+    "eslint": "^8.57.0",
+    "jest": "^29.7.0",
+    "pg": "^8.8.0",
+    "pino": "^9.5.0",
+    "reflect-metadata": "^0.2.2",
+    "ts-jest": "^29.2.5",
+    "typescript": "^5.0.0"
+  }
+}

@@ -42,7 +42,7 @@ importers:
         specifier: ^5.0.0
         version: 5.9.3
 
-  packages/common-express-server:
+  packages/keelson-express:
     devDependencies:
       '@ticatec/bean-validator':
         specifier: workspace:*
@@ -50,9 +50,9 @@ importers:
       '@ticatec/logger-api':
         specifier: workspace:*
         version: link:../logger-api
-      '@ticatec/node-common-library':
+      '@ticatec/keelson-core':
         specifier: workspace:*
-        version: link:../node-common-library
+        version: link:../keelson-core
       '@ticatec/node-exception':
         specifier: workspace:*
         version: link:../node-exception
@@ -136,14 +136,14 @@ importers:
         specifier: ^5.0.0
         version: 5.9.3
 
-  packages/dm-common-library:
+  packages/keelson-dm:
     devDependencies:
       '@ticatec/logger-api':
         specifier: workspace:*
         version: link:../logger-api
-      '@ticatec/node-common-library':
+      '@ticatec/keelson-core':
         specifier: workspace:*
-        version: link:../node-common-library
+        version: link:../keelson-core
       '@types/jest':
         specifier: ^29.5.14
         version: 29.5.14
@@ -235,14 +235,14 @@ importers:
         specifier: ^5.0.0
         version: 5.9.3
 
-  packages/mysql-common-library:
+  packages/keelson-mysql:
     devDependencies:
       '@ticatec/logger-api':
         specifier: workspace:*
         version: link:../logger-api
-      '@ticatec/node-common-library':
+      '@ticatec/keelson-core':
         specifier: workspace:*
-        version: link:../node-common-library
+        version: link:../keelson-core
       '@types/jest':
         specifier: ^29.5.14
         version: 29.5.14
@@ -274,7 +274,7 @@ importers:
         specifier: ^5.0.0
         version: 5.9.3
 
-  packages/node-common-library:
+  packages/keelson-core:
     dependencies:
       reflect-metadata:
         specifier: ^0.2.2
@@ -350,14 +350,14 @@ importers:
         specifier: ^5.6.0
         version: 5.9.3
 
-  packages/pg-common-library:
+  packages/keelson-pg:
     devDependencies:
       '@ticatec/logger-api':
         specifier: workspace:*
         version: link:../logger-api
-      '@ticatec/node-common-library':
+      '@ticatec/keelson-core':
         specifier: workspace:*
-        version: link:../node-common-library
+        version: link:../keelson-core
       '@types/jest':
         specifier: ^29.5.14
         version: 29.5.14

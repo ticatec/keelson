@@ -87,7 +87,7 @@ describe('handleError', () => {
     });
 
     // Callers that invoke the handler directly pass `null` for next
-    // (common-express-server's RouterHelper does). Falling through to write a
+    // (keelson-express's RouterHelper does). Falling through to write a
     // response here throws ERR_HTTP_HEADERS_SENT out of the error handler itself.
     it.each([[null], [undefined]])('writes nothing when headers are sent and next is %p', (next) => {
         const {container, sent} = makeContainer();
