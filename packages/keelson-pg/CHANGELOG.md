@@ -76,6 +76,10 @@ npm with a pointer here.
 
 ### Changed
 
+- Both READMEs gained the Contributing / development-setup section the rest of the
+  monorepo carries, including the note that the workspace is pnpm-only (`workspace:*` is
+  not a protocol npm implements, so `npm install` fails with `EUNSUPPORTEDPROTOCOL`).
+
 - `prepublishOnly` now runs the test suite, matching the other two drivers.
 
 - The four transaction-lifecycle log calls pass a context object first

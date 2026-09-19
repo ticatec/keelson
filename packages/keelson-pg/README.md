@@ -81,6 +81,40 @@ try {
 | `PgDBConnection` | class | Extend it to adjust a dialect detail. |
 | `PostConnection` | type | `((client: PoolClient) => Promise<void>) | null` |
 
+## Contributing
+
+This package lives in the [Keelson](https://github.com/ticatec/keelson) monorepo. Issues
+and pull requests are welcome there.
+
+### Development Setup
+
+```bash
+git clone https://github.com/ticatec/keelson.git
+cd keelson
+pnpm install
+cd packages/keelson-pg
+
+pnpm build       # Build both CJS and ESM outputs (lints first)
+pnpm test        # Run the test suite
+pnpm typecheck   # Type-check all three configurations
+pnpm lint        # Lint only
+```
+
+From the monorepo root, `pnpm verify` builds, type-checks and tests every package.
+
+The workspace is pnpm-only: the dependencies here are declared with `workspace:*`, a
+protocol npm does not understand, so `npm install` fails outright with
+`EUNSUPPORTEDPROTOCOL`.
+
+The test suite mocks `pg`, so a clone builds and tests without a PostgreSQL server to
+connect to.
+
+### Publishing
+
+```bash
+pnpm publish:public   # runs typecheck, test and build first, via prepublishOnly
+```
+
 ## License
 
 MIT © [Ticatec](https://github.com/ticatec)

@@ -20,7 +20,7 @@
 ## 安装
 
 ```bash
-npm install @ticatec/keelson-dm
+pnpm add @ticatec/keelson-dm
 ```
 
 ### Peer Dependencies
@@ -28,7 +28,7 @@ npm install @ticatec/keelson-dm
 请确保项目中已安装对应对等依赖：
 
 ```bash
-npm install dmdb @ticatec/keelson-core
+pnpm add dmdb @ticatec/keelson-core
 ```
 
 ## 快速上手
@@ -151,6 +151,37 @@ async function performDatabaseOperations() {
 **绑定参数一律不写入日志**，只有 SQL 文本与参数个数。确需排查时设置
 `KEELSON_LOG_SQL_PARAMS=true`；默认关闭，不应出现在生产环境。
 连接池配置摘要不含 `password` 与 `connectString`。
+
+## 贡献
+
+本包位于 [Keelson](https://github.com/ticatec/keelson) monorepo，欢迎在该仓库提交 issue 与 PR。
+
+### 开发设置
+
+```bash
+git clone https://github.com/ticatec/keelson.git
+cd keelson
+pnpm install
+cd packages/keelson-dm
+
+pnpm build       # 同时构建 CJS 与 ESM 产物（构建前先跑 lint）
+pnpm test        # 运行测试
+pnpm typecheck   # 对三套配置做类型检查
+pnpm lint        # 仅 lint
+```
+
+在 monorepo 根目录执行 `pnpm verify`，会对全部包做构建、类型检查与测试。
+
+工作区只支持 pnpm：这里的依赖用 `workspace:*` 声明，npm 不认识这个协议，
+`npm install` 会直接以 `EUNSUPPORTEDPROTOCOL` 失败。
+
+测试套件对 `dmdb` 做了 mock，因此克隆后无需可连接的达梦服务也能构建与跑测试。
+
+### 发布
+
+```bash
+pnpm publish:public   # prepublishOnly 会先跑 typecheck、test 与 build
+```
 
 ## 授权协议
 

@@ -20,7 +20,7 @@ A Dameng (达梦 8) database connection driver for `@ticatec/keelson-core`, prov
 ## Installation
 
 ```bash
-npm install @ticatec/keelson-dm
+pnpm add @ticatec/keelson-dm
 ```
 
 ### Peer Dependencies
@@ -28,7 +28,7 @@ npm install @ticatec/keelson-dm
 Make sure to install the required peer dependencies:
 
 ```bash
-npm install dmdb @ticatec/keelson-core
+pnpm add dmdb @ticatec/keelson-core
 ```
 
 ## Quick Start
@@ -154,6 +154,40 @@ at `info`. **Bind parameters are never written to the log** - only the statement
 parameter count. When tracing a problem needs the values, set `KEELSON_LOG_SQL_PARAMS=true`;
 it is off by default and belongs nowhere near production. The pool configuration summary never
 carries `password` or `connectString`.
+
+## Contributing
+
+This package lives in the [Keelson](https://github.com/ticatec/keelson) monorepo. Issues
+and pull requests are welcome there.
+
+### Development Setup
+
+```bash
+git clone https://github.com/ticatec/keelson.git
+cd keelson
+pnpm install
+cd packages/keelson-dm
+
+pnpm build       # Build both CJS and ESM outputs (lints first)
+pnpm test        # Run the test suite
+pnpm typecheck   # Type-check all three configurations
+pnpm lint        # Lint only
+```
+
+From the monorepo root, `pnpm verify` builds, type-checks and tests every package.
+
+The workspace is pnpm-only: the dependencies here are declared with `workspace:*`, a
+protocol npm does not understand, so `npm install` fails outright with
+`EUNSUPPORTEDPROTOCOL`.
+
+The test suite mocks `dmdb`, so a clone builds and tests without a Dameng server to
+connect to.
+
+### Publishing
+
+```bash
+pnpm publish:public   # runs typecheck, test and build first, via prepublishOnly
+```
 
 ## License
 

@@ -73,6 +73,11 @@ npm with a pointer here.
 
 ### Changed
 
+- Installation examples use `pnpm add`, and both READMEs gained the Contributing /
+  development-setup section the rest of the monorepo carries, including the note that the
+  workspace is pnpm-only (`workspace:*` is not a protocol npm implements, so `npm install`
+  fails with `EUNSUPPORTEDPROTOCOL`).
+
 - **`strict` is on.** The build configs (`tsconfig.cjs.json` / `tsconfig.esm.json`)
   did not extend `tsconfig.json` - they were standalone - so nothing in the base
   config ever applied to what shipped: not `strict`, not `skipLibCheck`, not
