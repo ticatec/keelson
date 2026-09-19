@@ -1,6 +1,6 @@
 {
   "name": "@ticatec/dm-common-library",
-  "version": "3.3.0",
+  "version": "4.0.0",
   "description": "Dameng (DM8) database driver implementation for @ticatec/node-common-library framework with connection pooling and transaction support",
   "type": "module",
   "main": "./lib/cjs/index.js",
@@ -72,7 +72,7 @@
     "npm": ">=6.0.0"
   },
   "peerDependencies": {
-    "@ticatec/node-common-library": ">=3.3.0",
+    "@ticatec/node-common-library": ">=4.0.0",
     "dmdb": "^1.0.52452"
   },
   "dependencies": {},

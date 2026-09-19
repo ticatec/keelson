@@ -17,9 +17,9 @@ keelson（龙骨翼板）是铺在船体龙骨之上、纵贯全船的内构梁�
 | 包 | 版本 | 职责 |
 | --- | --- | --- |
 | [common-express-server](packages/common-express-server) | 2.0.1 | Express 服务端骨架 —— `BaseServer`、控制器、路由、健康检查、多租户、鉴权上下文 |
-| [node-common-library](packages/node-common-library) | 4.0.0 | 四层数据访问 —— `CommonDAO` / `CommonRepository` / `CommonService`、`@Transaction`、`BeanFactory`、`CommonSearchCriteria`、分页 |
-| [bean-validator](packages/bean-validator) | 1.0.2 | 声明式 DTO 校验与数据清洗 |
-| [node-exception](packages/node-exception) | 2.0.0 | 标准化的 Express 错误处理中间件 |
+| [node-common-library](packages/node-common-library) | 4.1.0 | 四层数据访问 —— `CommonDAO` / `CommonRepository` / `CommonService`、`@Transaction`、`BeanFactory`、`CommonSearchCriteria`、分页 |
+| [bean-validator](packages/bean-validator) | 1.1.0 | 声明式 DTO 校验与数据清洗 |
+| [node-exception](packages/node-exception) | 2.1.0 | 标准化的 Express 错误处理中间件 |
 
 ### 数据库驱动
 
@@ -27,9 +27,9 @@ keelson（龙骨翼板）是铺在船体龙骨之上、纵贯全船的内构梁�
 
 | 包 | 版本 | 数据库 |
 | --- | --- | --- |
-| [pg-common-library](packages/pg-common-library) | 3.3.0 | PostgreSQL |
-| [mysql-common-library](packages/mysql-common-library) | 3.3.0 | MySQL |
-| [dm-common-library](packages/dm-common-library) | 3.3.0 | 达梦 DM8 |
+| [pg-common-library](packages/pg-common-library) | 4.0.0 | PostgreSQL |
+| [mysql-common-library](packages/mysql-common-library) | 4.0.0 | MySQL |
+| [dm-common-library](packages/dm-common-library) | 4.0.0 | 达梦 DM8 |
 
 ### 基础设施
 
@@ -39,8 +39,8 @@ keelson（龙骨翼板）是铺在船体龙骨之上、纵贯全船的内构梁�
 | --- | --- | --- |
 | [logger-api](packages/logger-api) | 1.0.0 | 零依赖日志契约 —— 包面向它写日志，应用注入具体实现 |
 | [logger-pino](packages/logger-pino) | 1.0.0 | `logger-api` 的可选 pino 适配器，提供 appender 与分类级别 |
-| [config-loader](packages/config-loader) | 1.0.0 | YAML / JSON 配置加载 |
-| [redis-client](packages/redis-client) | 1.1.0 | ioredis 封装，含单例管理与缓存数据辅助 |
+| [config-loader](packages/config-loader) | 1.1.0 | YAML / JSON 配置加载 |
+| [redis-client](packages/redis-client) | 1.2.0 | ioredis 封装，含单例管理与缓存数据辅助 |
 
 ## 架构
 

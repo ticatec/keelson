@@ -1,6 +1,6 @@
 {
   "name": "@ticatec/mysql-common-library",
-  "version": "3.3.0",
+  "version": "4.0.0",
   "description": "MySQL database connection implementation for @ticatec/node-common-library framework with connection pooling and transaction support",
   "type": "module",
   "main": "./lib/cjs/index.js",
@@ -73,7 +73,7 @@
     "npm": ">=6.0.0"
   },
   "peerDependencies": {
-    "@ticatec/node-common-library": ">=3.3.0",
+    "@ticatec/node-common-library": ">=4.0.0",
     "mysql2": "^3.9.0"
   },
   "dependencies": {},
