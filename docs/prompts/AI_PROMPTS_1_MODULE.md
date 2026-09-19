@@ -68,8 +68,11 @@ Do not register any beans yet. Do not add routes yet.
 ```
 Add bean registration to <Orders>Server.beforeStart().
 
-Register these, in this order, using Beans.getInstance() with lazy loaders so each module
-is imported only when first used:
+Register these, in this order, using Beans.getInstance() with dynamic-import loaders. Note
+what is deferred and what is not: beans.load() awaits every loader in one pass, so all the
+modules are imported and registered at startup. What stays lazy is instantiation — the
+class is only constructed the first time a bean is actually resolved. The loaders keep the
+wiring out of the entry file's import graph, which is what breaks module-level cycles:
 
   <OrderDAO>          -> ./dao/<OrderDAO>.js
   <OrderRepository>   -> ./repository/<OrderRepository>.js
@@ -91,7 +94,9 @@ result as the `<x-auth-user>` request header, URL-encoded JSON.
 
 1. Define the application's user model in src/types/user-registry.d.ts:
 
-   interface AppUser {
+   import type { CommonUser } from '@ticatec/keelson-express';
+
+   interface AppUser extends CommonUser {
        accountCode: string;
        name: string;
        tenantCode: string;
@@ -101,6 +106,10 @@ result as the `<x-auth-user>` request header, URL-encoded JSON.
 
    Register it by augmenting CustomUserRegistry from '@ticatec/keelson-express', so that
    req.user and getLoggedUser(req) are typed as AppUser everywhere without casts.
+
+   RegisteredUser resolves through `U extends CommonUser ? U : LoggedUser`. Extend
+   CommonUser explicitly so the declared intent is what the type checks, rather than
+   relying on the structural match.
 
 2. If the header name is not the default `user`, subclass HeaderUserResolver and override
    userHeader() only — leave decoding and the language header alone.

@@ -65,7 +65,10 @@
 ```
 在 <Orders>Server.beforeStart() 里加上 bean 注册。
 
-用 Beans.getInstance() 配合懒加载器按以下顺序注册，这样每个模块只在首次使用时被导入：
+用 Beans.getInstance() 配合动态 import 的加载器按以下顺序注册。注意什么被推迟了、
+什么没有：beans.load() 会一趟把每个加载器都 await 掉，所以全部模块在启动时就已导入并
+注册完毕。真正"惰性"的是实例化——类要等到某个 bean 第一次被解析时才构造。加载器的作用
+是把装配关系挡在入口文件的导入图之外，模块级的循环依赖正是这样被打断的：
 
   <OrderDAO>          -> ./dao/<OrderDAO>.js
   <OrderRepository>   -> ./repository/<OrderRepository>.js
@@ -87,7 +90,9 @@
 
 1. 在 src/types/user-registry.d.ts 里定义应用的用户模型：
 
-   interface AppUser {
+   import type { CommonUser } from '@ticatec/keelson-express';
+
+   interface AppUser extends CommonUser {
        accountCode: string;
        name: string;
        tenantCode: string;
@@ -97,6 +102,9 @@
 
    通过增强 '@ticatec/keelson-express' 的 CustomUserRegistry 注册它，使得 req.user 与
    getLoggedUser(req) 在任何地方都是 AppUser 类型，不需要任何断言。
+
+   RegisteredUser 的解析路径是 `U extends CommonUser ? U : LoggedUser`。显式继承
+   CommonUser，让类型检查的是声明出来的意图，而不是靠结构匹配碰巧成立。
 
 2. 如果头名不是默认的 `user`，继承 HeaderUserResolver 并**只**覆写 userHeader()——
    解码与语言头保持原样。

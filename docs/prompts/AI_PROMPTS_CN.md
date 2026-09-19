@@ -12,6 +12,7 @@
 | 3 | Service 层 —— 接口与实现 | [AI_PROMPTS_3_SERVICE_CN.md](AI_PROMPTS_3_SERVICE_CN.md) |
 | 4 | Repository 层 | [AI_PROMPTS_4_REPOSITORY_CN.md](AI_PROMPTS_4_REPOSITORY_CN.md) |
 | 5 | DAO 层 | [AI_PROMPTS_5_DAO_CN.md](AI_PROMPTS_5_DAO_CN.md) |
+| 附 | 动态查询与分页条件构建 | [SEARCH_CRITERIA_CN.md](SEARCH_CRITERIA_CN.md) |
 
 ## 规则块
 
@@ -39,6 +40,9 @@
   Service       业务逻辑，以及事务边界（@Transaction）。
                 以接口声明契约；由一个 extends CommonService 并 implements 该接口的
                 类实现。
+                每一个会碰数据库的方法都要加装饰器——写用 @Transaction()，
+                读用 @Transaction(Propagation.NONE)。不加就意味着上下文里没有连接，
+                DAO 会在运行时抛异常。
                 不写 SQL。不碰 req/res。不做输入形状的验证。
 
   Repository    service 与 DAO 之间的桥梁。做简单的实体检查：是否存在、状态是否可用、
@@ -63,6 +67,31 @@
   类在 BaseServer.beforeStart() 里用 beanFactory（或用 Beans 注册懒加载器）按名字注册。
   层内部用 this.getRepositoryInstance<T>(name) 或 this.getDAOInstance<T>(name) 解析，
   写成 private getter，不要写成字段。
+
+基类来自哪个包 —— 不要猜导入：
+
+  @ticatec/keelson-core      CommonService、CommonRepository、CommonDAO、CommonSearchCriteria、
+                             Transaction、Propagation、TransactionManager、beanFactory、Beans、
+                             DBManager、getLogger；类型 PaginationList、QuickSearchResult、
+                             InsertResult、UpdateResult、DBConnection
+  @ticatec/keelson-express   Controller、BaseController、CommonController、
+                             CommonSearchController、CommonRoutes、AuthenticatedRoutes、
+                             routerHelper、UserResolver、HeaderUserResolver、
+                             setUserResolver、getUserResolver、AppConf、
+                             HealthCheckRegistry、CommonProcessor、ProcessorManager；
+                             类型 LoggedUser、CommonUser、CustomUserRegistry、
+                             RegisteredUser、RestfulFunction
+  @ticatec/bean-validator    StringValidator、NumberValidator、DateValidator、
+                             BooleanValidator、EnumValidator、ObjectValidator、ArrayValidator、
+                             CommonValidator、setLocaleMessage；类型 ValidationRules
+  @ticatec/node-exception    上面 ERRORS 表里的每一种异常
+
+  其中两个是默认导出，不是具名导出：
+      import BaseServer from '@ticatec/keelson-express';
+      import beanValidator from '@ticatec/bean-validator';
+
+  每个包只有一个入口。没有深层子路径导入——
+  '@ticatec/keelson-express/common/BaseController' 解析不了。
 
 JSDOC —— 必须写，不是可选：
 
@@ -111,6 +140,12 @@ TypeScript：
   Express 5 里路由参数的类型是 `string | string[]`，用 String(...) 包一层，不要断言。
 
 表名、列名、需求里没提到的字段，先问，不要自己编。
+
+占位符：
+
+  `<尖括号>` 里的是占位符。每一个都要换成真实的实体名并使用正确的大小写——
+  <Order>ServiceImpl 写成 OrderServiceImpl，<order> 写成 order。
+  产出的代码里不允许出现不是 TypeScript 泛型、也不是比较运算符的 `<` 或 `>`。
 ```
 
 ## 怎么用

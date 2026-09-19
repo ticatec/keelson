@@ -13,6 +13,7 @@ session, then the prompt for the layer you are working on.
 | 3 | Service layer — interface and implementation | [AI_PROMPTS_3_SERVICE.md](AI_PROMPTS_3_SERVICE.md) |
 | 4 | Repository layer | [AI_PROMPTS_4_REPOSITORY.md](AI_PROMPTS_4_REPOSITORY.md) |
 | 5 | DAO layer | [AI_PROMPTS_5_DAO.md](AI_PROMPTS_5_DAO.md) |
+| A | Dynamic query and pagination criteria | [SEARCH_CRITERIA.md](SEARCH_CRITERIA.md) |
 
 ## The rules block
 
@@ -42,6 +43,9 @@ WHERE EACH KIND OF WORK BELONGS:
   Service          Business logic, and the transaction boundary (@Transaction).
                    Declared as an interface; implemented by a class that extends
                    CommonService and implements that interface.
+                   EVERY method that reaches the database is decorated — @Transaction()
+                   to write, @Transaction(Propagation.NONE) to read. Undecorated means
+                   no connection in the context, which is a runtime throw in the DAO.
                    No SQL. No req/res. No validation of input shape.
 
   Repository       The bridge between service and DAO. Simple entity checks: does it
@@ -67,6 +71,31 @@ WIRING:
   Classes are registered by name with beanFactory (or Beans for lazy loaders) in
   BaseServer.beforeStart(). Inside a layer, resolve with this.getRepositoryInstance<T>(name)
   or this.getDAOInstance<T>(name), declared as a private getter, never a field.
+
+WHERE THE BASE CLASSES COME FROM — do not guess an import:
+
+  @ticatec/keelson-core      CommonService, CommonRepository, CommonDAO, CommonSearchCriteria,
+                             Transaction, Propagation, TransactionManager, beanFactory, Beans,
+                             DBManager, getLogger; types PaginationList, QuickSearchResult,
+                             InsertResult, UpdateResult, DBConnection
+  @ticatec/keelson-express   Controller, BaseController, CommonController,
+                             CommonSearchController, CommonRoutes, AuthenticatedRoutes,
+                             routerHelper, UserResolver, HeaderUserResolver,
+                             setUserResolver, getUserResolver, AppConf,
+                             HealthCheckRegistry, CommonProcessor, ProcessorManager;
+                             types LoggedUser, CommonUser, CustomUserRegistry,
+                             RegisteredUser, RestfulFunction
+  @ticatec/bean-validator    StringValidator, NumberValidator, DateValidator,
+                             BooleanValidator, EnumValidator, ObjectValidator, ArrayValidator,
+                             CommonValidator, setLocaleMessage; type ValidationRules
+  @ticatec/node-exception    every error type in the ERRORS table above
+
+  Two of them are DEFAULT exports, not named ones:
+      import BaseServer from '@ticatec/keelson-express';
+      import beanValidator from '@ticatec/bean-validator';
+
+  Each package has exactly one entry point. There are no deep subpath imports —
+  '@ticatec/keelson-express/common/BaseController' does not resolve.
 
 JSDOC — required, not optional:
 
@@ -119,6 +148,13 @@ TYPESCRIPT:
   rather than casting.
 
 Ask before inventing a table name, a column name, or a field that was not specified.
+
+PLACEHOLDERS:
+
+  Names in <angle brackets> are placeholders. Replace every one with the real entity name
+  in the right casing — <Order>ServiceImpl becomes OrderServiceImpl, <order> becomes order.
+  The generated code must not contain a '<' or '>' that is not a TypeScript generic or a
+  comparison operator.
 ```
 
 ## How to use these

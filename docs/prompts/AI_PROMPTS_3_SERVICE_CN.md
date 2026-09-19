@@ -73,8 +73,21 @@ beanFactory.createBean<OrderService>('OrderService')!
 
 ## 规则
 
-**每个会写数据的公开方法都带 `@Transaction()`。** 边界就是 service 方法，而且有且只有
-一个地方可能是它。只读方法不需要，除非多次读取必须看到同一个快照。
+**每个会碰数据库的公开方法都带 `@Transaction` 装饰器——只读的也要。** 边界就是 service
+方法，而且有且只有一个地方可能是它。
+
+写操作，以及多次读取必须看到同一个快照的读操作，用 `@Transaction()`。普通的读操作用
+`@Transaction(Propagation.NONE)`——它借一条连接给这个方法、用完还回去，中间不执行
+`BEGIN`。
+
+读操作唯一**不能**做的，是什么都不加。`CommonDAO` 不从池里自取连接，它从环境上下文里读；
+没有上下文，这个方法之下的每一条查询都会在运行时抛：
+
+```
+No database connection available. Ensure you are inside a @Transaction or using TransactionManager.execute().
+```
+
+建立这个上下文的正是装饰器。`NONE` 是"要连接、不要事务"的说法——它不是优化，是底线。
 
 **靠抛异常回滚。** 不写 `try`/`catch`/`rollback`。被装饰方法之下任何位置抛出的异常都会
 让整个事务回滚——包括那个同时也是 400 的 `IllegalParameterError`。
@@ -110,7 +123,8 @@ beanFactory.createBean<OrderService>('OrderService')!
    并 implements <Order>Service：
 
    - 一个用 getRepositoryInstance 解析 <Order>Repository 的 private getter
-   - createNew、update、cancel 上加 @Transaction()；search 不加
+   - createNew、update、cancel 上加 @Transaction()；search 上加
+     @Transaction(Propagation.NONE)——绝不能不加，否则 DAO 找不到连接
    - 业务规则：
      * createNew：该编码在本租户内不得已存在；状态置为 ACTIVE
      * update：订单必须存在、属于调用者的租户、且处于 DRAFT 状态
@@ -202,7 +216,8 @@ beanFactory.createBean<OrderService>('OrderService')!
 - 入参是控制器从 req.query 原样传来的 criteria 对象
 - 它构造一个 CommonSearchCriteria 子类并交给 repository
 - 返回 PaginationList
-- 不加 @Transaction()——这是读操作
+- 加 @Transaction(Propagation.NONE)——读操作要连接但不要事务。不能不加：CommonDAO 是从
+  装饰器建立的上下文里解析连接的，没有上下文，查询会在运行时抛异常。
 
 同时生成查询条件类：src/criteria/<Order>SearchCriteria.ts，把查询字段
 <status、customerId、createdAt 日期区间、覆盖 code 与 remark 的关键字>映射成条件，

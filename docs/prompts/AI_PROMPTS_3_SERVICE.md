@@ -75,9 +75,24 @@ when you want to know what a module can do, without the body of every method in 
 
 ## The rules
 
-**Every public method that writes carries `@Transaction()`.** The boundary is the service
-method, and there is exactly one place it can be. A read-only method does not need one
-unless several reads must see the same snapshot.
+**Every public method that touches the database carries a `@Transaction` decorator —
+including the read-only ones.** The boundary is the service method, and there is exactly one
+place it can be.
+
+Writes, and reads that must see one consistent snapshot, take `@Transaction()`. A plain read
+takes `@Transaction(Propagation.NONE)`, which lends the method a connection and returns it
+afterwards without a `BEGIN`.
+
+What a read may **not** do is go undecorated. `CommonDAO` does not take a connection from the
+pool; it reads one out of the ambient context, and with no context every query below the
+method throws at runtime:
+
+```
+No database connection available. Ensure you are inside a @Transaction or using TransactionManager.execute().
+```
+
+The decorator is what establishes that context. `NONE` is how you say "a connection, no
+transaction" — it is not an optimisation, it is the minimum.
 
 **Throw to roll back.** No `try`/`catch`/`rollback`. An error thrown anywhere under the
 decorated method rolls the whole thing back, including an `IllegalParameterError` that also
@@ -115,7 +130,8 @@ Produce two files.
    and implementing <Order>Service:
 
    - a private getter resolving <Order>Repository via getRepositoryInstance
-   - @Transaction() on createNew, update and cancel; none on search
+   - @Transaction() on createNew, update and cancel; @Transaction(Propagation.NONE) on
+     search — never undecorated, or the DAO has no connection to find
    - business rules:
      * createNew: the code must not already exist in this tenant; set status to ACTIVE
      * update: the order must exist, belong to the caller's tenant, and be in DRAFT
@@ -215,7 +231,9 @@ Implement search on <Order>ServiceImpl.
 - It takes the criteria object the controller passed straight from req.query
 - It builds a CommonSearchCriteria subclass and hands it to the repository
 - It returns PaginationList
-- No @Transaction() — it is a read
+- @Transaction(Propagation.NONE) — a read needs a connection but no transaction. Do not
+  leave it undecorated: CommonDAO resolves its connection from the context the decorator
+  establishes, and without one the query throws at runtime.
 
 Generate the criteria class too: src/criteria/<Order>SearchCriteria.ts, mapping the query
 fields <status, customerId, a createdAt date range, a keyword over code and remark> onto
