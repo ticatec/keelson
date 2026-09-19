@@ -44,6 +44,23 @@
 
 ### Fixed
 
+- **A failed startup crashed the process instead of exiting from it.**
+  `BaseServer.startup()` (the static one) returns `void` - it is the last call in `main`, so
+  nothing is left to await it. Its `catch` rethrew, which turned the failure into an
+  unhandled rejection; Node has terminated the process on those since v15, so a bad port
+  produced a raw `ERR_SOCKET_BAD_PORT` stack instead of a logged error, the crash exit code
+  overrode the `process.exitCode = 1` the handler had just set, and no line after the call
+  ever ran. Reproduced against the built package. The chain now ends in the `catch`. To
+  decide what happens on failure yourself, await the instance `startup()`, which still
+  rethrows.
+
+- **Errors were logged without their message or stack.** Every `catch` in `BaseServer`
+  passed `{ err }` to the logger. `message` and `stack` are not enumerable properties, so
+  once the object is serialized all that survives is `{"err":{"code":"ENOSPC"}}` - the one
+  line worth reading is gone. Verified against the console fallback. The error is now passed
+  as the context argument itself, which is what `@ticatec/logger-api` and pino expect. The
+  static `startup()` also no longer logs a second copy of what the instance already logged.
+
 - **`AppConf`, `Controller.debugEnabled` and `ProcessorManager` were split between the
   CommonJS and ESM builds.** All three were class statics, and this package ships both
   builds, so a process loading both got two of each: configuration written through the ESM

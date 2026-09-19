@@ -85,6 +85,20 @@ const server = new MyServer();
 BaseServer.startup(server);
 ```
 
+`BaseServer.startup()` is the entry point: it returns `void`, logs a failed startup and sets
+`process.exitCode = 1`, so the process exits non-zero on its own. When you need to decide
+what happens on failure — retry, report, shut something down — await the instance method
+instead, which rethrows:
+
+```typescript
+try {
+    await server.startup();
+} catch (err) {
+    await reportToPagerDuty(err);
+    process.exit(1);
+}
+```
+
 ### 3. Cloud-Native Health Check
 
 The framework includes built-in Kubernetes probe endpoints by default:

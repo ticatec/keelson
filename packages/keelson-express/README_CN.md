@@ -84,6 +84,19 @@ const server = new MyServer();
 BaseServer.startup(server);
 ```
 
+`BaseServer.startup()` 是进程入口：返回 `void`，启动失败时记录日志并置
+`process.exitCode = 1`，进程自行以非零码退出。需要自己决定失败后做什么——重试、上报、
+关掉别的东西——就改为 await 实例方法，它会照常抛出：
+
+```typescript
+try {
+    await server.startup();
+} catch (err) {
+    await reportToPagerDuty(err);
+    process.exit(1);
+}
+```
+
 ### 3. 云原生健康检查 (Health Check)
 
 框架内置云原生与 K8s 标准的健康检查子系统，默认自动暴露免认证探针端点：

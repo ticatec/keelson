@@ -3,12 +3,12 @@ import {handleError} from "@ticatec/node-exception";
 import fs from 'fs';
 import http from "http";
 import net from "net";
-import { getLogger, Logger } from "@ticatec/logger-api";
+import {getLogger, Logger} from "@ticatec/logger-api";
 import CommonRoutes from "./CommonRoutes.js";
-import { HealthCheckRegistry } from "./health/HealthCheckRegistry.js";
-import type { HealthCheckIndicator } from "./health/HealthCheckRegistry.js";
-import { createSystemHealthIndicator } from "./health/BuiltinHealthIndicators.js";
-import { HealthRoutes } from "./health/HealthRoutes.js";
+import {HealthCheckRegistry} from "./health/HealthCheckRegistry.js";
+import type {HealthCheckIndicator} from "./health/HealthCheckRegistry.js";
+import {createSystemHealthIndicator} from "./health/BuiltinHealthIndicators.js";
+import {HealthRoutes} from "./health/HealthRoutes.js";
 
 /**
  * Function signature for module loader
@@ -24,6 +24,7 @@ export default abstract class BaseServer {
     protected get logger(): Logger {
         return getLogger(this.constructor.name);
     }
+
     /**
      * Context root path for the server. Set by {@link startup} from `getWebConf()`.
      * 在 startup() 跑完之前是 undefined——子类若在此之前用它，拼出来的路径会带上
@@ -64,10 +65,13 @@ export default abstract class BaseServer {
      */
     protected writeCheckFile(port: number, fileName: string = './check.dat') {
         try {
-            this.logger.debug({ port, fileName }, 'Writing listening port to check file');
+            this.logger.debug({port, fileName}, 'Writing listening port to check file');
             fs.writeFileSync(fileName, `${port}`);
         } catch (err) {
-            this.logger.error({ err }, 'Error writing port file');
+            // 传 Error 本身，不要包成 {err}：Error 的 message 与 stack 都不是可枚举属性，
+            // 包进对象后经 JSON 序列化只剩 {"err":{"code":"ENOSPC"}} 这种残骸，
+            // 真正要看的那行没了。
+            this.logger.error(err, 'Error writing port file');
         }
     }
 
@@ -81,11 +85,11 @@ export default abstract class BaseServer {
         try {
             await this.beforeStart();
             const webConf = this.getWebConf();
-            this.logger.debug({ port: webConf.port, ip: webConf.ip, contextRoot: webConf.contextRoot }, 'Web configuration loaded');
+            this.logger.debug({port: webConf.port, ip: webConf.ip, contextRoot: webConf.contextRoot}, 'Web configuration loaded');
             this.contextRoot = webConf.contextRoot;
             await this.startWebServer(webConf);
         } catch (err) {
-            this.logger.error({ err }, 'Startup failed');
+            this.logger.error(err, 'Startup failed');
             throw err;
         }
     }
@@ -148,7 +152,7 @@ export default abstract class BaseServer {
     protected async addHealthCheck() {
         const webConf = this.getWebConf?.() || {};
         const healthPrefix = webConf.healthPath || '/health';
-        this.logger.debug({ healthPrefix }, 'Mounting health check subsystem routes');
+        this.logger.debug({healthPrefix}, 'Mounting health check subsystem routes');
         const healthRoutes = new HealthRoutes(this.healthRegistry);
         await healthRoutes.bind(this.requireApp(), healthPrefix);
     }
@@ -171,31 +175,29 @@ export default abstract class BaseServer {
         app.use(routerHelper.retrieveUser());
         await this.setupRoutes();
         app.use(routerHelper.actionNotFound());
-        // @ticatec/node-exception 的 handleError 自己会按状态码分级记录（5xx 带栈记
-        // error，4xx 记 debug），这里不再补一条，否则同一个错误在日志里出现两次。
         app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
             handleError(err, req, res, next);
         });
 
         return new Promise<http.Server>((resolve, reject) => {
             const onError = (err: Error) => {
-                this.logger.error({ err }, 'Server listen error');
+                this.logger.error(err, 'Server listen error');
                 reject(err);
             };
 
             const server: http.Server = app.listen(webConf.port, webConf.ip, async () => {
                 server.removeListener('error', onError);
-                server.on('error', (err) => this.logger.error({ err }, 'Runtime server error'));
+                server.on('error', (err) => this.logger.error(err, 'Runtime server error'));
                 try {
                     const address = server.address() as net.AddressInfo;
                     const actualPort = address?.port || webConf.port;
                     await this.postServerCreated(server);
                     this.writeCheckFile(actualPort);
                     this.httpServer = server;
-                    this.logger.info({ ip: webConf.ip, port: actualPort }, 'Web service started');
+                    this.logger.info({ip: webConf.ip, port: actualPort}, 'Web service started');
                     resolve(server);
                 } catch (err) {
-                    this.logger.error({ err }, 'Post server creation setup failed, closing server');
+                    this.logger.error(err, 'Post server creation setup failed, closing server');
                     server.close(() => reject(err));
                 }
             });
@@ -209,17 +211,17 @@ export default abstract class BaseServer {
     async shutdown(checkFileName: string = './check.dat'): Promise<void> {
         this.logger.info({}, 'Shutting down server');
         try {
-            const { default: ProcessorManager } = await import('./ProcessorManager.js');
+            const {default: ProcessorManager} = await import('./ProcessorManager.js');
             await ProcessorManager.getInstance().stopAll();
         } catch (err) {
-            this.logger.warn({ err }, 'Error stopping processor manager');
+            this.logger.warn(err, 'Error stopping processor manager');
         }
 
         if (fs.existsSync(checkFileName)) {
             try {
                 fs.unlinkSync(checkFileName);
             } catch (err) {
-                this.logger.warn({ err }, 'Error removing check file');
+                this.logger.warn(err, 'Error removing check file');
             }
         }
 
@@ -310,13 +312,29 @@ export default abstract class BaseServer {
     protected abstract setupRoutes(): Promise<void>;
 
     /**
-     * Static method to start a server instance
+     * Starts a server as the process entry point.
+     *
+     * Deliberately returns `void`: this is the last call in `main`, so there is no caller
+     * left to await it or to handle a rejection. A startup failure is therefore logged
+     * here and turned into a non-zero exit code — the chain ends, it does not rethrow.
+     *
+     * 这里不能 `throw ex`。抛出的异常落进一条没人 await 的 promise 链，变成
+     * unhandled rejection；Node 15 起默认直接终止进程，于是启动失败时拿到的是一段
+     * 裸栈，而不是一条记好的日志，`process.exitCode = 1` 也会被崩溃的退出码覆盖。
+     * 实测：端口传 -1 时进程直接以 ERR_SOCKET_BAD_PORT 退出，`startup()` 之后的任何
+     * 代码都不会执行。
+     *
+     * 需要自己决定失败后做什么（重试、上报、优雅退出）的调用方，直接 await
+     * `server.startup()`，它照常抛。
      * @param server The server instance to start
      */
-    static startup(server: BaseServer): Promise<void> {
-        return server.startup().catch(ex => {
+    static startup(server: BaseServer): void {
+        server.startup().then(() => {
+            server.logger.info({}, 'Server started');
+        }).catch(() => {
+            // 不在这里重复记一遍：实例的 startup() 已经记过并 rethrow，
+            // 这里只负责把失败变成退出码。
             process.exitCode = 1;
-            throw ex;
         });
     }
 }

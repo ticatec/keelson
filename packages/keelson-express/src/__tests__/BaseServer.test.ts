@@ -144,6 +144,17 @@ const withDeadline = async <T>(promise: Promise<T>, ms: number, message: string)
     }
 };
 
+/** Polls until `condition` holds, so a test waits on the event rather than on a guessed delay. */
+const waitFor = async (condition: () => boolean, timeoutMs: number = 3000): Promise<void> => {
+    const deadline = Date.now() + timeoutMs;
+    while (!condition()) {
+        if (Date.now() > deadline) {
+            throw new Error('Timed out waiting for the expected condition');
+        }
+        await new Promise(resolve => setTimeout(resolve, 10));
+    }
+};
+
 class TestServer extends BaseServer {
     public listenPort: number = 0;
     public failPostCreate: boolean = false;
@@ -449,14 +460,70 @@ describe('keelson-express comprehensive test suite', () => {
         await expect(server.startup()).rejects.toThrow();
     });
 
-    test('should set process.exitCode = 1 on BaseServer.startup static failure', async () => {
-        const server = new TestServer();
-        server.listenPort = -1;
+    test('BaseServer.startup() reports a failed startup as an exit code, not an unhandled rejection', async () => {
+        const errors: Array<any> = [];
+        setLoggerProvider(() => ({ ...SILENT, error: (...args: Array<any>) => { errors.push(args); } } as any));
 
-        process.exitCode = 0;
-        await expect(BaseServer.startup(server)).rejects.toThrow();
-        expect(process.exitCode).toBe(1);
-        process.exitCode = 0; // Reset
+        // 静态 startup() 是 void 的：没有调用方能 await 它，也就没人处理它的拒绝。
+        // catch 里若 rethrow，异常会变成 unhandled rejection——Node 15 起默认直接
+        // 终止进程，启动失败时拿到的是一段裸栈而不是一条日志，process.exitCode
+        // 也会被崩溃的退出码覆盖。这条断言守的就是这个。
+        const unhandled: Array<any> = [];
+        const onUnhandled = (reason: any) => { unhandled.push(reason); };
+        process.on('unhandledRejection', onUnhandled);
+
+        const previousExitCode = process.exitCode;
+        try {
+            const server = new TestServer();
+            server.listenPort = -1;
+            process.exitCode = 0;
+
+            expect(BaseServer.startup(server)).toBeUndefined();
+
+            // 等错误日志出现，而不是猜一个 sleep 时长
+            await waitFor(() => errors.length > 0);
+            // 再多放几轮微任务，让本会变成 unhandled 的拒绝有机会冒出来
+            await new Promise(resolve => setImmediate(resolve));
+            await new Promise(resolve => setImmediate(resolve));
+
+            expect(process.exitCode).toBe(1);
+            expect(unhandled).toHaveLength(0);
+
+            // 失败只记一次：实例的 startup() 记，静态的只负责置退出码
+            const startupFailures = errors.filter(e => String(e[1]).includes('Startup failed'));
+            expect(startupFailures).toHaveLength(1);
+            // 传的是 Error 本身而不是 {err}，message 与 stack 才留得住。
+            // 这里不用 toBeInstanceOf：错误由 Node 内部构造，与测试所在的 realm
+            // 不是同一个 Error，instanceof 会失败——要断言的本来也是内容还在。
+            const logged = startupFailures[0][0];
+            expect(typeof logged.message).toBe('string');
+            expect(logged.message).toContain('port');
+            expect(typeof logged.stack).toBe('string');
+        } finally {
+            process.off('unhandledRejection', onUnhandled);
+            process.exitCode = previousExitCode;
+            setLoggerProvider(() => SILENT);
+        }
+    });
+
+    test('BaseServer.startup() logs once on success and leaves the exit code alone', async () => {
+        const infos: Array<any> = [];
+        setLoggerProvider(() => ({ ...SILENT, info: (...args: Array<any>) => { infos.push(args); } } as any));
+
+        const previousExitCode = process.exitCode;
+        const server = new TestServer();
+        server.listenPort = 0;
+        try {
+            process.exitCode = 0;
+            BaseServer.startup(server);
+
+            await waitFor(() => infos.some(e => String(e[1]) === 'Server started'));
+            expect(process.exitCode).toBe(0);
+        } finally {
+            await server.shutdown();
+            process.exitCode = previousExitCode;
+            setLoggerProvider(() => SILENT);
+        }
     });
 
     describe('CommonUser and LoggedUser Interface Suite', () => {
