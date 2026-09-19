@@ -1,6 +1,6 @@
 {
   "name": "@ticatec/node-exception",
-  "version": "2.1.0",
+  "version": "3.0.0",
   "description": "Production-ready Express error handling middleware with standardized HTTP error types, centralized exception management, and automatic content negotiation for REST APIs. Type-safe, with logging injected through the @ticatec/logger-api contract.",
   "type": "module",
   "main": "lib/cjs/index.js",

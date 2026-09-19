@@ -1,0 +1,532 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>06. 日志与健康检查 | Keelson 官方教程</title>
+  <meta name="description" content="Keelson TypeScript Framework Official Tutorial - Enterprise TypeScript for Express">
+  <link rel="stylesheet" href="../assets/style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+</head>
+<body class="theme-auto">
+  <!-- Top Navigation Header -->
+  <header class="top-navbar">
+    <div class="navbar-left">
+      <button class="mobile-menu-toggle" id="menuToggle" aria-label="Toggle Navigation">
+        <svg viewBox="0 0 24 24" width="22" height="22" stroke="currentColor" stroke-width="2" fill="none"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+      </button>
+      <a href="index.html" class="brand-logo">
+        <span class="brand-icon">⚡</span>
+        <span class="brand-name">Keelson</span>
+        <span class="brand-badge">教程</span>
+      </a>
+    </div>
+
+    <div class="navbar-right">
+      <!-- Search Input -->
+      <div class="search-box">
+        <svg class="search-icon" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+        <input type="text" id="searchInput" placeholder="在章节中快速搜索..." />
+        <span class="search-kbd">⌘K</span>
+      </div>
+
+      <!-- Language Switch -->
+      <a href="../en/06-logging-and-health.html" class="lang-switch-btn" title="切换为英文">
+        <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>
+        <span>English</span>
+      </a>
+
+      <!-- Theme Switch -->
+      <button class="theme-toggle-btn" id="themeToggle" aria-label="Toggle Theme">
+        <svg class="sun-icon" viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
+        <svg class="moon-icon" viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+      </button>
+
+      <!-- GitHub Link -->
+      <a href="https://github.com/ticatec/keelson" target="_blank" rel="noopener noreferrer" class="github-link" title="GitHub Repository">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z"/></svg>
+      </a>
+    </div>
+  </header>
+
+  <div class="layout-container">
+    <!-- Left Navigation Sidebar -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-header">
+        <div class="sidebar-title">教程目录</div>
+        <span class="chapter-count">10 篇文档</span>
+      </div>
+      <nav class="sidebar-nav">
+        <ul class="nav-list" id="navList">
+          
+      <li class="nav-item ">
+        <a href="index.html" class="nav-link" title="教程导读与各章索引">
+          <span class="chapter-badge">00</span>
+          <span class="chapter-text">
+            <span class="chapter-title">概览与教程目录</span>
+            <span class="chapter-desc">教程导读与各章索引</span>
+          </span>
+        </a>
+        
+      </li>
+    
+      <li class="nav-item ">
+        <a href="01-getting-started.html" class="nav-link" title="从空目录到一个能响应请求的服务">
+          <span class="chapter-badge">01</span>
+          <span class="chapter-text">
+            <span class="chapter-title">起步</span>
+            <span class="chapter-desc">从空目录到一个能响应请求的服务</span>
+          </span>
+        </a>
+        
+      </li>
+    
+      <li class="nav-item ">
+        <a href="02-layers-and-transactions.html" class="nav-link" title="为什么分四层，事务如何贯穿">
+          <span class="chapter-badge">02</span>
+          <span class="chapter-text">
+            <span class="chapter-title">分层与事务</span>
+            <span class="chapter-desc">为什么分四层，事务如何贯穿</span>
+          </span>
+        </a>
+        
+      </li>
+    
+      <li class="nav-item ">
+        <a href="03-wiring.html" class="nav-link" title="类与类互相发现，解耦初始化顺序">
+          <span class="chapter-badge">03</span>
+          <span class="chapter-text">
+            <span class="chapter-title">装配与依赖注入</span>
+            <span class="chapter-desc">类与类互相发现，解耦初始化顺序</span>
+          </span>
+        </a>
+        
+      </li>
+    
+      <li class="nav-item ">
+        <a href="04-http-layer.html" class="nav-link" title="路由、控制器、校验与错误映射">
+          <span class="chapter-badge">04</span>
+          <span class="chapter-text">
+            <span class="chapter-title">HTTP 层</span>
+            <span class="chapter-desc">路由、控制器、校验与错误映射</span>
+          </span>
+        </a>
+        
+      </li>
+    
+      <li class="nav-item ">
+        <a href="05-identity.html" class="nav-link" title="req.user 来源与鉴权机制">
+          <span class="chapter-badge">05</span>
+          <span class="chapter-text">
+            <span class="chapter-title">身份与访问控制</span>
+            <span class="chapter-desc">req.user 来源与鉴权机制</span>
+          </span>
+        </a>
+        
+      </li>
+    
+      <li class="nav-item active">
+        <a href="06-logging-and-health.html" class="nav-link" title="记录规范、敏感信息与 K8s 探针">
+          <span class="chapter-badge">06</span>
+          <span class="chapter-text">
+            <span class="chapter-title">日志与健康检查</span>
+            <span class="chapter-desc">记录规范、敏感信息与 K8s 探针</span>
+          </span>
+        </a>
+        
+      <ul class="sidebar-subnav">
+        
+          <li class="sidebar-subnav-item level-2">
+            <a href="#日志面向契约不面向具体库" class="subnav-link" data-toc-target="日志面向契约不面向具体库">
+              日志面向契约，不面向具体库
+            </a>
+          </li>
+        
+          <li class="sidebar-subnav-item level-2">
+            <a href="#用-pino-做结构化日志" class="subnav-link" data-toc-target="用-pino-做结构化日志">
+              用 pino 做结构化日志
+            </a>
+          </li>
+        
+          <li class="sidebar-subnav-item level-2">
+            <a href="#两个参数" class="subnav-link" data-toc-target="两个参数">
+              两个参数
+            </a>
+          </li>
+        
+          <li class="sidebar-subnav-item level-2">
+            <a href="#框架不会记录的东西" class="subnav-link" data-toc-target="框架不会记录的东西">
+              框架不会记录的东西
+            </a>
+          </li>
+        
+          <li class="sidebar-subnav-item level-2">
+            <a href="#健康检查" class="subnav-link" data-toc-target="健康检查">
+              健康检查
+            </a>
+          </li>
+        
+          <li class="sidebar-subnav-item level-2">
+            <a href="#探针会泄露什么" class="subnav-link" data-toc-target="探针会泄露什么">
+              探针会泄露什么
+            </a>
+          </li>
+        
+          <li class="sidebar-subnav-item level-2">
+            <a href="#出问题时看哪里" class="subnav-link" data-toc-target="出问题时看哪里">
+              出问题时看哪里
+            </a>
+          </li>
+        
+      </ul>
+      </li>
+    
+      <li class="nav-item ">
+        <a href="07-background-work.html" class="nav-link" title="周期任务调度与优雅关停保护">
+          <span class="chapter-badge">07</span>
+          <span class="chapter-text">
+            <span class="chapter-title">后台任务与优雅关停</span>
+            <span class="chapter-desc">周期任务调度与优雅关停保护</span>
+          </span>
+        </a>
+        
+      </li>
+    
+      <li class="nav-item ">
+        <a href="08-config-and-cache.html" class="nav-link" title="YAML、Nacos、Consul 与 Redis 集成">
+          <span class="chapter-badge">08</span>
+          <span class="chapter-text">
+            <span class="chapter-title">配置与缓存</span>
+            <span class="chapter-desc">YAML、Nacos、Consul 与 Redis 集成</span>
+          </span>
+        </a>
+        
+      </li>
+    
+      <li class="nav-item ">
+        <a href="09-production-checklist.html" class="nav-link" title="生产环境准备与关键排查项">
+          <span class="chapter-badge">09</span>
+          <span class="chapter-text">
+            <span class="chapter-title">上线之前检查清单</span>
+            <span class="chapter-desc">生产环境准备与关键排查项</span>
+          </span>
+        </a>
+        
+      </li>
+    
+        </ul>
+      </nav>
+      <div class="sidebar-footer">
+        <a href="https://github.com/ticatec/keelson" target="_blank" rel="noopener">Keelson v1.0.0</a>
+        <span>·</span>
+        <a href="../index.html">返回首页</a>
+      </div>
+    </aside>
+
+    <!-- Overlay for mobile drawer -->
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+    <!-- Main Content Area -->
+    <main class="main-wrapper">
+      <div class="content-container">
+        <!-- Breadcrumbs -->
+        <nav class="breadcrumb-nav">
+          <a href="index.html" class="crumb-link">Keelson</a>
+          <span class="crumb-sep">/</span>
+          <span class="crumb-link">教程</span>
+          <span class="crumb-sep">/</span>
+          <span class="crumb-current">日志与健康检查</span>
+        </nav>
+
+        <!-- Markdown Generated Content -->
+        <article class="markdown-body">
+          <h1 id="6-日志与健康检查" class="heading-anchor"><a href="#6-日志与健康检查" class="header-link">#</a> 6. 日志与健康检查</h1>
+<p>框架往日志里写什么、拒绝写什么、怎么把它接到 pino 上，以及 Kubernetes 探针看到的是什么。</p>
+<h2 id="日志面向契约不面向具体库" class="heading-anchor"><a href="#日志面向契约不面向具体库" class="header-link">#</a> 日志面向契约，不面向具体库</h2>
+<p>没有任何一个 Keelson 包引入日志库。它们都调用同一个契约：</p>
+
+<div class="code-block-wrapper">
+  <div class="code-block-header">
+    <span class="code-lang-tag">typescript</span>
+    <button class="copy-btn" data-code-id="code-5zbndna" title="复制代码">
+      <svg class="copy-icon" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+      <span class="copy-label">复制</span>
+    </button>
+  </div>
+  <pre class="code-block"><code id="code-5zbndna" class="language-typescript"><span class="token keyword">import</span> { getLogger } <span class="token keyword">from</span> <span class="token string">&#039;@ticatec/logger-api&#039;</span>;
+
+<span class="token keyword">const</span> logger = <span class="token function">getLogger</span>(<span class="token string">&#039;UserService&#039;</span>, <span class="token string">&#039;service&#039;</span>);
+logger.<span class="token function">info</span>({ orderId }, <span class="token string">&#039;Order placed&#039;</span>);</code></pre>
+</div>
+<p><code class="inline-code">getLogger(name, category)</code>——name 通常是类名，category 把一批类归到一起，方便一次性设级别。在框架的基类内部，你已经有 <code class="inline-code">this.logger</code>，它的名字就是你的具体类名。</p>
+<p>什么都不装也能用：输出到 console，按 <code class="inline-code">LOG_LEVEL</code> 过滤。</p>
+
+<div class="code-block-wrapper">
+  <div class="code-block-header">
+    <span class="code-lang-tag">bash</span>
+    <button class="copy-btn" data-code-id="code-hcjvccy" title="复制代码">
+      <svg class="copy-icon" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+      <span class="copy-label">复制</span>
+    </button>
+  </div>
+  <pre class="code-block"><code id="code-hcjvccy" class="language-bash">LOG_LEVEL=debug <span class="token keyword">node</span> dist/main.js</code></pre>
+</div>
+<p>这是一个真正可用的回退，不是占位实现——开发时够用，日志被当作纯文本采集的容器里也够用。</p>
+<h2 id="用-pino-做结构化日志" class="heading-anchor"><a href="#用-pino-做结构化日志" class="header-link">#</a> 用 pino 做结构化日志</h2>
+<p>装上适配器，在任何东西打日志之前初始化一次：</p>
+
+<div class="code-block-wrapper">
+  <div class="code-block-header">
+    <span class="code-lang-tag">bash</span>
+    <button class="copy-btn" data-code-id="code-0vcehhn" title="复制代码">
+      <svg class="copy-icon" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+      <span class="copy-label">复制</span>
+    </button>
+  </div>
+  <pre class="code-block"><code id="code-0vcehhn" class="language-bash"><span class="token keyword">pnpm</span> add @ticatec/logger<span class="token property">-pino</span></code></pre>
+</div>
+
+<div class="code-block-wrapper">
+  <div class="code-block-header">
+    <span class="code-lang-tag">typescript</span>
+    <button class="copy-btn" data-code-id="code-5i1zkne" title="复制代码">
+      <svg class="copy-icon" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+      <span class="copy-label">复制</span>
+    </button>
+  </div>
+  <pre class="code-block"><code id="code-5i1zkne" class="language-typescript"><span class="token comment">// src/main.ts，在引入任何会打日志的模块之前</span>
+<span class="token keyword">import</span> <span class="token string">&#039;reflect-metadata&#039;</span>;
+<span class="token keyword">import</span> { initialize } <span class="token keyword">from</span> <span class="token string">&#039;@ticatec/logger-pino&#039;</span>;
+
+<span class="token function">initialize</span>({
+    appenders: [
+        { name: <span class="token string">&#039;stdout&#039;</span>, <span class="token keyword">type</span>: <span class="token string">&#039;console&#039;</span>, level: <span class="token string">&#039;info&#039;</span> },
+        { name: <span class="token string">&#039;errfile&#039;</span>, <span class="token keyword">type</span>: <span class="token string">&#039;file&#039;</span>, level: <span class="token string">&#039;error&#039;</span>, options: { filename: <span class="token string">&#039;/var/log/app/error.log&#039;</span> } }
+    ],
+    loggers: {
+        root: { level: <span class="token string">&#039;info&#039;</span>, appenders: [<span class="token string">&#039;stdout&#039;</span>, <span class="token string">&#039;errfile&#039;</span>] },
+        dao: { level: <span class="token string">&#039;warn&#039;</span>, appenders: [<span class="token string">&#039;stdout&#039;</span>] },
+        service: { level: <span class="token string">&#039;debug&#039;</span>, appenders: [<span class="token string">&#039;stdout&#039;</span>] }
+    }
+});</code></pre>
+</div>
+<p><code class="inline-code">root</code> 是所有没有单独配置的 category 的兜底。框架用到的 category 有 <code class="inline-code">dao</code>、<code class="inline-code">service</code>、 <code class="inline-code">repository</code>、<code class="inline-code">controller</code>、<code class="inline-code">db</code>，所以上面这份配置压住了 SQL 日志，同时让 service 层保持详细。</p>
+<p><code class="inline-code">initialize()</code> 只能调用一次——第二次会抛错，而不是悄悄地重新配置整个进程。如果你已经有配好的 pino 实例，它也直接接受实例。</p>
+<h2 id="两个参数" class="heading-anchor"><a href="#两个参数" class="header-link">#</a> 两个参数</h2>
+
+<div class="code-block-wrapper">
+  <div class="code-block-header">
+    <span class="code-lang-tag">typescript</span>
+    <button class="copy-btn" data-code-id="code-92j9dqu" title="复制代码">
+      <svg class="copy-icon" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+      <span class="copy-label">复制</span>
+    </button>
+  </div>
+  <pre class="code-block"><code id="code-92j9dqu" class="language-typescript">logger.<span class="token function">info</span>({ orderId, amount }, <span class="token string">&#039;Order placed&#039;</span>);   <span class="token comment">// 上下文在前，消息在后</span></code></pre>
+</div>
+<p>契约里两种形式都支持，<code class="inline-code">logger.info(&#039;message&#039;)</code> 也能用。优先用对象形式：结构化字段才让日志可检索，而把值拼进消息字符串里，谁也查不了。</p>
+<p>有一条容易搞错——<code class="inline-code">Error</code> 要<strong>作为</strong>上下文传，而不是包在对象里：</p>
+
+<div class="code-block-wrapper">
+  <div class="code-block-header">
+    <span class="code-lang-tag">typescript</span>
+    <button class="copy-btn" data-code-id="code-v3fv9i9" title="复制代码">
+      <svg class="copy-icon" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+      <span class="copy-label">复制</span>
+    </button>
+  </div>
+  <pre class="code-block"><code id="code-v3fv9i9" class="language-typescript">logger.<span class="token function">error</span>(err, <span class="token string">&#039;Failed to place order&#039;</span>);       <span class="token comment">// message 与 stack 都在</span>
+logger.<span class="token function">error</span>({ err }, <span class="token string">&#039;Failed to place order&#039;</span>);   <span class="token comment">// 两个都没了</span></code></pre>
+</div>
+<p><code class="inline-code">message</code> 与 <code class="inline-code">stack</code> 都不是可枚举属性，<code class="inline-code">{ err }</code> 序列化之后只剩 <code class="inline-code">{&quot;err&quot;:{&quot;code&quot;:&quot;ENOSPC&quot;}}</code>——最该看的那行没了。</p>
+<h2 id="框架不会记录的东西" class="heading-anchor"><a href="#框架不会记录的东西" class="header-link">#</a> 框架不会记录的东西</h2>
+<p>有三类默认被挡在外面，因为日志是一个比事故本身活得更久、并且会被复制到没人清点过的地方去的文件。</p>
+<p><strong>凭据。</strong> 连接配置以摘要形式记录——host、port、database、池大小，以及 <code class="inline-code">authenticated: true</code>——绝不记口令或连接串。</p>
+<p><strong>SQL 绑定参数。</strong> 语句只记文本与参数<strong>个数</strong>：</p>
+
+<div class="code-block-wrapper">
+  <div class="code-block-header">
+    <span class="code-lang-tag">text</span>
+    <button class="copy-btn" data-code-id="code-yych1fi" title="复制代码">
+      <svg class="copy-icon" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+      <span class="copy-label">复制</span>
+    </button>
+  </div>
+  <pre class="code-block"><code id="code-yych1fi" class="language-text">DEBUG [SQL] Executing SQL update {&quot;sql&quot;:&quot;UPDATE users SET pwd = ? WHERE id = ?&quot;,&quot;paramCount&quot;:2}</code></pre>
+</div>
+<p>确实需要参数值来排查问题时：</p>
+
+<div class="code-block-wrapper">
+  <div class="code-block-header">
+    <span class="code-lang-tag">bash</span>
+    <button class="copy-btn" data-code-id="code-0hdxn8r" title="复制代码">
+      <svg class="copy-icon" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+      <span class="copy-label">复制</span>
+    </button>
+  </div>
+  <pre class="code-block"><code id="code-0hdxn8r" class="language-bash">KEELSON_LOG_SQL_PARAMS=true <span class="token keyword">node</span> dist/main.js</code></pre>
+</div>
+<p>它对每一层都生效——DAO 的辅助方法和驱动层都在内。用完记得关掉。</p>
+<p><strong>请求体与响应体。</strong> 不主动打开就不记录：</p>
+
+<div class="code-block-wrapper">
+  <div class="code-block-header">
+    <span class="code-lang-tag">typescript</span>
+    <button class="copy-btn" data-code-id="code-b5i2feh" title="复制代码">
+      <svg class="copy-icon" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+      <span class="copy-label">复制</span>
+    </button>
+  </div>
+  <pre class="code-block"><code id="code-b5i2feh" class="language-typescript"><span class="token keyword">import</span> { Controller } <span class="token keyword">from</span> <span class="token string">&#039;@ticatec/keelson-express&#039;</span>;
+Controller.debugEnabled = <span class="token keyword">true</span>;</code></pre>
+</div>
+<p>它会把 <code class="inline-code">req.body</code> 与 <code class="inline-code">req.query</code> 打到 debug——客户端发来的一切，包括口令与 token。仅限开发环境。</p>
+<p>用户标识同样不记录，原因见第 5 章。</p>
+<h2 id="健康检查" class="heading-anchor"><a href="#健康检查" class="header-link">#</a> 健康检查</h2>
+<p>三个端点挂在你的路由之前，且免认证：</p>
+<div class="table-container"><table><thead><tr><th>端点</th><th>含义</th></tr></thead><tbody><tr><td><code class="inline-code">GET /health/live</code></td><td>进程活着。只要还能应答就是 200。</td></tr><tr><td><code class="inline-code">GET /health/ready</code></td><td>所有关键检查通过返回 200，否则 503。</td></tr><tr><td><code class="inline-code">GET /health</code></td><td>与 <code class="inline-code">/health/ready</code> 相同。</td></tr></tbody></table></div>
+<p>这个区分对 Kubernetes 很重要。<strong>存活</strong>探针失败会重启 pod；<strong>就绪</strong>探针失败只是把它移出负载均衡。数据库故障应该让你下线，而不是让你进入重启循环——所以数据库属于就绪检查，也正是 <code class="inline-code">registerHealthCheck</code> 注册的位置。</p>
+
+<div class="code-block-wrapper">
+  <div class="code-block-header">
+    <span class="code-lang-tag">typescript</span>
+    <button class="copy-btn" data-code-id="code-1gglxte" title="复制代码">
+      <svg class="copy-icon" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+      <span class="copy-label">复制</span>
+    </button>
+  </div>
+  <pre class="code-block"><code id="code-1gglxte" class="language-typescript"><span class="token keyword">protected</span> <span class="token keyword">async</span> <span class="token function">beforeStart</span>(): <span class="token builtin">Promise</span>&lt;<span class="token keyword">void</span>&gt; {
+    DBManager.<span class="token function">init</span>(<span class="token function">initializePg</span>(AppConf.<span class="token function">getInstance</span>()!.<span class="token keyword">get</span>(<span class="token string">&#039;database&#039;</span>)));
+
+    this.<span class="token function">registerHealthCheck</span>(<span class="token string">&#039;database&#039;</span>, <span class="token keyword">async</span> () =&gt; {
+        <span class="token keyword">const</span> conn = <span class="token keyword">await</span> DBManager.<span class="token function">getInstance</span>().<span class="token function">connect</span>();
+        <span class="token keyword">try</span> {
+            <span class="token keyword">await</span> conn.<span class="token function">executeUpdate</span>(<span class="token string">&#039;SELECT 1&#039;</span>, []);
+            <span class="token keyword">return</span> { status: <span class="token string">&#039;UP&#039;</span> };
+        } <span class="token keyword">finally</span> {
+            <span class="token keyword">await</span> conn.<span class="token function">close</span>();
+        }
+    });
+
+    this.<span class="token function">registerHealthCheck</span>(<span class="token string">&#039;cache&#039;</span>, <span class="token keyword">async</span> () =&gt; {
+        <span class="token keyword">return</span> { status: <span class="token keyword">await</span> <span class="token function">redisReachable</span>() ? <span class="token string">&#039;UP&#039;</span> : <span class="token string">&#039;DOWN&#039;</span> };
+    }, <span class="token keyword">false</span>);     <span class="token comment">// 非关键</span>
+}</code></pre>
+</div>
+<p><strong>关键</strong>检查 DOWN 会让整体响应 DOWN、状态码 503。<strong>非关键</strong>检查 DOWN 让整体 DEGRADED、状态码 200——服务还能用，只是变差了。缓存是教科书级的非关键依赖：缓存冷了是慢，不是坏。</p>
+<p>每个检查默认 3 秒超时，第四个参数可以改。超时的检查按 DOWN 处理，而不是把探针挂住—— 这点很重要，因为一个挂住的探针和一个挂住的进程看起来一模一样。</p>
+<p>框架还替你注册了一个内置的 <code class="inline-code">system</code> 指示器，报告运行时长与内存，RSS 超过 2 GB 时报 DEGRADED。</p>
+<h2 id="探针会泄露什么" class="heading-anchor"><a href="#探针会泄露什么" class="header-link">#</a> 探针会泄露什么</h2>
+<p>非生产环境下，响应里带着每个检查的 <code class="inline-code">details</code> 与错误字符串。设置 <code class="inline-code">NODE_ENV=production</code> 后，<code class="inline-code">details</code> 被省略，错误统一变成 <code class="inline-code">&quot;Health check failed&quot;</code>。</p>
+<p>这不是修饰。<code class="inline-code">/health/ready</code> 出于必要是免认证的，而驱动抛出的错误字符串里很乐意包含主机名、端口、数据库名，有时还有用户名。生产环境请设置 <code class="inline-code">NODE_ENV=production</code>—— 它同时也是剥掉错误响应中堆栈的那个开关。</p>
+<h2 id="出问题时看哪里" class="heading-anchor"><a href="#出问题时看哪里" class="header-link">#</a> 出问题时看哪里</h2>
+
+<div class="code-block-wrapper">
+  <div class="code-block-header">
+    <span class="code-lang-tag">bash</span>
+    <button class="copy-btn" data-code-id="code-7vwnaiy" title="复制代码">
+      <svg class="copy-icon" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+      <span class="copy-label">复制</span>
+    </button>
+  </div>
+  <pre class="code-block"><code id="code-7vwnaiy" class="language-bash">LOG_LEVEL=debug                    <span class="token comment"># 一切，包括路由注册</span>
+KEELSON_LOG_SQL_PARAMS=true        <span class="token comment"># 外加绑定参数值</span></code></pre>
+</div>
+<p>以及在应用里设 <code class="inline-code">Controller.debugEnabled = true</code> 看请求体。这三个都是开发期开关，生产服务一个都不该开。</p>
+<hr class="divider" />
+<p>下一章：<a href="07-background-work.html" class="doc-link">后台任务与关停</a>。</p>
+        </article>
+
+        <!-- Previous / Next Navigation -->
+        
+    <div class="chapter-pagination">
+      
+        <a href="05-identity.html" class="pagination-btn prev-btn">
+          <span class="pagination-sub">← 上一章</span>
+          <span class="pagination-title">05. 身份与访问控制</span>
+        </a>
+      
+
+      
+        <a href="07-background-work.html" class="pagination-btn next-btn">
+          <span class="pagination-sub">下一章 →</span>
+          <span class="pagination-title">07. 后台任务与优雅关停</span>
+        </a>
+      
+    </div>
+  
+
+        <!-- Document Footer -->
+        <footer class="site-footer">
+          <div class="footer-left">
+            <p>© 2026 Ticatec Keelson Framework. Released under the MIT License.</p>
+          </div>
+          <div class="footer-right">
+            <a href="../en/06-logging-and-health.html" class="footer-lang-link">
+              🌐 Read in English
+            </a>
+          </div>
+        </footer>
+      </div>
+
+      <!-- Right Table of Contents -->
+      
+      <aside class="right-toc-container">
+        <div class="right-toc-inner">
+          <div class="toc-header">本页目录</div>
+          <ul class="right-toc-list">
+            
+              <li class="toc-item level-2">
+                <a href="#日志面向契约不面向具体库" class="toc-link" data-anchor="日志面向契约不面向具体库">
+                  日志面向契约，不面向具体库
+                </a>
+              </li>
+            
+              <li class="toc-item level-2">
+                <a href="#用-pino-做结构化日志" class="toc-link" data-anchor="用-pino-做结构化日志">
+                  用 pino 做结构化日志
+                </a>
+              </li>
+            
+              <li class="toc-item level-2">
+                <a href="#两个参数" class="toc-link" data-anchor="两个参数">
+                  两个参数
+                </a>
+              </li>
+            
+              <li class="toc-item level-2">
+                <a href="#框架不会记录的东西" class="toc-link" data-anchor="框架不会记录的东西">
+                  框架不会记录的东西
+                </a>
+              </li>
+            
+              <li class="toc-item level-2">
+                <a href="#健康检查" class="toc-link" data-anchor="健康检查">
+                  健康检查
+                </a>
+              </li>
+            
+              <li class="toc-item level-2">
+                <a href="#探针会泄露什么" class="toc-link" data-anchor="探针会泄露什么">
+                  探针会泄露什么
+                </a>
+              </li>
+            
+              <li class="toc-item level-2">
+                <a href="#出问题时看哪里" class="toc-link" data-anchor="出问题时看哪里">
+                  出问题时看哪里
+                </a>
+              </li>
+            
+          </ul>
+        </div>
+      </aside>
+    
+    </main>
+  </div>
+
+  <script src="../assets/app.js"></script>
+</body>
+</html>

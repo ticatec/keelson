@@ -1,0 +1,535 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>03. 装配与依赖注入 | Keelson 官方教程</title>
+  <meta name="description" content="Keelson TypeScript Framework Official Tutorial - Enterprise TypeScript for Express">
+  <link rel="stylesheet" href="../assets/style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+</head>
+<body class="theme-auto">
+  <!-- Top Navigation Header -->
+  <header class="top-navbar">
+    <div class="navbar-left">
+      <button class="mobile-menu-toggle" id="menuToggle" aria-label="Toggle Navigation">
+        <svg viewBox="0 0 24 24" width="22" height="22" stroke="currentColor" stroke-width="2" fill="none"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+      </button>
+      <a href="index.html" class="brand-logo">
+        <span class="brand-icon">⚡</span>
+        <span class="brand-name">Keelson</span>
+        <span class="brand-badge">教程</span>
+      </a>
+    </div>
+
+    <div class="navbar-right">
+      <!-- Search Input -->
+      <div class="search-box">
+        <svg class="search-icon" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+        <input type="text" id="searchInput" placeholder="在章节中快速搜索..." />
+        <span class="search-kbd">⌘K</span>
+      </div>
+
+      <!-- Language Switch -->
+      <a href="../en/03-wiring.html" class="lang-switch-btn" title="切换为英文">
+        <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>
+        <span>English</span>
+      </a>
+
+      <!-- Theme Switch -->
+      <button class="theme-toggle-btn" id="themeToggle" aria-label="Toggle Theme">
+        <svg class="sun-icon" viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
+        <svg class="moon-icon" viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+      </button>
+
+      <!-- GitHub Link -->
+      <a href="https://github.com/ticatec/keelson" target="_blank" rel="noopener noreferrer" class="github-link" title="GitHub Repository">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z"/></svg>
+      </a>
+    </div>
+  </header>
+
+  <div class="layout-container">
+    <!-- Left Navigation Sidebar -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-header">
+        <div class="sidebar-title">教程目录</div>
+        <span class="chapter-count">10 篇文档</span>
+      </div>
+      <nav class="sidebar-nav">
+        <ul class="nav-list" id="navList">
+          
+      <li class="nav-item ">
+        <a href="index.html" class="nav-link" title="教程导读与各章索引">
+          <span class="chapter-badge">00</span>
+          <span class="chapter-text">
+            <span class="chapter-title">概览与教程目录</span>
+            <span class="chapter-desc">教程导读与各章索引</span>
+          </span>
+        </a>
+        
+      </li>
+    
+      <li class="nav-item ">
+        <a href="01-getting-started.html" class="nav-link" title="从空目录到一个能响应请求的服务">
+          <span class="chapter-badge">01</span>
+          <span class="chapter-text">
+            <span class="chapter-title">起步</span>
+            <span class="chapter-desc">从空目录到一个能响应请求的服务</span>
+          </span>
+        </a>
+        
+      </li>
+    
+      <li class="nav-item ">
+        <a href="02-layers-and-transactions.html" class="nav-link" title="为什么分四层，事务如何贯穿">
+          <span class="chapter-badge">02</span>
+          <span class="chapter-text">
+            <span class="chapter-title">分层与事务</span>
+            <span class="chapter-desc">为什么分四层，事务如何贯穿</span>
+          </span>
+        </a>
+        
+      </li>
+    
+      <li class="nav-item active">
+        <a href="03-wiring.html" class="nav-link" title="类与类互相发现，解耦初始化顺序">
+          <span class="chapter-badge">03</span>
+          <span class="chapter-text">
+            <span class="chapter-title">装配与依赖注入</span>
+            <span class="chapter-desc">类与类互相发现，解耦初始化顺序</span>
+          </span>
+        </a>
+        
+      <ul class="sidebar-subnav">
+        
+          <li class="sidebar-subnav-item level-2">
+            <a href="#先注册再按名字取" class="subnav-link" data-toc-target="先注册再按名字取">
+              先注册，再按名字取
+            </a>
+          </li>
+        
+          <li class="sidebar-subnav-item level-2">
+            <a href="#层内部用带类型的访问器" class="subnav-link" data-toc-target="层内部用带类型的访问器">
+              层内部用带类型的访问器
+            </a>
+          </li>
+        
+          <li class="sidebar-subnav-item level-2">
+            <a href="#为什么用-getter-而不是字段" class="subnav-link" data-toc-target="为什么用-getter-而不是字段">
+              为什么用 getter 而不是字段
+            </a>
+          </li>
+        
+          <li class="sidebar-subnav-item level-2">
+            <a href="#循环依赖" class="subnav-link" data-toc-target="循环依赖">
+              循环依赖
+            </a>
+          </li>
+        
+          <li class="sidebar-subnav-item level-2">
+            <a href="#bean-很多的时候" class="subnav-link" data-toc-target="bean-很多的时候">
+              bean 很多的时候
+            </a>
+          </li>
+        
+          <li class="sidebar-subnav-item level-2">
+            <a href="#注册该写在哪" class="subnav-link" data-toc-target="注册该写在哪">
+              注册该写在哪
+            </a>
+          </li>
+        
+          <li class="sidebar-subnav-item level-2">
+            <a href="#一个进程一份注册表" class="subnav-link" data-toc-target="一个进程一份注册表">
+              一个进程一份注册表
+            </a>
+          </li>
+        
+          <li class="sidebar-subnav-item level-2">
+            <a href="#bean-找不到的时候" class="subnav-link" data-toc-target="bean-找不到的时候">
+              bean 找不到的时候
+            </a>
+          </li>
+        
+          <li class="sidebar-subnav-item level-2">
+            <a href="#bean-不要带状态" class="subnav-link" data-toc-target="bean-不要带状态">
+              bean 不要带状态
+            </a>
+          </li>
+        
+          <li class="sidebar-subnav-item level-2">
+            <a href="#自己的一份注册表" class="subnav-link" data-toc-target="自己的一份注册表">
+              自己的一份注册表
+            </a>
+          </li>
+        
+      </ul>
+      </li>
+    
+      <li class="nav-item ">
+        <a href="04-http-layer.html" class="nav-link" title="路由、控制器、校验与错误映射">
+          <span class="chapter-badge">04</span>
+          <span class="chapter-text">
+            <span class="chapter-title">HTTP 层</span>
+            <span class="chapter-desc">路由、控制器、校验与错误映射</span>
+          </span>
+        </a>
+        
+      </li>
+    
+      <li class="nav-item ">
+        <a href="05-identity.html" class="nav-link" title="req.user 来源与鉴权机制">
+          <span class="chapter-badge">05</span>
+          <span class="chapter-text">
+            <span class="chapter-title">身份与访问控制</span>
+            <span class="chapter-desc">req.user 来源与鉴权机制</span>
+          </span>
+        </a>
+        
+      </li>
+    
+      <li class="nav-item ">
+        <a href="06-logging-and-health.html" class="nav-link" title="记录规范、敏感信息与 K8s 探针">
+          <span class="chapter-badge">06</span>
+          <span class="chapter-text">
+            <span class="chapter-title">日志与健康检查</span>
+            <span class="chapter-desc">记录规范、敏感信息与 K8s 探针</span>
+          </span>
+        </a>
+        
+      </li>
+    
+      <li class="nav-item ">
+        <a href="07-background-work.html" class="nav-link" title="周期任务调度与优雅关停保护">
+          <span class="chapter-badge">07</span>
+          <span class="chapter-text">
+            <span class="chapter-title">后台任务与优雅关停</span>
+            <span class="chapter-desc">周期任务调度与优雅关停保护</span>
+          </span>
+        </a>
+        
+      </li>
+    
+      <li class="nav-item ">
+        <a href="08-config-and-cache.html" class="nav-link" title="YAML、Nacos、Consul 与 Redis 集成">
+          <span class="chapter-badge">08</span>
+          <span class="chapter-text">
+            <span class="chapter-title">配置与缓存</span>
+            <span class="chapter-desc">YAML、Nacos、Consul 与 Redis 集成</span>
+          </span>
+        </a>
+        
+      </li>
+    
+      <li class="nav-item ">
+        <a href="09-production-checklist.html" class="nav-link" title="生产环境准备与关键排查项">
+          <span class="chapter-badge">09</span>
+          <span class="chapter-text">
+            <span class="chapter-title">上线之前检查清单</span>
+            <span class="chapter-desc">生产环境准备与关键排查项</span>
+          </span>
+        </a>
+        
+      </li>
+    
+        </ul>
+      </nav>
+      <div class="sidebar-footer">
+        <a href="https://github.com/ticatec/keelson" target="_blank" rel="noopener">Keelson v1.0.0</a>
+        <span>·</span>
+        <a href="../index.html">返回首页</a>
+      </div>
+    </aside>
+
+    <!-- Overlay for mobile drawer -->
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+    <!-- Main Content Area -->
+    <main class="main-wrapper">
+      <div class="content-container">
+        <!-- Breadcrumbs -->
+        <nav class="breadcrumb-nav">
+          <a href="index.html" class="crumb-link">Keelson</a>
+          <span class="crumb-sep">/</span>
+          <span class="crumb-link">教程</span>
+          <span class="crumb-sep">/</span>
+          <span class="crumb-current">装配与依赖注入</span>
+        </nav>
+
+        <!-- Markdown Generated Content -->
+        <article class="markdown-body">
+          <h1 id="3-装配" class="heading-anchor"><a href="#3-装配" class="header-link">#</a> 3. 装配</h1>
+<p>Service 需要 Repository，Repository 需要 DAO。用 <code class="inline-code">new</code> 写，这就变成一个你必须一次做对并且一直保持对的初始化顺序。Keelson 的答案是：一个按名字索引的注册表，加上一个把构造推迟到首次使用的代理。</p>
+<h2 id="先注册再按名字取" class="heading-anchor"><a href="#先注册再按名字取" class="header-link">#</a> 先注册，再按名字取</h2>
+
+<div class="code-block-wrapper">
+  <div class="code-block-header">
+    <span class="code-lang-tag">typescript</span>
+    <button class="copy-btn" data-code-id="code-kaqv1nz" title="复制代码">
+      <svg class="copy-icon" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+      <span class="copy-label">复制</span>
+    </button>
+  </div>
+  <pre class="code-block"><code id="code-kaqv1nz" class="language-typescript"><span class="token keyword">import</span> { beanFactory } <span class="token keyword">from</span> <span class="token string">&#039;@ticatec/keelson-core&#039;</span>;
+
+beanFactory.<span class="token function">register</span>(<span class="token string">&#039;UserDAO&#039;</span>, UserDAO);
+beanFactory.<span class="token function">register</span>(<span class="token string">&#039;UserRepository&#039;</span>, UserRepository);
+beanFactory.<span class="token function">register</span>(<span class="token string">&#039;UserService&#039;</span>, UserService);</code></pre>
+</div>
+<p><code class="inline-code">register()</code> 只是把类存起来，不调用构造函数——这里什么都没有被实例化，所以这三行的先后顺序无关紧要。</p>
+<p>取回来：</p>
+
+<div class="code-block-wrapper">
+  <div class="code-block-header">
+    <span class="code-lang-tag">typescript</span>
+    <button class="copy-btn" data-code-id="code-x1stqg2" title="复制代码">
+      <svg class="copy-icon" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+      <span class="copy-label">复制</span>
+    </button>
+  </div>
+  <pre class="code-block"><code id="code-x1stqg2" class="language-typescript"><span class="token keyword">const</span> service = beanFactory.createBean&lt;UserService&gt;(<span class="token string">&#039;UserService&#039;</span>);</code></pre>
+</div>
+<p>拿到的是一个 <code class="inline-code">Proxy</code>。真正的 <code class="inline-code">UserService</code> 在你第一次访问属性或调用方法时才构造，之后一直缓存。用同一个名字再调 <code class="inline-code">createBean</code>，拿到的是同一个代理，背后是同一个实例。</p>
+<p>这就是顺序问题消失的原因。<code class="inline-code">UserService</code> 的构造函数可以引用 <code class="inline-code">UserRepository</code>，后者引用 <code class="inline-code">UserDAO</code>，而它们谁都不会被构造，直到真的有请求打进来——那时候一切早已注册完毕。</p>
+<h2 id="层内部用带类型的访问器" class="heading-anchor"><a href="#层内部用带类型的访问器" class="header-link">#</a> 层内部用带类型的访问器</h2>
+<p><code class="inline-code">beanFactory.createBean()</code> 是从外部进入的入口——你的启动代码、路由类。在层的内部，用基类给你的访问器：</p>
+
+<div class="code-block-wrapper">
+  <div class="code-block-header">
+    <span class="code-lang-tag">typescript</span>
+    <button class="copy-btn" data-code-id="code-hy7k6qw" title="复制代码">
+      <svg class="copy-icon" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+      <span class="copy-label">复制</span>
+    </button>
+  </div>
+  <pre class="code-block"><code id="code-hy7k6qw" class="language-typescript"><span class="token keyword">export</span> <span class="token keyword">class</span> UserService <span class="token keyword">extends</span> <span class="token builtin">CommonService</span> {
+    <span class="token keyword">private</span> <span class="token keyword">get</span> <span class="token function">userRepo</span>(): UserRepository {
+        <span class="token keyword">return</span> this.getRepositoryInstance&lt;UserRepository&gt;(<span class="token string">&#039;UserRepository&#039;</span>);
+    }
+}
+
+<span class="token keyword">export</span> <span class="token keyword">class</span> UserRepository <span class="token keyword">extends</span> <span class="token builtin">CommonRepository</span> {
+    <span class="token keyword">private</span> <span class="token keyword">get</span> <span class="token function">userDAO</span>(): UserDAO {
+        <span class="token keyword">return</span> this.getDAOInstance&lt;UserDAO&gt;(<span class="token string">&#039;UserDAO&#039;</span>);
+    }
+}</code></pre>
+</div>
+<p>两者有一处关键差别。<code class="inline-code">createBean&lt;T&gt;()</code> 返回 <code class="inline-code">T | undefined</code>——名字没注册过时是 undefined——所以 <code class="inline-code">strict</code> 会逼你处理，通常是一个 <code class="inline-code">!</code>。而 <code class="inline-code">getRepositoryInstance()</code> 与 <code class="inline-code">getDAOInstance()</code> 返回 <code class="inline-code">T</code>，名字不存在时<strong>直接抛错</strong>，消息里点名是哪个 bean，并告诉你去注册。</p>
+<p>这种不对称是刻意的：请求深处少了一个 bean 是编程错误，你要的是它当场、大声地失败，而不是一个 <code class="inline-code">undefined</code> 再往下走三层才变成 <code class="inline-code">Cannot read properties of undefined</code>。</p>
+<h2 id="为什么用-getter-而不是字段" class="heading-anchor"><a href="#为什么用-getter-而不是字段" class="header-link">#</a> 为什么用 getter 而不是字段</h2>
+<p>注意上面的访问器是 getter，不是在构造函数里赋值的字段：</p>
+
+<div class="code-block-wrapper">
+  <div class="code-block-header">
+    <span class="code-lang-tag">typescript</span>
+    <button class="copy-btn" data-code-id="code-s1oq5it" title="复制代码">
+      <svg class="copy-icon" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+      <span class="copy-label">复制</span>
+    </button>
+  </div>
+  <pre class="code-block"><code id="code-s1oq5it" class="language-typescript"><span class="token comment">// 这样写</span>
+<span class="token keyword">private</span> <span class="token keyword">get</span> <span class="token function">userRepo</span>(): UserRepository {
+    <span class="token keyword">return</span> this.getRepositoryInstance&lt;UserRepository&gt;(<span class="token string">&#039;UserRepository&#039;</span>);
+}
+
+<span class="token comment">// 不要这样</span>
+<span class="token keyword">private</span> userRepo = this.getRepositoryInstance&lt;UserRepository&gt;(<span class="token string">&#039;UserRepository&#039;</span>);</code></pre>
+</div>
+<p>字段初始化器在构造期间执行。而构造本身是首次使用时才发生的，所以字段会在那一刻解析依赖——通常没问题，但把两个生命周期绑在了一起，没有换来任何好处。getter 每次访问都解析一遍，代价是一次 map 查找，因为代理本身是缓存的。</p>
+<h2 id="循环依赖" class="heading-anchor"><a href="#循环依赖" class="header-link">#</a> 循环依赖</h2>
+<p><code class="inline-code">UserService</code> 用到 <code class="inline-code">AccountService</code>，后者又用到 <code class="inline-code">UserService</code>。用 <code class="inline-code">new</code> 写，这是栈溢出。用懒加载代理，这没问题——只要两边的<strong>构造函数</strong>都不去用对方。</p>
+
+<div class="code-block-wrapper">
+  <div class="code-block-header">
+    <span class="code-lang-tag">typescript</span>
+    <button class="copy-btn" data-code-id="code-c4rx17f" title="复制代码">
+      <svg class="copy-icon" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+      <span class="copy-label">复制</span>
+    </button>
+  </div>
+  <pre class="code-block"><code id="code-c4rx17f" class="language-typescript"><span class="token comment">// 没问题：各自只在方法真正运行时才解析对方</span>
+<span class="token keyword">class</span> UserService <span class="token keyword">extends</span> <span class="token builtin">CommonService</span> {
+    <span class="token keyword">private</span> <span class="token keyword">get</span> <span class="token function">accounts</span>(): AccountService {
+        <span class="token keyword">return</span> beanFactory.createBean&lt;AccountService&gt;(<span class="token string">&#039;AccountService&#039;</span>)!;
+    }
+}</code></pre>
+</div>
+<p>不行的是在构造函数里调用对方。工厂会检测到并抛出把链条写清楚的错误：</p>
+
+<div class="code-block-wrapper">
+  <div class="code-block-header">
+    <span class="code-lang-tag">text</span>
+    <button class="copy-btn" data-code-id="code-urglv7m" title="复制代码">
+      <svg class="copy-icon" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+      <span class="copy-label">复制</span>
+    </button>
+  </div>
+  <pre class="code-block"><code id="code-urglv7m" class="language-text">Circular dependency detected: UserService -&gt; AccountService -&gt; UserService</code></pre>
+</div>
+<p>这条消息在告诉你：某个构造函数在做它不该做的事。把它挪进方法里。</p>
+<h2 id="bean-很多的时候" class="heading-anchor"><a href="#bean-很多的时候" class="header-link">#</a> bean 很多的时候</h2>
+<p>在 <code class="inline-code">beforeStart()</code> 里一个个列出来会很长，而且每一个都对应入口文件顶部的一条 import—— 这意味着无论进程用不用得上，所有类都会在启动时被加载。<code class="inline-code">Beans</code> 注册的是<strong>加载器</strong>：</p>
+
+<div class="code-block-wrapper">
+  <div class="code-block-header">
+    <span class="code-lang-tag">typescript</span>
+    <button class="copy-btn" data-code-id="code-5e9vwro" title="复制代码">
+      <svg class="copy-icon" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+      <span class="copy-label">复制</span>
+    </button>
+  </div>
+  <pre class="code-block"><code id="code-5e9vwro" class="language-typescript"><span class="token keyword">import</span> { Beans } <span class="token keyword">from</span> <span class="token string">&#039;@ticatec/keelson-core&#039;</span>;
+
+<span class="token keyword">protected</span> <span class="token keyword">async</span> <span class="token function">beforeStart</span>(): <span class="token builtin">Promise</span>&lt;<span class="token keyword">void</span>&gt; {
+    DBManager.<span class="token function">init</span>(<span class="token function">initializePg</span>(AppConf.<span class="token function">getInstance</span>()!.<span class="token keyword">get</span>(<span class="token string">&#039;database&#039;</span>)));
+
+    <span class="token keyword">const</span> beans = Beans.<span class="token function">getInstance</span>();
+    beans.<span class="token function">register</span>(<span class="token string">&#039;UserDAO&#039;</span>, () =&gt; <span class="token keyword">import</span>(<span class="token string">&#039;./dao/UserDAO.js&#039;</span>));
+    beans.<span class="token function">register</span>(<span class="token string">&#039;UserRepository&#039;</span>, () =&gt; <span class="token keyword">import</span>(<span class="token string">&#039;./repository/UserRepository.js&#039;</span>));
+    beans.<span class="token function">register</span>(<span class="token string">&#039;UserService&#039;</span>, () =&gt; <span class="token keyword">import</span>(<span class="token string">&#039;./service/UserService.js&#039;</span>));
+
+    <span class="token keyword">await</span> beans.<span class="token function">load</span>();
+}</code></pre>
+</div>
+<p>每个加载器是一个动态 import，对应模块的<strong>默认导出</strong>就是那个类。<code class="inline-code">load()</code> 遍历它们，逐个 import 并把类以该名字交给 <code class="inline-code">beanFactory</code>。之后的一切与前面完全一样。</p>
+<p>这还能打破模块层面的循环引用——那是懒加载代理帮不上忙的地方：两个模块在顶部互相 import，问题在你的任何代码运行之前就已经发生了。</p>
+<h2 id="注册该写在哪" class="heading-anchor"><a href="#注册该写在哪" class="header-link">#</a> 注册该写在哪</h2>
+<p>永远写在 <code class="inline-code">beforeStart()</code> 里。它在配置加载之后、Express 应用创建之前运行，正是数据库已经就绪而请求还不可能到达的那个窗口。</p>
+<p>写在 <code class="inline-code">setupRoutes()</code> 里也能跑通，但那是碰巧——路由绑定确实发生在开始监听之前。只是这样一来注册就排在 <code class="inline-code">addHealthCheck()</code> 之后了，某个要解析 bean 的健康检查项会发现它还不存在。</p>
+<h2 id="一个进程一份注册表" class="heading-anchor"><a href="#一个进程一份注册表" class="header-link">#</a> 一个进程一份注册表</h2>
+<p><code class="inline-code">beanFactory</code> 是单例，而在一个同时发布 CommonJS 与 ESM 的包里，单例是个陷阱：两种模块格式，两份模块级变量，两个注册表。从一边注册、从另一边解析，bean 就是不存在。</p>
+<p>Keelson 把它以 <code class="inline-code">Symbol.for()</code> 为键锚定在 <code class="inline-code">globalThis</code> 上，两份产物共用一份注册表。这件事你不需要做任何处理——知道它，只是为了解释 <code class="inline-code">beanFactory</code> 为什么不是一个简单的导出常量。</p>
+<h2 id="bean-找不到的时候" class="heading-anchor"><a href="#bean-找不到的时候" class="header-link">#</a> bean 找不到的时候</h2>
+
+<div class="code-block-wrapper">
+  <div class="code-block-header">
+    <span class="code-lang-tag">text</span>
+    <button class="copy-btn" data-code-id="code-6nu5qr2" title="复制代码">
+      <svg class="copy-icon" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+      <span class="copy-label">复制</span>
+    </button>
+  </div>
+  <pre class="code-block"><code id="code-6nu5qr2" class="language-text">Repository &quot;UserRepository&quot; is not registered in BeanFactory.
+Please register it via beanFactory.register(&#039;UserRepository&#039;, Class) before usage.</code></pre>
+</div>
+<p>按可能性排序的三个常见原因：注册用的名字和查找用的名字拼得不一样——它们是字符串，没有任何东西会替你核对；注册写在了错误的生命周期方法里；或者 <code class="inline-code">Beans</code> 的加载器指向的模块没有 <code class="inline-code">default</code> 导出。</p>
+<h2 id="bean-不要带状态" class="heading-anchor"><a href="#bean-不要带状态" class="header-link">#</a> bean 不要带状态</h2>
+<p>一个 bean 是整个进程里所有请求共用的那一个实例。构造函数之外任何写到 <code class="inline-code">this</code> 上的东西，下一个请求都看得见；压力一上来，就是两个请求在写同一个字段。每请求的状态靠参数传递，或者放在事务上下文里——绝不要放在 service 上。</p>
+<h2 id="自己的一份注册表" class="heading-anchor"><a href="#自己的一份注册表" class="header-link">#</a> 自己的一份注册表</h2>
+<p><code class="inline-code">BeanFactory</code> 除了单例之外也作为类导出，所以 <code class="inline-code">new BeanFactory()</code> 能给你一份别人看不到的私有注册表。</p>
+<p>它的用处比听上去窄。<code class="inline-code">CommonService.getRepositoryInstance()</code> 与 <code class="inline-code">CommonRepository.getDAOInstance()</code> 读的是模块级单例，不接受注册表参数，所以一个要跑 service 或 repository 的测试，无论如何都得注册到全局的 <code class="inline-code">beanFactory</code> 上。私有实例只对直接调用注册表的代码有意义。</p>
+<hr class="divider" />
+<p>下一章：<a href="04-http-layer.html" class="doc-link">HTTP 层</a> —— 路由、控制器、校验与错误。</p>
+        </article>
+
+        <!-- Previous / Next Navigation -->
+        
+    <div class="chapter-pagination">
+      
+        <a href="02-layers-and-transactions.html" class="pagination-btn prev-btn">
+          <span class="pagination-sub">← 上一章</span>
+          <span class="pagination-title">02. 分层与事务</span>
+        </a>
+      
+
+      
+        <a href="04-http-layer.html" class="pagination-btn next-btn">
+          <span class="pagination-sub">下一章 →</span>
+          <span class="pagination-title">04. HTTP 层</span>
+        </a>
+      
+    </div>
+  
+
+        <!-- Document Footer -->
+        <footer class="site-footer">
+          <div class="footer-left">
+            <p>© 2026 Ticatec Keelson Framework. Released under the MIT License.</p>
+          </div>
+          <div class="footer-right">
+            <a href="../en/03-wiring.html" class="footer-lang-link">
+              🌐 Read in English
+            </a>
+          </div>
+        </footer>
+      </div>
+
+      <!-- Right Table of Contents -->
+      
+      <aside class="right-toc-container">
+        <div class="right-toc-inner">
+          <div class="toc-header">本页目录</div>
+          <ul class="right-toc-list">
+            
+              <li class="toc-item level-2">
+                <a href="#先注册再按名字取" class="toc-link" data-anchor="先注册再按名字取">
+                  先注册，再按名字取
+                </a>
+              </li>
+            
+              <li class="toc-item level-2">
+                <a href="#层内部用带类型的访问器" class="toc-link" data-anchor="层内部用带类型的访问器">
+                  层内部用带类型的访问器
+                </a>
+              </li>
+            
+              <li class="toc-item level-2">
+                <a href="#为什么用-getter-而不是字段" class="toc-link" data-anchor="为什么用-getter-而不是字段">
+                  为什么用 getter 而不是字段
+                </a>
+              </li>
+            
+              <li class="toc-item level-2">
+                <a href="#循环依赖" class="toc-link" data-anchor="循环依赖">
+                  循环依赖
+                </a>
+              </li>
+            
+              <li class="toc-item level-2">
+                <a href="#bean-很多的时候" class="toc-link" data-anchor="bean-很多的时候">
+                  bean 很多的时候
+                </a>
+              </li>
+            
+              <li class="toc-item level-2">
+                <a href="#注册该写在哪" class="toc-link" data-anchor="注册该写在哪">
+                  注册该写在哪
+                </a>
+              </li>
+            
+              <li class="toc-item level-2">
+                <a href="#一个进程一份注册表" class="toc-link" data-anchor="一个进程一份注册表">
+                  一个进程一份注册表
+                </a>
+              </li>
+            
+              <li class="toc-item level-2">
+                <a href="#bean-找不到的时候" class="toc-link" data-anchor="bean-找不到的时候">
+                  bean 找不到的时候
+                </a>
+              </li>
+            
+              <li class="toc-item level-2">
+                <a href="#bean-不要带状态" class="toc-link" data-anchor="bean-不要带状态">
+                  bean 不要带状态
+                </a>
+              </li>
+            
+              <li class="toc-item level-2">
+                <a href="#自己的一份注册表" class="toc-link" data-anchor="自己的一份注册表">
+                  自己的一份注册表
+                </a>
+              </li>
+            
+          </ul>
+        </div>
+      </aside>
+    
+    </main>
+  </div>
+
+  <script src="../assets/app.js"></script>
+</body>
+</html>

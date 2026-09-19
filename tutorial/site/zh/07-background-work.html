@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>07. 后台任务与优雅关停 | Keelson 官方教程</title>
+  <meta name="description" content="Keelson TypeScript Framework Official Tutorial - Enterprise TypeScript for Express">
+  <link rel="stylesheet" href="../assets/style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+</head>
+<body class="theme-auto">
+  <!-- Top Navigation Header -->
+  <header class="top-navbar">
+    <div class="navbar-left">
+      <button class="mobile-menu-toggle" id="menuToggle" aria-label="Toggle Navigation">
+        <svg viewBox="0 0 24 24" width="22" height="22" stroke="currentColor" stroke-width="2" fill="none"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+      </button>
+      <a href="index.html" class="brand-logo">
+        <span class="brand-icon">⚡</span>
+        <span class="brand-name">Keelson</span>
+        <span class="brand-badge">教程</span>
+      </a>
+    </div>
+
+    <div class="navbar-right">
+      <!-- Search Input -->
+      <div class="search-box">
+        <svg class="search-icon" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+        <input type="text" id="searchInput" placeholder="在章节中快速搜索..." />
+        <span class="search-kbd">⌘K</span>
+      </div>
+
+      <!-- Language Switch -->
+      <a href="../en/07-background-work.html" class="lang-switch-btn" title="切换为英文">
+        <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>
+        <span>English</span>
+      </a>
+
+      <!-- Theme Switch -->
+      <button class="theme-toggle-btn" id="themeToggle" aria-label="Toggle Theme">
+        <svg class="sun-icon" viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
+        <svg class="moon-icon" viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+      </button>
+
+      <!-- GitHub Link -->
+      <a href="https://github.com/ticatec/keelson" target="_blank" rel="noopener noreferrer" class="github-link" title="GitHub Repository">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z"/></svg>
+      </a>
+    </div>
+  </header>
+
+  <div class="layout-container">
+    <!-- Left Navigation Sidebar -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-header">
+        <div class="sidebar-title">教程目录</div>
+        <span class="chapter-count">10 篇文档</span>
+      </div>
+      <nav class="sidebar-nav">
+        <ul class="nav-list" id="navList">
+          
+      <li class="nav-item ">
+        <a href="index.html" class="nav-link" title="教程导读与各章索引">
+          <span class="chapter-badge">00</span>
+          <span class="chapter-text">
+            <span class="chapter-title">概览与教程目录</span>
+            <span class="chapter-desc">教程导读与各章索引</span>
+          </span>
+        </a>
+        
+      </li>
+    
+      <li class="nav-item ">
+        <a href="01-getting-started.html" class="nav-link" title="从空目录到一个能响应请求的服务">
+          <span class="chapter-badge">01</span>
+          <span class="chapter-text">
+            <span class="chapter-title">起步</span>
+            <span class="chapter-desc">从空目录到一个能响应请求的服务</span>
+          </span>
+        </a>
+        
+      </li>
+    
+      <li class="nav-item ">
+        <a href="02-layers-and-transactions.html" class="nav-link" title="为什么分四层，事务如何贯穿">
+          <span class="chapter-badge">02</span>
+          <span class="chapter-text">
+            <span class="chapter-title">分层与事务</span>
+            <span class="chapter-desc">为什么分四层，事务如何贯穿</span>
+          </span>
+        </a>
+        
+      </li>
+    
+      <li class="nav-item ">
+        <a href="03-wiring.html" class="nav-link" title="类与类互相发现，解耦初始化顺序">
+          <span class="chapter-badge">03</span>
+          <span class="chapter-text">
+            <span class="chapter-title">装配与依赖注入</span>
+            <span class="chapter-desc">类与类互相发现，解耦初始化顺序</span>
+          </span>
+        </a>
+        
+      </li>
+    
+      <li class="nav-item ">
+        <a href="04-http-layer.html" class="nav-link" title="路由、控制器、校验与错误映射">
+          <span class="chapter-badge">04</span>
+          <span class="chapter-text">
+            <span class="chapter-title">HTTP 层</span>
+            <span class="chapter-desc">路由、控制器、校验与错误映射</span>
+          </span>
+        </a>
+        
+      </li>
+    
+      <li class="nav-item ">
+        <a href="05-identity.html" class="nav-link" title="req.user 来源与鉴权机制">
+          <span class="chapter-badge">05</span>
+          <span class="chapter-text">
+            <span class="chapter-title">身份与访问控制</span>
+            <span class="chapter-desc">req.user 来源与鉴权机制</span>
+          </span>
+        </a>
+        
+      </li>
+    
+      <li class="nav-item ">
+        <a href="06-logging-and-health.html" class="nav-link" title="记录规范、敏感信息与 K8s 探针">
+          <span class="chapter-badge">06</span>
+          <span class="chapter-text">
+            <span class="chapter-title">日志与健康检查</span>
+            <span class="chapter-desc">记录规范、敏感信息与 K8s 探针</span>
+          </span>
+        </a>
+        
+      </li>
+    
+      <li class="nav-item active">
+        <a href="07-background-work.html" class="nav-link" title="周期任务调度与优雅关停保护">
+          <span class="chapter-badge">07</span>
+          <span class="chapter-text">
+            <span class="chapter-title">后台任务与优雅关停</span>
+            <span class="chapter-desc">周期任务调度与优雅关停保护</span>
+          </span>
+        </a>
+        
+      <ul class="sidebar-subnav">
+        
+          <li class="sidebar-subnav-item level-2">
+            <a href="#一个处理器" class="subnav-link" data-toc-target="一个处理器">
+              一个处理器
+            </a>
+          </li>
+        
+          <li class="sidebar-subnav-item level-2">
+            <a href="#异常不会停掉循环" class="subnav-link" data-toc-target="异常不会停掉循环">
+              异常不会停掉循环
+            </a>
+          </li>
+        
+          <li class="sidebar-subnav-item level-2">
+            <a href="#注册与启动" class="subnav-link" data-toc-target="注册与启动">
+              注册与启动
+            </a>
+          </li>
+        
+          <li class="sidebar-subnav-item level-2">
+            <a href="#关停" class="subnav-link" data-toc-target="关停">
+              关停
+            </a>
+          </li>
+        
+          <li class="sidebar-subnav-item level-3">
+            <a href="#等待在途条目是什么意思" class="subnav-link" data-toc-target="等待在途条目是什么意思">
+              &quot;等待在途条目&quot;是什么意思
+            </a>
+          </li>
+        
+          <li class="sidebar-subnav-item level-3">
+            <a href="#http-那一侧" class="subnav-link" data-toc-target="http-那一侧">
+              HTTP 那一侧
+            </a>
+          </li>
+        
+          <li class="sidebar-subnav-item level-2">
+            <a href="#端口文件" class="subnav-link" data-toc-target="端口文件">
+              端口文件
+            </a>
+          </li>
+        
+      </ul>
+      </li>
+    
+      <li class="nav-item ">
+        <a href="08-config-and-cache.html" class="nav-link" title="YAML、Nacos、Consul 与 Redis 集成">
+          <span class="chapter-badge">08</span>
+          <span class="chapter-text">
+            <span class="chapter-title">配置与缓存</span>
+            <span class="chapter-desc">YAML、Nacos、Consul 与 Redis 集成</span>
+          </span>
+        </a>
+        
+      </li>
+    
+      <li class="nav-item ">
+        <a href="09-production-checklist.html" class="nav-link" title="生产环境准备与关键排查项">
+          <span class="chapter-badge">09</span>
+          <span class="chapter-text">
+            <span class="chapter-title">上线之前检查清单</span>
+            <span class="chapter-desc">生产环境准备与关键排查项</span>
+          </span>
+        </a>
+        
+      </li>
+    
+        </ul>
+      </nav>
+      <div class="sidebar-footer">
+        <a href="https://github.com/ticatec/keelson" target="_blank" rel="noopener">Keelson v1.0.0</a>
+        <span>·</span>
+        <a href="../index.html">返回首页</a>
+      </div>
+    </aside>
+
+    <!-- Overlay for mobile drawer -->
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+    <!-- Main Content Area -->
+    <main class="main-wrapper">
+      <div class="content-container">
+        <!-- Breadcrumbs -->
+        <nav class="breadcrumb-nav">
+          <a href="index.html" class="crumb-link">Keelson</a>
+          <span class="crumb-sep">/</span>
+          <span class="crumb-link">教程</span>
+          <span class="crumb-sep">/</span>
+          <span class="crumb-current">后台任务与优雅关停</span>
+        </nav>
+
+        <!-- Markdown Generated Content -->
+        <article class="markdown-body">
+          <h1 id="7-后台任务与关停" class="heading-anchor"><a href="#7-后台任务与关停" class="header-link">#</a> 7. 后台任务与关停</h1>
+<p>不由请求触发的活儿——待发件箱、要轮询的队列、每晚的清理——以及怎么在停机时一件都不丢。</p>
+<h2 id="一个处理器" class="heading-anchor"><a href="#一个处理器" class="header-link">#</a> 一个处理器</h2>
+<p>继承 <code class="inline-code">CommonProcessor&lt;T&gt;</code>，说明多久看一次、每条数据怎么处理：</p>
+
+<div class="code-block-wrapper">
+  <div class="code-block-header">
+    <span class="code-lang-tag">typescript</span>
+    <button class="copy-btn" data-code-id="code-hc24egm" title="复制代码">
+      <svg class="copy-icon" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+      <span class="copy-label">复制</span>
+    </button>
+  </div>
+  <pre class="code-block"><code id="code-hc24egm" class="language-typescript"><span class="token keyword">import</span> { CommonProcessor } <span class="token keyword">from</span> <span class="token string">&#039;@ticatec/keelson-express&#039;</span>;
+<span class="token keyword">import</span> { beanFactory } <span class="token keyword">from</span> <span class="token string">&#039;@ticatec/keelson-core&#039;</span>;
+
+<span class="token keyword">interface</span> PendingMail { id: string; to: string; body: string; }
+
+<span class="token keyword">export</span> <span class="token keyword">default</span> <span class="token keyword">class</span> MailProcessor <span class="token keyword">extends</span> CommonProcessor&lt;PendingMail&gt; {
+    <span class="token function">constructor</span>() {
+        <span class="token function">super</span>(<span class="token number">30</span>, <span class="token number">5</span>);        <span class="token comment">// 每 30 秒看一次，最多 5 条并发</span>
+    }
+
+    <span class="token keyword">private</span> <span class="token keyword">get</span> <span class="token function">service</span>(): MailService {
+        <span class="token keyword">return</span> beanFactory.createBean&lt;MailService&gt;(<span class="token string">&#039;MailService&#039;</span>)!;
+    }
+
+    <span class="token keyword">protected</span> <span class="token keyword">async</span> <span class="token function">loadToProcessData</span>(): <span class="token builtin">Promise</span>&lt;<span class="token builtin">Array</span>&lt;PendingMail&gt;&gt; {
+        <span class="token keyword">return</span> <span class="token keyword">await</span> this.service.<span class="token function">findPending</span>(<span class="token number">100</span>);
+    }
+
+    <span class="token keyword">protected</span> <span class="token keyword">async</span> <span class="token function">processItem</span>(item: PendingMail): <span class="token builtin">Promise</span>&lt;<span class="token keyword">void</span>&gt; {
+        <span class="token keyword">await</span> this.service.<span class="token function">send</span>(item);
+    }
+}</code></pre>
+</div>
+<p>构造函数两个参数分别是轮询间隔秒数（最小 5，会取整）和并发度——同时最多几个 <code class="inline-code">processItem</code> 在跑，默认 5。</p>
+<p>循环是：等一个间隔，调 <code class="inline-code">loadToProcessData()</code>，用不超过 <code class="inline-code">ants</code> 的并发跑 <code class="inline-code">processItem</code>，再等。空批次会立刻重置计时器，所以空闲的处理器不会攒下一堆被跳过的 tick。</p>
+<p>两个 tick 永不重叠。某一批跑得比间隔还久时，下一个 tick 是被跳过而不是排队——对 &quot;把积压抽干&quot;这类循环来说这正是你要的，但如果你期待的是固定频率调度，这一点值得知道。</p>
+<h2 id="异常不会停掉循环" class="heading-anchor"><a href="#异常不会停掉循环" class="header-link">#</a> 异常不会停掉循环</h2>
+<p><code class="inline-code">processItem</code> 抛异常会被记录，剩下的条目继续跑。<code class="inline-code">loadToProcessData</code> 抛异常会被记录，这一轮结束，下一轮照常。所以数据库短暂故障只会让处理器暂停，而不是死掉。</p>
+<p>随之而来的后果：一条永远处理不了的&quot;毒药数据&quot;会每个间隔重试一次，永远如此。那个把条目标记为已处理的逻辑，也应当在 N 次失败后把它标记为失败——框架不跟踪重试次数，因为只有你的表结构知道这个计数器该放哪。</p>
+<h2 id="注册与启动" class="heading-anchor"><a href="#注册与启动" class="header-link">#</a> 注册与启动</h2>
+
+<div class="code-block-wrapper">
+  <div class="code-block-header">
+    <span class="code-lang-tag">typescript</span>
+    <button class="copy-btn" data-code-id="code-z6l2rme" title="复制代码">
+      <svg class="copy-icon" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+      <span class="copy-label">复制</span>
+    </button>
+  </div>
+  <pre class="code-block"><code id="code-z6l2rme" class="language-typescript"><span class="token keyword">import</span> { ProcessorManager } <span class="token keyword">from</span> <span class="token string">&#039;@ticatec/keelson-express&#039;</span>;
+
+<span class="token keyword">protected</span> <span class="token keyword">async</span> <span class="token function">beforeStart</span>(): <span class="token builtin">Promise</span>&lt;<span class="token keyword">void</span>&gt; {
+    DBManager.<span class="token function">init</span>(<span class="token function">initializePg</span>(AppConf.<span class="token function">getInstance</span>()!.<span class="token keyword">get</span>(<span class="token string">&#039;database&#039;</span>)));
+    beanFactory.<span class="token function">register</span>(<span class="token string">&#039;MailService&#039;</span>, MailService);
+
+    <span class="token keyword">const</span> manager = ProcessorManager.<span class="token function">getInstance</span>();
+    manager.<span class="token function">register</span>(MailProcessor);
+    manager.<span class="token function">startAll</span>();
+}</code></pre>
+</div>
+<p><code class="inline-code">register(Class)</code> 以类名为键，返回实例，只在第一次真正创建。<code class="inline-code">startAll()</code> 启动所有已注册的处理器。</p>
+<p>注册要排在数据库与 bean 之后——处理器可能在启动后一秒内就跑第一个 tick，那时它必须面对一个可用的世界。</p>
+<p>之后想拿到某个处理器，<code class="inline-code">ProcessorManager.getInstance().get(&#039;MailProcessor&#039;)</code> 返回它或 <code class="inline-code">undefined</code>。<code class="inline-code">runImmediately()</code> 让下一个 tick 立刻发生——webhook 想踢一下抽取循环而不是干等一个间隔时，用的就是它。</p>
+<h2 id="关停" class="heading-anchor"><a href="#关停" class="header-link">#</a> 关停</h2>
+<p><code class="inline-code">BaseServer.shutdown()</code> 按顺序做三件事：停掉所有处理器并等待在途条目、删掉 <code class="inline-code">check.dat</code> 端口文件、关闭 HTTP 服务器。</p>
+<p>处理器排在最前面是关键。先关监听会让某一批数据处理到一半，而 pod 已经在被拆了。</p>
+<p>把它接到编排器发的信号上：</p>
+
+<div class="code-block-wrapper">
+  <div class="code-block-header">
+    <span class="code-lang-tag">typescript</span>
+    <button class="copy-btn" data-code-id="code-1k55ko6" title="复制代码">
+      <svg class="copy-icon" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+      <span class="copy-label">复制</span>
+    </button>
+  </div>
+  <pre class="code-block"><code id="code-1k55ko6" class="language-typescript"><span class="token keyword">const</span> server = <span class="token keyword">new</span> <span class="token function">MyServer</span>();
+BaseServer.<span class="token function">startup</span>(server);
+
+<span class="token keyword">for</span> (<span class="token keyword">const</span> signal of [<span class="token string">&#039;SIGTERM&#039;</span>, <span class="token string">&#039;SIGINT&#039;</span>] as <span class="token keyword">const</span>) {
+    process.<span class="token function">on</span>(signal, () =&gt; {
+        server.<span class="token function">shutdown</span>().<span class="token function">then</span>(() =&gt; process.<span class="token function">exit</span>(<span class="token number">0</span>));
+    });
+}</code></pre>
+</div>
+<p><code class="inline-code">shutdown()</code> 不会自动挂到信号上。一个背着你安装信号处理器的框架，等你需要自己的关停顺序时——关掉消息中间件连接、从服务发现注销——就成了要跟它搏斗的东西。</p>
+<h3 id="等待在途条目是什么意思" class="heading-anchor"><a href="#等待在途条目是什么意思" class="header-link">#</a> &quot;等待在途条目&quot;是什么意思</h3>
+<p><code class="inline-code">stop()</code> 清掉定时器，然后 await 当前正在跑的那一批。已经进入 <code class="inline-code">processItem</code> 的条目会跑完。还没开始的条目就是不开始了——它仍然处在你的查询所依据的那个待处理状态里，下一个起来的进程会接着捞。</p>
+<p>这正是 <code class="inline-code">loadToProcessData()</code> 的查询应当依据持久化状态、而不是内存标志的原因：你与未来的自己之间的约定是——没处理完的行，重启之后依然看得见。</p>
+<h3 id="http-那一侧" class="heading-anchor"><a href="#http-那一侧" class="header-link">#</a> HTTP 那一侧</h3>
+<p><code class="inline-code">close()</code> 停止接受新连接，并等待在途请求完成。Node 18 在这一步会把空闲的 keep-alive 连接留着，可能拖住回调，所以 <code class="inline-code">shutdown()</code> 显式关掉空闲连接。在途请求则不去动它，让它写完——一个把响应写到一半截断的关停，不叫优雅。</p>
+<p>给 pod 的 <code class="inline-code">terminationGracePeriodSeconds</code> 要比你最慢的请求更长。</p>
+<h2 id="端口文件" class="heading-anchor"><a href="#端口文件" class="header-link">#</a> 端口文件</h2>
+<p>启动时服务器把自己实际绑定到的端口写进 <code class="inline-code">./check.dat</code>，<code class="inline-code">shutdown()</code> 删掉它。在 <code class="inline-code">port: 0</code>（随便找个空闲端口）的场景下，外层脚本就是靠这个文件发现真实端口的。作为健康信号它很弱，请用 <code class="inline-code">/health/live</code>。</p>
+<hr class="divider" />
+<p>下一章：<a href="08-config-and-cache.html" class="doc-link">配置与缓存</a>。</p>
+        </article>
+
+        <!-- Previous / Next Navigation -->
+        
+    <div class="chapter-pagination">
+      
+        <a href="06-logging-and-health.html" class="pagination-btn prev-btn">
+          <span class="pagination-sub">← 上一章</span>
+          <span class="pagination-title">06. 日志与健康检查</span>
+        </a>
+      
+
+      
+        <a href="08-config-and-cache.html" class="pagination-btn next-btn">
+          <span class="pagination-sub">下一章 →</span>
+          <span class="pagination-title">08. 配置与缓存</span>
+        </a>
+      
+    </div>
+  
+
+        <!-- Document Footer -->
+        <footer class="site-footer">
+          <div class="footer-left">
+            <p>© 2026 Ticatec Keelson Framework. Released under the MIT License.</p>
+          </div>
+          <div class="footer-right">
+            <a href="../en/07-background-work.html" class="footer-lang-link">
+              🌐 Read in English
+            </a>
+          </div>
+        </footer>
+      </div>
+
+      <!-- Right Table of Contents -->
+      
+      <aside class="right-toc-container">
+        <div class="right-toc-inner">
+          <div class="toc-header">本页目录</div>
+          <ul class="right-toc-list">
+            
+              <li class="toc-item level-2">
+                <a href="#一个处理器" class="toc-link" data-anchor="一个处理器">
+                  一个处理器
+                </a>
+              </li>
+            
+              <li class="toc-item level-2">
+                <a href="#异常不会停掉循环" class="toc-link" data-anchor="异常不会停掉循环">
+                  异常不会停掉循环
+                </a>
+              </li>
+            
+              <li class="toc-item level-2">
+                <a href="#注册与启动" class="toc-link" data-anchor="注册与启动">
+                  注册与启动
+                </a>
+              </li>
+            
+              <li class="toc-item level-2">
+                <a href="#关停" class="toc-link" data-anchor="关停">
+                  关停
+                </a>
+              </li>
+            
+              <li class="toc-item level-3">
+                <a href="#等待在途条目是什么意思" class="toc-link" data-anchor="等待在途条目是什么意思">
+                  &quot;等待在途条目&quot;是什么意思
+                </a>
+              </li>
+            
+              <li class="toc-item level-3">
+                <a href="#http-那一侧" class="toc-link" data-anchor="http-那一侧">
+                  HTTP 那一侧
+                </a>
+              </li>
+            
+              <li class="toc-item level-2">
+                <a href="#端口文件" class="toc-link" data-anchor="端口文件">
+                  端口文件
+                </a>
+              </li>
+            
+          </ul>
+        </div>
+      </aside>
+    
+    </main>
+  </div>
+
+  <script src="../assets/app.js"></script>
+</body>
+</html>

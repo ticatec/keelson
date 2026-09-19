@@ -96,7 +96,7 @@
     "express": "^5.0.0",
     "@ticatec/keelson-core": ">=1.0.0",
     "@ticatec/bean-validator": ">=1.1.0",
-    "@ticatec/node-exception": ">=2.1.0"
+    "@ticatec/node-exception": ">=3.0.0"
   },
   "devDependencies": {
     "@ticatec/bean-validator": "workspace:*",

@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>概览与教程目录 | Keelson 官方教程</title>
+  <meta name="description" content="Keelson TypeScript Framework Official Tutorial - Enterprise TypeScript for Express">
+  <link rel="stylesheet" href="../assets/style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+</head>
+<body class="theme-auto">
+  <!-- Top Navigation Header -->
+  <header class="top-navbar">
+    <div class="navbar-left">
+      <button class="mobile-menu-toggle" id="menuToggle" aria-label="Toggle Navigation">
+        <svg viewBox="0 0 24 24" width="22" height="22" stroke="currentColor" stroke-width="2" fill="none"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+      </button>
+      <a href="index.html" class="brand-logo">
+        <span class="brand-icon">⚡</span>
+        <span class="brand-name">Keelson</span>
+        <span class="brand-badge">教程</span>
+      </a>
+    </div>
+
+    <div class="navbar-right">
+      <!-- Search Input -->
+      <div class="search-box">
+        <svg class="search-icon" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+        <input type="text" id="searchInput" placeholder="在章节中快速搜索..." />
+        <span class="search-kbd">⌘K</span>
+      </div>
+
+      <!-- Language Switch -->
+      <a href="../en/index.html" class="lang-switch-btn" title="切换为英文">
+        <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>
+        <span>English</span>
+      </a>
+
+      <!-- Theme Switch -->
+      <button class="theme-toggle-btn" id="themeToggle" aria-label="Toggle Theme">
+        <svg class="sun-icon" viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
+        <svg class="moon-icon" viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+      </button>
+
+      <!-- GitHub Link -->
+      <a href="https://github.com/ticatec/keelson" target="_blank" rel="noopener noreferrer" class="github-link" title="GitHub Repository">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z"/></svg>
+      </a>
+    </div>
+  </header>
+
+  <div class="layout-container">
+    <!-- Left Navigation Sidebar -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-header">
+        <div class="sidebar-title">教程目录</div>
+        <span class="chapter-count">10 篇文档</span>
+      </div>
+      <nav class="sidebar-nav">
+        <ul class="nav-list" id="navList">
+          
+      <li class="nav-item active">
+        <a href="index.html" class="nav-link" title="教程导读与各章索引">
+          <span class="chapter-badge">00</span>
+          <span class="chapter-text">
+            <span class="chapter-title">概览与教程目录</span>
+            <span class="chapter-desc">教程导读与各章索引</span>
+          </span>
+        </a>
+        
+      <ul class="sidebar-subnav">
+        
+          <li class="sidebar-subnav-item level-2">
+            <a href="#它与-docsprompts-指南的关系" class="subnav-link" data-toc-target="它与-docsprompts-指南的关系">
+              它与 docs/prompts 指南的关系
+            </a>
+          </li>
+        
+          <li class="sidebar-subnav-item level-2">
+            <a href="#各章的约定" class="subnav-link" data-toc-target="各章的约定">
+              各章的约定
+            </a>
+          </li>
+        
+      </ul>
+      </li>
+    
+      <li class="nav-item ">
+        <a href="01-getting-started.html" class="nav-link" title="从空目录到一个能响应请求的服务">
+          <span class="chapter-badge">01</span>
+          <span class="chapter-text">
+            <span class="chapter-title">起步</span>
+            <span class="chapter-desc">从空目录到一个能响应请求的服务</span>
+          </span>
+        </a>
+        
+      </li>
+    
+      <li class="nav-item ">
+        <a href="02-layers-and-transactions.html" class="nav-link" title="为什么分四层，事务如何贯穿">
+          <span class="chapter-badge">02</span>
+          <span class="chapter-text">
+            <span class="chapter-title">分层与事务</span>
+            <span class="chapter-desc">为什么分四层，事务如何贯穿</span>
+          </span>
+        </a>
+        
+      </li>
+    
+      <li class="nav-item ">
+        <a href="03-wiring.html" class="nav-link" title="类与类互相发现，解耦初始化顺序">
+          <span class="chapter-badge">03</span>
+          <span class="chapter-text">
+            <span class="chapter-title">装配与依赖注入</span>
+            <span class="chapter-desc">类与类互相发现，解耦初始化顺序</span>
+          </span>
+        </a>
+        
+      </li>
+    
+      <li class="nav-item ">
+        <a href="04-http-layer.html" class="nav-link" title="路由、控制器、校验与错误映射">
+          <span class="chapter-badge">04</span>
+          <span class="chapter-text">
+            <span class="chapter-title">HTTP 层</span>
+            <span class="chapter-desc">路由、控制器、校验与错误映射</span>
+          </span>
+        </a>
+        
+      </li>
+    
+      <li class="nav-item ">
+        <a href="05-identity.html" class="nav-link" title="req.user 来源与鉴权机制">
+          <span class="chapter-badge">05</span>
+          <span class="chapter-text">
+            <span class="chapter-title">身份与访问控制</span>
+            <span class="chapter-desc">req.user 来源与鉴权机制</span>
+          </span>
+        </a>
+        
+      </li>
+    
+      <li class="nav-item ">
+        <a href="06-logging-and-health.html" class="nav-link" title="记录规范、敏感信息与 K8s 探针">
+          <span class="chapter-badge">06</span>
+          <span class="chapter-text">
+            <span class="chapter-title">日志与健康检查</span>
+            <span class="chapter-desc">记录规范、敏感信息与 K8s 探针</span>
+          </span>
+        </a>
+        
+      </li>
+    
+      <li class="nav-item ">
+        <a href="07-background-work.html" class="nav-link" title="周期任务调度与优雅关停保护">
+          <span class="chapter-badge">07</span>
+          <span class="chapter-text">
+            <span class="chapter-title">后台任务与优雅关停</span>
+            <span class="chapter-desc">周期任务调度与优雅关停保护</span>
+          </span>
+        </a>
+        
+      </li>
+    
+      <li class="nav-item ">
+        <a href="08-config-and-cache.html" class="nav-link" title="YAML、Nacos、Consul 与 Redis 集成">
+          <span class="chapter-badge">08</span>
+          <span class="chapter-text">
+            <span class="chapter-title">配置与缓存</span>
+            <span class="chapter-desc">YAML、Nacos、Consul 与 Redis 集成</span>
+          </span>
+        </a>
+        
+      </li>
+    
+      <li class="nav-item ">
+        <a href="09-production-checklist.html" class="nav-link" title="生产环境准备与关键排查项">
+          <span class="chapter-badge">09</span>
+          <span class="chapter-text">
+            <span class="chapter-title">上线之前检查清单</span>
+            <span class="chapter-desc">生产环境准备与关键排查项</span>
+          </span>
+        </a>
+        
+      </li>
+    
+        </ul>
+      </nav>
+      <div class="sidebar-footer">
+        <a href="https://github.com/ticatec/keelson" target="_blank" rel="noopener">Keelson v1.0.0</a>
+        <span>·</span>
+        <a href="../index.html">返回首页</a>
+      </div>
+    </aside>
+
+    <!-- Overlay for mobile drawer -->
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+    <!-- Main Content Area -->
+    <main class="main-wrapper">
+      <div class="content-container">
+        <!-- Breadcrumbs -->
+        <nav class="breadcrumb-nav">
+          <a href="index.html" class="crumb-link">Keelson</a>
+          <span class="crumb-sep">/</span>
+          <span class="crumb-link">教程</span>
+          <span class="crumb-sep">/</span>
+          <span class="crumb-current">概览与教程目录</span>
+        </nav>
+
+        <!-- Markdown Generated Content -->
+        <article class="markdown-body">
+          <h1 id="keelson-教程" class="heading-anchor"><a href="#keelson-教程" class="header-link">#</a> Keelson 教程</h1>
+<p>九章，一章一个主题，各章独立成篇。从你当下的问题那一章看起即可。</p>
+<div class="table-container"><table><thead><tr><th>#</th><th>章节</th><th>回答什么问题</th></tr></thead><tbody><tr><td>1</td><td><a href="01-getting-started.html" class="doc-link">起步</a></td><td>从空目录到一个能响应请求的服务</td></tr><tr><td>2</td><td><a href="02-layers-and-transactions.html" class="doc-link">分层与事务</a></td><td>为什么分四层，一个事务怎么贯穿它们</td></tr><tr><td>3</td><td><a href="03-wiring.html" class="doc-link">装配</a></td><td>类与类之间怎么互相找到，且不必操心初始化顺序</td></tr><tr><td>4</td><td><a href="04-http-layer.html" class="doc-link">HTTP 层</a></td><td>路由、控制器、校验、错误映射</td></tr><tr><td>5</td><td><a href="05-identity.html" class="doc-link">身份与访问控制</a></td><td><code class="inline-code">req.user</code> 从哪来，鉴权怎么做</td></tr><tr><td>6</td><td><a href="06-logging-and-health.html" class="doc-link">日志与健康检查</a></td><td>什么会被记录、什么永远不记、K8s 看到什么</td></tr><tr><td>7</td><td><a href="07-background-work.html" class="doc-link">后台任务与关停</a></td><td>周期任务，以及关停时不丢活儿</td></tr><tr><td>8</td><td><a href="08-config-and-cache.html" class="doc-link">配置与缓存</a></td><td>本地 YAML、Nacos、Consul、Redis</td></tr><tr><td>9</td><td><a href="09-production-checklist.html" class="doc-link">上线之前</a></td><td>检查清单，以及每一条背后的理由</td></tr></tbody></table></div>
+<h2 id="它与-docsprompts-指南的关系" class="heading-anchor"><a href="#它与-docsprompts-指南的关系" class="header-link">#</a> 它与 docs/prompts 指南的关系</h2>
+<p><code class="inline-code">docs/prompts/</code> 是<strong>参考手册</strong>——单个层的每个方法、每个选项、每种边界情况。本教程是另一半：这些部件为什么长成这样，以及它们怎么拼在一起。涉及核心层（DAO、 Service、依赖注入、控制器与数据校验）的章节末尾均链接了对应的深入指南。</p>
+<p>想理解框架，读教程；动手写代码时，把指南开在旁边。</p>
+<p>如果你用 AI 助手写代码，<code class="inline-code">docs/prompts/AI_PROMPTS_CN.md</code> 里有可直接粘贴的分层规则块，以及按层组织的现成提示词。</p>
+<h2 id="各章的约定" class="heading-anchor"><a href="#各章的约定" class="header-link">#</a> 各章的约定</h2>
+<p>所有示例代码都对着已发布的类型编译验证过。确实写得不完整的地方，会明说。</p>
+<p>示例用 PostgreSQL 的占位符（<code class="inline-code">$1</code>、<code class="inline-code">$2</code>）。MySQL 与达梦用 <code class="inline-code">?</code>——第 2 章讲怎么写出与方言无关的 SQL。</p>
+<p>各章默认你已经读过<a href="https://github.com/ticatec/keelson#readme" class="doc-link">项目 README</a>以了解框架全貌。</p>
+        </article>
+
+        <!-- Previous / Next Navigation -->
+        
+    <div class="chapter-pagination">
+      <div class="pagination-placeholder"></div>
+
+      
+        <a href="01-getting-started.html" class="pagination-btn next-btn">
+          <span class="pagination-sub">下一章 →</span>
+          <span class="pagination-title">01. 起步</span>
+        </a>
+      
+    </div>
+  
+
+        <!-- Document Footer -->
+        <footer class="site-footer">
+          <div class="footer-left">
+            <p>© 2026 Ticatec Keelson Framework. Released under the MIT License.</p>
+          </div>
+          <div class="footer-right">
+            <a href="../en/index.html" class="footer-lang-link">
+              🌐 Read in English
+            </a>
+          </div>
+        </footer>
+      </div>
+
+      <!-- Right Table of Contents -->
+      
+      <aside class="right-toc-container">
+        <div class="right-toc-inner">
+          <div class="toc-header">本页目录</div>
+          <ul class="right-toc-list">
+            
+              <li class="toc-item level-2">
+                <a href="#它与-docsprompts-指南的关系" class="toc-link" data-anchor="它与-docsprompts-指南的关系">
+                  它与 docs/prompts 指南的关系
+                </a>
+              </li>
+            
+              <li class="toc-item level-2">
+                <a href="#各章的约定" class="toc-link" data-anchor="各章的约定">
+                  各章的约定
+                </a>
+              </li>
+            
+          </ul>
+        </div>
+      </aside>
+    
+    </main>
+  </div>
+
+  <script src="../assets/app.js"></script>
+</body>
+</html>

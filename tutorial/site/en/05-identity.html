@@ -1,0 +1,547 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>05. Identity &amp; Access Control | Keelson Official Tutorial</title>
+  <meta name="description" content="Keelson TypeScript Framework Official Tutorial - Enterprise TypeScript for Express">
+  <link rel="stylesheet" href="../assets/style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+</head>
+<body class="theme-auto">
+  <!-- Top Navigation Header -->
+  <header class="top-navbar">
+    <div class="navbar-left">
+      <button class="mobile-menu-toggle" id="menuToggle" aria-label="Toggle Navigation">
+        <svg viewBox="0 0 24 24" width="22" height="22" stroke="currentColor" stroke-width="2" fill="none"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+      </button>
+      <a href="index.html" class="brand-logo">
+        <span class="brand-icon">⚡</span>
+        <span class="brand-name">Keelson</span>
+        <span class="brand-badge">Tutorial</span>
+      </a>
+    </div>
+
+    <div class="navbar-right">
+      <!-- Search Input -->
+      <div class="search-box">
+        <svg class="search-icon" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+        <input type="text" id="searchInput" placeholder="Search chapters..." />
+        <span class="search-kbd">⌘K</span>
+      </div>
+
+      <!-- Language Switch -->
+      <a href="../zh/05-identity.html" class="lang-switch-btn" title="Switch to Chinese">
+        <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>
+        <span>中文</span>
+      </a>
+
+      <!-- Theme Switch -->
+      <button class="theme-toggle-btn" id="themeToggle" aria-label="Toggle Theme">
+        <svg class="sun-icon" viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
+        <svg class="moon-icon" viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+      </button>
+
+      <!-- GitHub Link -->
+      <a href="https://github.com/ticatec/keelson" target="_blank" rel="noopener noreferrer" class="github-link" title="GitHub Repository">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z"/></svg>
+      </a>
+    </div>
+  </header>
+
+  <div class="layout-container">
+    <!-- Left Navigation Sidebar -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-header">
+        <div class="sidebar-title">Chapters</div>
+        <span class="chapter-count">10 Docs</span>
+      </div>
+      <nav class="sidebar-nav">
+        <ul class="nav-list" id="navList">
+          
+      <li class="nav-item ">
+        <a href="index.html" class="nav-link" title="Tutorial overview &amp; index">
+          <span class="chapter-badge">00</span>
+          <span class="chapter-text">
+            <span class="chapter-title">Overview &amp; Table of Contents</span>
+            <span class="chapter-desc">Tutorial overview &amp; index</span>
+          </span>
+        </a>
+        
+      </li>
+    
+      <li class="nav-item ">
+        <a href="01-getting-started.html" class="nav-link" title="From empty directory to responsive service">
+          <span class="chapter-badge">01</span>
+          <span class="chapter-text">
+            <span class="chapter-title">Getting Started</span>
+            <span class="chapter-desc">From empty directory to responsive service</span>
+          </span>
+        </a>
+        
+      </li>
+    
+      <li class="nav-item ">
+        <a href="02-layers-and-transactions.html" class="nav-link" title="Why four layers and declarative transactions">
+          <span class="chapter-badge">02</span>
+          <span class="chapter-text">
+            <span class="chapter-title">Layers &amp; Transactions</span>
+            <span class="chapter-desc">Why four layers and declarative transactions</span>
+          </span>
+        </a>
+        
+      </li>
+    
+      <li class="nav-item ">
+        <a href="03-wiring.html" class="nav-link" title="Component discovery &amp; initialization">
+          <span class="chapter-badge">03</span>
+          <span class="chapter-text">
+            <span class="chapter-title">Wiring &amp; Dependency Injection</span>
+            <span class="chapter-desc">Component discovery &amp; initialization</span>
+          </span>
+        </a>
+        
+      </li>
+    
+      <li class="nav-item ">
+        <a href="04-http-layer.html" class="nav-link" title="Routes, controllers, validation &amp; errors">
+          <span class="chapter-badge">04</span>
+          <span class="chapter-text">
+            <span class="chapter-title">HTTP Layer</span>
+            <span class="chapter-desc">Routes, controllers, validation &amp; errors</span>
+          </span>
+        </a>
+        
+      </li>
+    
+      <li class="nav-item active">
+        <a href="05-identity.html" class="nav-link" title="req.user origin &amp; auth mechanism">
+          <span class="chapter-badge">05</span>
+          <span class="chapter-text">
+            <span class="chapter-title">Identity &amp; Access Control</span>
+            <span class="chapter-desc">req.user origin &amp; auth mechanism</span>
+          </span>
+        </a>
+        
+      <ul class="sidebar-subnav">
+        
+          <li class="sidebar-subnav-item level-2">
+            <a href="#the-default-the-gateway-tells-you-who-is-calling" class="subnav-link" data-toc-target="the-default-the-gateway-tells-you-who-is-calling">
+              The default: the gateway tells you who is calling
+            </a>
+          </li>
+        
+          <li class="sidebar-subnav-item level-2">
+            <a href="#replacing-the-resolver" class="subnav-link" data-toc-target="replacing-the-resolver">
+              Replacing the resolver
+            </a>
+          </li>
+        
+          <li class="sidebar-subnav-item level-2">
+            <a href="#typing-the-user-as-your-own-model" class="subnav-link" data-toc-target="typing-the-user-as-your-own-model">
+              Typing the user as your own model
+            </a>
+          </li>
+        
+          <li class="sidebar-subnav-item level-2">
+            <a href="#impersonation" class="subnav-link" data-toc-target="impersonation">
+              Impersonation
+            </a>
+          </li>
+        
+          <li class="sidebar-subnav-item level-2">
+            <a href="#authorisation-three-places-three-questions" class="subnav-link" data-toc-target="authorisation-three-places-three-questions">
+              Authorisation: three places, three questions
+            </a>
+          </li>
+        
+          <li class="sidebar-subnav-item level-2">
+            <a href="#enriching-the-user-before-the-checks" class="subnav-link" data-toc-target="enriching-the-user-before-the-checks">
+              Enriching the user before the checks
+            </a>
+          </li>
+        
+          <li class="sidebar-subnav-item level-2">
+            <a href="#what-is-not-logged" class="subnav-link" data-toc-target="what-is-not-logged">
+              What is not logged
+            </a>
+          </li>
+        
+      </ul>
+      </li>
+    
+      <li class="nav-item ">
+        <a href="06-logging-and-health.html" class="nav-link" title="Logging policies &amp; K8s probes">
+          <span class="chapter-badge">06</span>
+          <span class="chapter-text">
+            <span class="chapter-title">Logging &amp; Health Checks</span>
+            <span class="chapter-desc">Logging policies &amp; K8s probes</span>
+          </span>
+        </a>
+        
+      </li>
+    
+      <li class="nav-item ">
+        <a href="07-background-work.html" class="nav-link" title="Scheduled tasks &amp; graceful shutdown">
+          <span class="chapter-badge">07</span>
+          <span class="chapter-text">
+            <span class="chapter-title">Background Work &amp; Shutdown</span>
+            <span class="chapter-desc">Scheduled tasks &amp; graceful shutdown</span>
+          </span>
+        </a>
+        
+      </li>
+    
+      <li class="nav-item ">
+        <a href="08-config-and-cache.html" class="nav-link" title="Local YAML, Nacos, Consul &amp; Redis">
+          <span class="chapter-badge">08</span>
+          <span class="chapter-text">
+            <span class="chapter-title">Config &amp; Cache</span>
+            <span class="chapter-desc">Local YAML, Nacos, Consul &amp; Redis</span>
+          </span>
+        </a>
+        
+      </li>
+    
+      <li class="nav-item ">
+        <a href="09-production-checklist.html" class="nav-link" title="Production readiness checklist">
+          <span class="chapter-badge">09</span>
+          <span class="chapter-text">
+            <span class="chapter-title">Production Checklist</span>
+            <span class="chapter-desc">Production readiness checklist</span>
+          </span>
+        </a>
+        
+      </li>
+    
+        </ul>
+      </nav>
+      <div class="sidebar-footer">
+        <a href="https://github.com/ticatec/keelson" target="_blank" rel="noopener">Keelson v1.0.0</a>
+        <span>·</span>
+        <a href="../index.html">Home</a>
+      </div>
+    </aside>
+
+    <!-- Overlay for mobile drawer -->
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+    <!-- Main Content Area -->
+    <main class="main-wrapper">
+      <div class="content-container">
+        <!-- Breadcrumbs -->
+        <nav class="breadcrumb-nav">
+          <a href="index.html" class="crumb-link">Keelson</a>
+          <span class="crumb-sep">/</span>
+          <span class="crumb-link">Tutorial</span>
+          <span class="crumb-sep">/</span>
+          <span class="crumb-current">Identity &amp; Access Control</span>
+        </nav>
+
+        <!-- Markdown Generated Content -->
+        <article class="markdown-body">
+          <h1 id="5-identity-and-access-control" class="heading-anchor"><a href="#5-identity-and-access-control" class="header-link">#</a> 5. Identity and access control</h1>
+<p>Where <code class="inline-code">req.user</code> comes from, how to type it as your own model, and the three places a request can be turned away.</p>
+<h2 id="the-default-the-gateway-tells-you-who-is-calling" class="heading-anchor"><a href="#the-default-the-gateway-tells-you-who-is-calling" class="header-link">#</a> The default: the gateway tells you who is calling</h2>
+<p>Keelson assumes it sits behind an API gateway that has already authenticated the caller and injects the result as a request header. <code class="inline-code">HeaderUserResolver</code> reads it:</p>
+<ul class="doc-list">
+<li><code class="inline-code">user</code> — URL-encoded JSON describing the caller</li>
+<li><code class="inline-code">x-language</code> — optional, copied onto the user as <code class="inline-code">language</code></li>
+</ul>
+
+<div class="code-block-wrapper">
+  <div class="code-block-header">
+    <span class="code-lang-tag">text</span>
+    <button class="copy-btn" data-code-id="code-bhpghrt" title="复制代码">
+      <svg class="copy-icon" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+      <span class="copy-label">复制</span>
+    </button>
+  </div>
+  <pre class="code-block"><code id="code-bhpghrt" class="language-text">user: %7B%22accountCode%22%3A%22U1%22%2C%22name%22%3A%22Ada%22%7D</code></pre>
+</div>
+<p>becomes <code class="inline-code">req.user = { accountCode: &#039;U1&#039;, name: &#039;Ada&#039;, language: &#039;en&#039; }</code>.</p>
+<blockquote><p><strong>That header is trusted, completely.</strong> Whatever arrives in it becomes the caller. This is only safe when the service cannot be reached except through a gateway that sets the header itself and <strong>strips any client-supplied copy</strong>. Expose the service directly — a misrouted ingress, a debug port, a teammate curling the pod — and any client can name itself anyone, including an administrator.  If you cannot guarantee that, do not use the default resolver. Use one that verifies a signature.</p></blockquote>
+<p>Nothing rejects a request at this stage. A request with no <code class="inline-code">user</code> header simply has no <code class="inline-code">req.user</code>, which is how a public route stays public. A malformed header is logged and treated the same way — a garbled header is not an authentication failure, it is a missing identity.</p>
+<h2 id="replacing-the-resolver" class="heading-anchor"><a href="#replacing-the-resolver" class="header-link">#</a> Replacing the resolver</h2>
+<p>Change one step by extending <code class="inline-code">HeaderUserResolver</code>:</p>
+
+<div class="code-block-wrapper">
+  <div class="code-block-header">
+    <span class="code-lang-tag">typescript</span>
+    <button class="copy-btn" data-code-id="code-5m3gjm3" title="复制代码">
+      <svg class="copy-icon" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+      <span class="copy-label">复制</span>
+    </button>
+  </div>
+  <pre class="code-block"><code id="code-5m3gjm3" class="language-typescript"><span class="token keyword">import</span> { HeaderUserResolver, setUserResolver } <span class="token keyword">from</span> <span class="token string">&#039;@ticatec/keelson-express&#039;</span>;
+
+<span class="token keyword">class</span> BearerResolver <span class="token keyword">extends</span> HeaderUserResolver {
+    <span class="token keyword">protected</span> override <span class="token function">userHeader</span>(): string {
+        <span class="token keyword">return</span> <span class="token string">&#039;authorization&#039;</span>;
+    }
+    <span class="token keyword">protected</span> override <span class="token function">decode</span>(raw: string): unknown {
+        <span class="token keyword">return</span> <span class="token function">verifyJwt</span>(raw.<span class="token function">replace</span>(/^Bearer /, <span class="token string">&#039;&#039;</span>));   <span class="token comment">// throws on a bad token</span>
+    }
+}</code></pre>
+</div>
+<p>The other steps — reading the header, the language header, applying the language — carry on unchanged. Throwing from <code class="inline-code">decode()</code> is fine: it is logged and the request continues as anonymous, which the route layer then rejects if it requires a user.</p>
+<p>When the identity does not come from a header at all, extend <code class="inline-code">UserResolver</code>:</p>
+
+<div class="code-block-wrapper">
+  <div class="code-block-header">
+    <span class="code-lang-tag">typescript</span>
+    <button class="copy-btn" data-code-id="code-q6qulj2" title="复制代码">
+      <svg class="copy-icon" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+      <span class="copy-label">复制</span>
+    </button>
+  </div>
+  <pre class="code-block"><code id="code-q6qulj2" class="language-typescript"><span class="token keyword">import</span> { UserResolver, setUserResolver } <span class="token keyword">from</span> <span class="token string">&#039;@ticatec/keelson-express&#039;</span>;
+<span class="token keyword">import</span> { Request } <span class="token keyword">from</span> <span class="token string">&#039;express&#039;</span>;
+
+<span class="token keyword">class</span> SessionResolver <span class="token keyword">extends</span> UserResolver {
+    <span class="token keyword">async</span> <span class="token function">resolve</span>(req: Request) {
+        <span class="token keyword">const</span> sid = req.cookies?.sid;
+        <span class="token keyword">return</span> sid ? <span class="token keyword">await</span> sessions.<span class="token keyword">get</span>(sid) : <span class="token keyword">undefined</span>;
+    }
+}</code></pre>
+</div>
+<p>Install it once, at the composition root, before the server starts:</p>
+
+<div class="code-block-wrapper">
+  <div class="code-block-header">
+    <span class="code-lang-tag">typescript</span>
+    <button class="copy-btn" data-code-id="code-mmua4gz" title="复制代码">
+      <svg class="copy-icon" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+      <span class="copy-label">复制</span>
+    </button>
+  </div>
+  <pre class="code-block"><code id="code-mmua4gz" class="language-typescript"><span class="token keyword">protected</span> <span class="token keyword">async</span> <span class="token function">beforeStart</span>(): <span class="token builtin">Promise</span>&lt;<span class="token keyword">void</span>&gt; {
+    <span class="token function">setUserResolver</span>(<span class="token keyword">new</span> <span class="token function">SessionResolver</span>());
+}</code></pre>
+</div>
+<p>A resolver never rejects. Returning <code class="inline-code">undefined</code> means anonymous; authorisation is a separate job, below.</p>
+<h2 id="typing-the-user-as-your-own-model" class="heading-anchor"><a href="#typing-the-user-as-your-own-model" class="header-link">#</a> Typing the user as your own model</h2>
+<p><code class="inline-code">CommonUser</code> and <code class="inline-code">LoggedUser</code> are deliberately empty — the framework never reads a field off the user, so it declares none. Your application declares the shape, once, by augmenting <code class="inline-code">CustomUserRegistry</code>:</p>
+
+<div class="code-block-wrapper">
+  <div class="code-block-header">
+    <span class="code-lang-tag">typescript</span>
+    <button class="copy-btn" data-code-id="code-4z00alx" title="复制代码">
+      <svg class="copy-icon" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+      <span class="copy-label">复制</span>
+    </button>
+  </div>
+  <pre class="code-block"><code id="code-4z00alx" class="language-typescript"><span class="token comment">// types/keelson-express.d.ts</span>
+<span class="token keyword">import</span> <span class="token string">&#039;@ticatec/keelson-express&#039;</span>;
+
+<span class="token keyword">interface</span> AppUser {
+    accountCode: string;
+    name: string;
+    isPlatform?: boolean;
+    tenant?: { code: string; name: string };
+    actAs?: AppUser;
+}
+
+declare module <span class="token string">&#039;@ticatec/keelson-express&#039;</span> {
+    <span class="token keyword">interface</span> CustomUserRegistry {
+        user: AppUser;
+    }
+}</code></pre>
+</div>
+<p>From then on <code class="inline-code">req.user</code> and <code class="inline-code">getLoggedUser(req)</code> are typed as <code class="inline-code">AppUser</code> everywhere, with no casts. <code class="inline-code">req.user</code> is declared on Express&#039;s <code class="inline-code">Request</code> by this package, so you do not augment <code class="inline-code">Express.Request</code> yourself.</p>
+<h2 id="impersonation" class="heading-anchor"><a href="#impersonation" class="header-link">#</a> Impersonation</h2>
+<p>An <code class="inline-code">actAs</code> field on the user means &quot;this administrator is acting as that user&quot;. Two rules follow from it:</p>
+<p><code class="inline-code">getLoggedUser(req)</code> returns <strong>the impersonated user</strong> when <code class="inline-code">actAs</code> is present, and the real one otherwise. Business code therefore operates on whoever the request is acting as, without knowing impersonation exists:</p>
+
+<div class="code-block-wrapper">
+  <div class="code-block-header">
+    <span class="code-lang-tag">typescript</span>
+    <button class="copy-btn" data-code-id="code-csysz6u" title="复制代码">
+      <svg class="copy-icon" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+      <span class="copy-label">复制</span>
+    </button>
+  </div>
+  <pre class="code-block"><code id="code-csysz6u" class="language-typescript"><span class="token keyword">protected</span> <span class="token function">getCreateNewArguments</span>(req: Request): <span class="token builtin">Array</span>&lt;any&gt; {
+    <span class="token keyword">return</span> [this.<span class="token function">getLoggedUser</span>(req), req.body];   <span class="token comment">// the actAs user, if any</span>
+}</code></pre>
+</div>
+<p><code class="inline-code">isValidUser()</code> is also handed the <code class="inline-code">actAs</code> user when one is present. That is what you want — the question is whether <em>the account being acted as</em> may do this — but it means the real administrator is not re-checked at this point. If your rules need both, read <code class="inline-code">req.user</code> directly.</p>
+<h2 id="authorisation-three-places-three-questions" class="heading-anchor"><a href="#authorisation-three-places-three-questions" class="header-link">#</a> Authorisation: three places, three questions</h2>
+<p><strong>1. Does this route group need a user at all?</strong></p>
+
+<div class="code-block-wrapper">
+  <div class="code-block-header">
+    <span class="code-lang-tag">typescript</span>
+    <button class="copy-btn" data-code-id="code-xd99106" title="复制代码">
+      <svg class="copy-icon" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+      <span class="copy-label">复制</span>
+    </button>
+  </div>
+  <pre class="code-block"><code id="code-xd99106" class="language-typescript"><span class="token keyword">export</span> <span class="token keyword">default</span> <span class="token keyword">class</span> UserRoutes <span class="token keyword">extends</span> AuthenticatedRoutes { <span class="token comment">/* ... */</span> }</code></pre>
+</div>
+<p><code class="inline-code">AuthenticatedRoutes</code> rejects a request with no user — a <code class="inline-code">401</code>. <code class="inline-code">CommonRoutes</code> is open.</p>
+<p><strong>2. Is this particular user allowed into this route group?</strong></p>
+
+<div class="code-block-wrapper">
+  <div class="code-block-header">
+    <span class="code-lang-tag">typescript</span>
+    <button class="copy-btn" data-code-id="code-xduwntv" title="复制代码">
+      <svg class="copy-icon" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+      <span class="copy-label">复制</span>
+    </button>
+  </div>
+  <pre class="code-block"><code id="code-xduwntv" class="language-typescript"><span class="token keyword">export</span> <span class="token keyword">default</span> <span class="token keyword">class</span> AdminRoutes <span class="token keyword">extends</span> CommonRoutes {
+    <span class="token keyword">protected</span> override <span class="token keyword">async</span> <span class="token function">isValidUser</span>(user: RegisteredUser): <span class="token builtin">Promise</span>&lt;boolean&gt; {
+        <span class="token keyword">if</span> (user == <span class="token keyword">null</span>) {
+            <span class="token keyword">return</span> <span class="token keyword">false</span>;
+        }
+        <span class="token keyword">const</span> account = <span class="token keyword">await</span> accounts.<span class="token function">find</span>(user.accountCode);
+        <span class="token keyword">return</span> account?.status === <span class="token string">&#039;active&#039;</span> &amp;&amp; account.role === <span class="token string">&#039;admin&#039;</span>;
+    }
+}</code></pre>
+</div>
+<p>Returning false produces a <code class="inline-code">401</code>. Throwing passes the error to the middleware, so throw <code class="inline-code">InsufficientPermissionError()</code> when <code class="inline-code">403</code> is the honest answer — &quot;you are who you say you are, and you still may not&quot;.</p>
+<p>The check runs once per request, before any handler. It is the right place for coarse questions: is the account active, is the tenant enabled, does the role match this group.</p>
+<p><strong>3. May this user do this to this record?</strong></p>
+<p>That belongs in the Service, because it needs the record:</p>
+
+<div class="code-block-wrapper">
+  <div class="code-block-header">
+    <span class="code-lang-tag">typescript</span>
+    <button class="copy-btn" data-code-id="code-91dhnr4" title="复制代码">
+      <svg class="copy-icon" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+      <span class="copy-label">复制</span>
+    </button>
+  </div>
+  <pre class="code-block"><code id="code-91dhnr4" class="language-typescript"><span class="token decorator">@Transaction</span>()
+<span class="token keyword">async</span> <span class="token function">updateOrder</span>(user: AppUser, order: Order): <span class="token builtin">Promise</span>&lt;<span class="token keyword">void</span>&gt; {
+    <span class="token keyword">const</span> existing = <span class="token keyword">await</span> this.orders.<span class="token function">findById</span>(order.id);
+    <span class="token keyword">if</span> (existing == <span class="token keyword">null</span>) {
+        <span class="token keyword">throw</span> <span class="token keyword">new</span> <span class="token function">ActionNotFoundError</span>();
+    }
+    <span class="token keyword">if</span> (existing.tenantCode !== user.tenant?.code) {
+        <span class="token keyword">throw</span> <span class="token keyword">new</span> <span class="token function">ActionNotFoundError</span>();      <span class="token comment">// not 403 — see below</span>
+    }
+    <span class="token keyword">await</span> this.orders.<span class="token function">update</span>(order);
+}</code></pre>
+</div>
+<p>Note the <code class="inline-code">404</code> for a record belonging to another tenant. A <code class="inline-code">403</code> would confirm the record exists, which lets someone enumerate other tenants&#039; ids. Answer as if it is not there, because from that caller&#039;s perspective it is not.</p>
+<h2 id="enriching-the-user-before-the-checks" class="heading-anchor"><a href="#enriching-the-user-before-the-checks" class="header-link">#</a> Enriching the user before the checks</h2>
+<p><code class="inline-code">getUserHook()</code> runs before <code class="inline-code">isValidUser()</code> and can replace <code class="inline-code">req.user</code>:</p>
+
+<div class="code-block-wrapper">
+  <div class="code-block-header">
+    <span class="code-lang-tag">typescript</span>
+    <button class="copy-btn" data-code-id="code-9yimn0s" title="复制代码">
+      <svg class="copy-icon" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+      <span class="copy-label">复制</span>
+    </button>
+  </div>
+  <pre class="code-block"><code id="code-9yimn0s" class="language-typescript"><span class="token keyword">protected</span> override <span class="token function">getUserHook</span>() {
+    <span class="token keyword">return</span> <span class="token keyword">async</span> (user: RegisteredUser) =&gt; {
+        (user as AppUser).permissions = <span class="token keyword">await</span> permissions.<span class="token function">load</span>((user as AppUser).accountCode);
+        <span class="token keyword">return</span> user;
+    };
+}</code></pre>
+</div>
+<p>It runs on every request in the group, so it is a database round-trip per request. Cache it (chapter 8) or fold the data into the gateway&#039;s header instead.</p>
+<h2 id="what-is-not-logged" class="heading-anchor"><a href="#what-is-not-logged" class="header-link">#</a> What is not logged</h2>
+<p>The framework does not write the user identity into the log. The <code class="inline-code">user</code> header is never echoed, and a failed <code class="inline-code">isValidUser()</code> records the route and whether impersonation was in play — not who was rejected.</p>
+<p>That is a deliberate default, not an oversight: a debug log that names every caller is a personal-data store nobody planned for. If you want per-user request tracing, add it in your own middleware where you decide the retention.</p>
+<hr class="divider" />
+<p>Next: <a href="06-logging-and-health.html" class="doc-link">Logging and health</a>.</p>
+        </article>
+
+        <!-- Previous / Next Navigation -->
+        
+    <div class="chapter-pagination">
+      
+        <a href="04-http-layer.html" class="pagination-btn prev-btn">
+          <span class="pagination-sub">← Previous</span>
+          <span class="pagination-title">04. HTTP Layer</span>
+        </a>
+      
+
+      
+        <a href="06-logging-and-health.html" class="pagination-btn next-btn">
+          <span class="pagination-sub">Next →</span>
+          <span class="pagination-title">06. Logging &amp; Health Checks</span>
+        </a>
+      
+    </div>
+  
+
+        <!-- Document Footer -->
+        <footer class="site-footer">
+          <div class="footer-left">
+            <p>© 2026 Ticatec Keelson Framework. Released under the MIT License.</p>
+          </div>
+          <div class="footer-right">
+            <a href="../zh/05-identity.html" class="footer-lang-link">
+              🌐 中文阅读
+            </a>
+          </div>
+        </footer>
+      </div>
+
+      <!-- Right Table of Contents -->
+      
+      <aside class="right-toc-container">
+        <div class="right-toc-inner">
+          <div class="toc-header">On this page</div>
+          <ul class="right-toc-list">
+            
+              <li class="toc-item level-2">
+                <a href="#the-default-the-gateway-tells-you-who-is-calling" class="toc-link" data-anchor="the-default-the-gateway-tells-you-who-is-calling">
+                  The default: the gateway tells you who is calling
+                </a>
+              </li>
+            
+              <li class="toc-item level-2">
+                <a href="#replacing-the-resolver" class="toc-link" data-anchor="replacing-the-resolver">
+                  Replacing the resolver
+                </a>
+              </li>
+            
+              <li class="toc-item level-2">
+                <a href="#typing-the-user-as-your-own-model" class="toc-link" data-anchor="typing-the-user-as-your-own-model">
+                  Typing the user as your own model
+                </a>
+              </li>
+            
+              <li class="toc-item level-2">
+                <a href="#impersonation" class="toc-link" data-anchor="impersonation">
+                  Impersonation
+                </a>
+              </li>
+            
+              <li class="toc-item level-2">
+                <a href="#authorisation-three-places-three-questions" class="toc-link" data-anchor="authorisation-three-places-three-questions">
+                  Authorisation: three places, three questions
+                </a>
+              </li>
+            
+              <li class="toc-item level-2">
+                <a href="#enriching-the-user-before-the-checks" class="toc-link" data-anchor="enriching-the-user-before-the-checks">
+                  Enriching the user before the checks
+                </a>
+              </li>
+            
+              <li class="toc-item level-2">
+                <a href="#what-is-not-logged" class="toc-link" data-anchor="what-is-not-logged">
+                  What is not logged
+                </a>
+              </li>
+            
+          </ul>
+        </div>
+      </aside>
+    
+    </main>
+  </div>
+
+  <script src="../assets/app.js"></script>
+</body>
+</html>

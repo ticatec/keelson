@@ -1,0 +1,584 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>01. 起步 | Keelson 官方教程</title>
+  <meta name="description" content="Keelson TypeScript Framework Official Tutorial - Enterprise TypeScript for Express">
+  <link rel="stylesheet" href="../assets/style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+</head>
+<body class="theme-auto">
+  <!-- Top Navigation Header -->
+  <header class="top-navbar">
+    <div class="navbar-left">
+      <button class="mobile-menu-toggle" id="menuToggle" aria-label="Toggle Navigation">
+        <svg viewBox="0 0 24 24" width="22" height="22" stroke="currentColor" stroke-width="2" fill="none"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+      </button>
+      <a href="index.html" class="brand-logo">
+        <span class="brand-icon">⚡</span>
+        <span class="brand-name">Keelson</span>
+        <span class="brand-badge">教程</span>
+      </a>
+    </div>
+
+    <div class="navbar-right">
+      <!-- Search Input -->
+      <div class="search-box">
+        <svg class="search-icon" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+        <input type="text" id="searchInput" placeholder="在章节中快速搜索..." />
+        <span class="search-kbd">⌘K</span>
+      </div>
+
+      <!-- Language Switch -->
+      <a href="../en/01-getting-started.html" class="lang-switch-btn" title="切换为英文">
+        <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>
+        <span>English</span>
+      </a>
+
+      <!-- Theme Switch -->
+      <button class="theme-toggle-btn" id="themeToggle" aria-label="Toggle Theme">
+        <svg class="sun-icon" viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
+        <svg class="moon-icon" viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+      </button>
+
+      <!-- GitHub Link -->
+      <a href="https://github.com/ticatec/keelson" target="_blank" rel="noopener noreferrer" class="github-link" title="GitHub Repository">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z"/></svg>
+      </a>
+    </div>
+  </header>
+
+  <div class="layout-container">
+    <!-- Left Navigation Sidebar -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-header">
+        <div class="sidebar-title">教程目录</div>
+        <span class="chapter-count">10 篇文档</span>
+      </div>
+      <nav class="sidebar-nav">
+        <ul class="nav-list" id="navList">
+          
+      <li class="nav-item ">
+        <a href="index.html" class="nav-link" title="教程导读与各章索引">
+          <span class="chapter-badge">00</span>
+          <span class="chapter-text">
+            <span class="chapter-title">概览与教程目录</span>
+            <span class="chapter-desc">教程导读与各章索引</span>
+          </span>
+        </a>
+        
+      </li>
+    
+      <li class="nav-item active">
+        <a href="01-getting-started.html" class="nav-link" title="从空目录到一个能响应请求的服务">
+          <span class="chapter-badge">01</span>
+          <span class="chapter-text">
+            <span class="chapter-title">起步</span>
+            <span class="chapter-desc">从空目录到一个能响应请求的服务</span>
+          </span>
+        </a>
+        
+      <ul class="sidebar-subnav">
+        
+          <li class="sidebar-subnav-item level-2">
+            <a href="#安装" class="subnav-link" data-toc-target="安装">
+              安装
+            </a>
+          </li>
+        
+          <li class="sidebar-subnav-item level-2">
+            <a href="#最小的服务" class="subnav-link" data-toc-target="最小的服务">
+              最小的服务
+            </a>
+          </li>
+        
+          <li class="sidebar-subnav-item level-2">
+            <a href="#启动" class="subnav-link" data-toc-target="启动">
+              启动
+            </a>
+          </li>
+        
+          <li class="sidebar-subnav-item level-2">
+            <a href="#不用要就有的东西" class="subnav-link" data-toc-target="不用要就有的东西">
+              不用要就有的东西
+            </a>
+          </li>
+        
+          <li class="sidebar-subnav-item level-2">
+            <a href="#配置真正该从哪来" class="subnav-link" data-toc-target="配置真正该从哪来">
+              配置真正该从哪来
+            </a>
+          </li>
+        
+          <li class="sidebar-subnav-item level-2">
+            <a href="#起不来的时候" class="subnav-link" data-toc-target="起不来的时候">
+              起不来的时候
+            </a>
+          </li>
+        
+      </ul>
+      </li>
+    
+      <li class="nav-item ">
+        <a href="02-layers-and-transactions.html" class="nav-link" title="为什么分四层，事务如何贯穿">
+          <span class="chapter-badge">02</span>
+          <span class="chapter-text">
+            <span class="chapter-title">分层与事务</span>
+            <span class="chapter-desc">为什么分四层，事务如何贯穿</span>
+          </span>
+        </a>
+        
+      </li>
+    
+      <li class="nav-item ">
+        <a href="03-wiring.html" class="nav-link" title="类与类互相发现，解耦初始化顺序">
+          <span class="chapter-badge">03</span>
+          <span class="chapter-text">
+            <span class="chapter-title">装配与依赖注入</span>
+            <span class="chapter-desc">类与类互相发现，解耦初始化顺序</span>
+          </span>
+        </a>
+        
+      </li>
+    
+      <li class="nav-item ">
+        <a href="04-http-layer.html" class="nav-link" title="路由、控制器、校验与错误映射">
+          <span class="chapter-badge">04</span>
+          <span class="chapter-text">
+            <span class="chapter-title">HTTP 层</span>
+            <span class="chapter-desc">路由、控制器、校验与错误映射</span>
+          </span>
+        </a>
+        
+      </li>
+    
+      <li class="nav-item ">
+        <a href="05-identity.html" class="nav-link" title="req.user 来源与鉴权机制">
+          <span class="chapter-badge">05</span>
+          <span class="chapter-text">
+            <span class="chapter-title">身份与访问控制</span>
+            <span class="chapter-desc">req.user 来源与鉴权机制</span>
+          </span>
+        </a>
+        
+      </li>
+    
+      <li class="nav-item ">
+        <a href="06-logging-and-health.html" class="nav-link" title="记录规范、敏感信息与 K8s 探针">
+          <span class="chapter-badge">06</span>
+          <span class="chapter-text">
+            <span class="chapter-title">日志与健康检查</span>
+            <span class="chapter-desc">记录规范、敏感信息与 K8s 探针</span>
+          </span>
+        </a>
+        
+      </li>
+    
+      <li class="nav-item ">
+        <a href="07-background-work.html" class="nav-link" title="周期任务调度与优雅关停保护">
+          <span class="chapter-badge">07</span>
+          <span class="chapter-text">
+            <span class="chapter-title">后台任务与优雅关停</span>
+            <span class="chapter-desc">周期任务调度与优雅关停保护</span>
+          </span>
+        </a>
+        
+      </li>
+    
+      <li class="nav-item ">
+        <a href="08-config-and-cache.html" class="nav-link" title="YAML、Nacos、Consul 与 Redis 集成">
+          <span class="chapter-badge">08</span>
+          <span class="chapter-text">
+            <span class="chapter-title">配置与缓存</span>
+            <span class="chapter-desc">YAML、Nacos、Consul 与 Redis 集成</span>
+          </span>
+        </a>
+        
+      </li>
+    
+      <li class="nav-item ">
+        <a href="09-production-checklist.html" class="nav-link" title="生产环境准备与关键排查项">
+          <span class="chapter-badge">09</span>
+          <span class="chapter-text">
+            <span class="chapter-title">上线之前检查清单</span>
+            <span class="chapter-desc">生产环境准备与关键排查项</span>
+          </span>
+        </a>
+        
+      </li>
+    
+        </ul>
+      </nav>
+      <div class="sidebar-footer">
+        <a href="https://github.com/ticatec/keelson" target="_blank" rel="noopener">Keelson v1.0.0</a>
+        <span>·</span>
+        <a href="../index.html">返回首页</a>
+      </div>
+    </aside>
+
+    <!-- Overlay for mobile drawer -->
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+    <!-- Main Content Area -->
+    <main class="main-wrapper">
+      <div class="content-container">
+        <!-- Breadcrumbs -->
+        <nav class="breadcrumb-nav">
+          <a href="index.html" class="crumb-link">Keelson</a>
+          <span class="crumb-sep">/</span>
+          <span class="crumb-link">教程</span>
+          <span class="crumb-sep">/</span>
+          <span class="crumb-current">起步</span>
+        </nav>
+
+        <!-- Markdown Generated Content -->
+        <article class="markdown-body">
+          <h1 id="1-起步" class="heading-anchor"><a href="#1-起步" class="header-link">#</a> 1. 起步</h1>
+<p>读完这一章，你会有一个连上 PostgreSQL、能响应请求、能报告自身健康状况的服务。自己写的代码大约六十行。</p>
+<h2 id="安装" class="heading-anchor"><a href="#安装" class="header-link">#</a> 安装</h2>
+
+<div class="code-block-wrapper">
+  <div class="code-block-header">
+    <span class="code-lang-tag">bash</span>
+    <button class="copy-btn" data-code-id="code-kofueb1" title="复制代码">
+      <svg class="copy-icon" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+      <span class="copy-label">复制</span>
+    </button>
+  </div>
+  <pre class="code-block"><code id="code-kofueb1" class="language-bash"><span class="token keyword">pnpm</span> add @ticatec/keelson<span class="token property">-express</span> @ticatec/keelson<span class="token property">-core</span> \
+         @ticatec/bean<span class="token property">-validator</span> @ticatec/<span class="token keyword">node</span><span class="token property">-exception</span> \
+         @ticatec/logger<span class="token property">-api</span> reflect<span class="token property">-metadata</span>
+
+<span class="token keyword">pnpm</span> add @ticatec/keelson<span class="token property">-pg</span> pg          <span class="token comment"># 或 keelson-mysql + mysql2、keelson-dm + dmdb</span>
+<span class="token keyword">pnpm</span> add <span class="token property">-D</span> typescript @types/<span class="token keyword">node</span> @types/express</code></pre>
+</div>
+<p>Keelson 同时提供 CommonJS 与 ESM 产物。下面的示例用 ESM——<code class="inline-code">package.json</code> 里 <code class="inline-code">&quot;type&quot;: &quot;module&quot;</code>，<code class="inline-code">tsconfig.json</code> 里模块解析用 <code class="inline-code">NodeNext</code>，相对导入即使源文件是 <code class="inline-code">.ts</code> 也要写 <code class="inline-code">.js</code> 后缀。最后这条常让人意外：这是 Node 对 ESM 的要求，TypeScript 刻意不去改写它。</p>
+<p><code class="inline-code">@Transaction</code> 是一个要读参数元数据的装饰器，所以 <code class="inline-code">tsconfig.json</code> 里这两项不是可选的：</p>
+
+<div class="code-block-wrapper">
+  <div class="code-block-header">
+    <span class="code-lang-tag">json</span>
+    <button class="copy-btn" data-code-id="code-whgtzrs" title="复制代码">
+      <svg class="copy-icon" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+      <span class="copy-label">复制</span>
+    </button>
+  </div>
+  <pre class="code-block"><code id="code-whgtzrs" class="language-json">{
+  <span class="token property">&quot;compilerOptions&quot;</span>: {
+    <span class="token property">&quot;target&quot;</span>: <span class="token string">&quot;es2022&quot;</span>,
+    <span class="token property">&quot;module&quot;</span>: <span class="token string">&quot;NodeNext&quot;</span>,
+    <span class="token property">&quot;moduleResolution&quot;</span>: <span class="token string">&quot;NodeNext&quot;</span>,
+    <span class="token property">&quot;experimentalDecorators&quot;</span>: <span class="token keyword">true</span>,
+    <span class="token property">&quot;emitDecoratorMetadata&quot;</span>: <span class="token keyword">true</span>,
+    <span class="token property">&quot;strict&quot;</span>: <span class="token keyword">true</span>
+  }
+}</code></pre>
+</div>
+<p>并且 <code class="inline-code">reflect-metadata</code> 必须在任何用到装饰器的代码之前导入一次：</p>
+
+<div class="code-block-wrapper">
+  <div class="code-block-header">
+    <span class="code-lang-tag">typescript</span>
+    <button class="copy-btn" data-code-id="code-ub63ir9" title="复制代码">
+      <svg class="copy-icon" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+      <span class="copy-label">复制</span>
+    </button>
+  </div>
+  <pre class="code-block"><code id="code-ub63ir9" class="language-typescript"><span class="token comment">// src/main.ts —— 整个程序的第一行</span>
+<span class="token keyword">import</span> <span class="token string">&#039;reflect-metadata&#039;</span>;</code></pre>
+</div>
+<p>漏了它，<code class="inline-code">@Transaction</code> 会在启动时直接抛错，而不是悄悄地不生效——这正是你想要的失败方式。</p>
+<h2 id="最小的服务" class="heading-anchor"><a href="#最小的服务" class="header-link">#</a> 最小的服务</h2>
+<p>四个文件。从最底下往上看。</p>
+<p><strong><code class="inline-code">src/dao/GreetingDAO.ts</code></strong> —— 只有 SQL。</p>
+
+<div class="code-block-wrapper">
+  <div class="code-block-header">
+    <span class="code-lang-tag">typescript</span>
+    <button class="copy-btn" data-code-id="code-2h8cnpv" title="复制代码">
+      <svg class="copy-icon" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+      <span class="copy-label">复制</span>
+    </button>
+  </div>
+  <pre class="code-block"><code id="code-2h8cnpv" class="language-typescript"><span class="token keyword">import</span> { <span class="token builtin">CommonDAO</span> } <span class="token keyword">from</span> <span class="token string">&#039;@ticatec/keelson-core&#039;</span>;
+
+<span class="token keyword">export</span> <span class="token keyword">interface</span> Greeting {
+    id: string;
+    text: string;
+}
+
+<span class="token keyword">export</span> <span class="token keyword">class</span> GreetingDAO <span class="token keyword">extends</span> <span class="token builtin">CommonDAO</span> {
+    <span class="token keyword">async</span> <span class="token function">findById</span>(id: string): <span class="token builtin">Promise</span>&lt;Greeting | <span class="token keyword">null</span>&gt; {
+        <span class="token keyword">return</span> <span class="token keyword">await</span> this.<span class="token function">findByPK</span>(<span class="token string">&#039;SELECT id, text FROM greetings WHERE id = $1&#039;</span>, [id]);
+    }
+}</code></pre>
+</div>
+<p><code class="inline-code">findByPK</code> 返回映射好的第一行，没有就是 <code class="inline-code">null</code>。列名自动转驼峰：<code class="inline-code">created_at</code> 变成 <code class="inline-code">createdAt</code>。你没有打开过连接——DAO 从当前作用域里的事务拿连接，这正是第 2 章的主题。</p>
+<p><strong><code class="inline-code">src/repository/GreetingRepository.ts</code></strong> —— 聚合 DAO。</p>
+
+<div class="code-block-wrapper">
+  <div class="code-block-header">
+    <span class="code-lang-tag">typescript</span>
+    <button class="copy-btn" data-code-id="code-1s9hw7a" title="复制代码">
+      <svg class="copy-icon" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+      <span class="copy-label">复制</span>
+    </button>
+  </div>
+  <pre class="code-block"><code id="code-1s9hw7a" class="language-typescript"><span class="token keyword">import</span> { <span class="token builtin">CommonRepository</span> } <span class="token keyword">from</span> <span class="token string">&#039;@ticatec/keelson-core&#039;</span>;
+<span class="token keyword">import</span> { GreetingDAO, Greeting } <span class="token keyword">from</span> <span class="token string">&#039;../dao/GreetingDAO.js&#039;</span>;
+
+<span class="token keyword">export</span> <span class="token keyword">class</span> GreetingRepository <span class="token keyword">extends</span> <span class="token builtin">CommonRepository</span> {
+    <span class="token keyword">private</span> <span class="token keyword">get</span> <span class="token function">dao</span>(): GreetingDAO {
+        <span class="token keyword">return</span> this.getDAOInstance&lt;GreetingDAO&gt;(<span class="token string">&#039;GreetingDAO&#039;</span>);
+    }
+
+    <span class="token keyword">async</span> <span class="token function">findById</span>(id: string): <span class="token builtin">Promise</span>&lt;Greeting | <span class="token keyword">null</span>&gt; {
+        <span class="token keyword">return</span> this.dao.<span class="token function">findById</span>(id);
+    }
+}</code></pre>
+</div>
+<p>一个 DAO 上面套一个 Repository，在这个规模下看着纯属多余，确实也是。等到某个用例要动两张表时它就不多余了——第 2 章。</p>
+<p><strong><code class="inline-code">src/service/GreetingService.ts</code></strong> —— 业务规则与事务边界。</p>
+
+<div class="code-block-wrapper">
+  <div class="code-block-header">
+    <span class="code-lang-tag">typescript</span>
+    <button class="copy-btn" data-code-id="code-3fau8iz" title="复制代码">
+      <svg class="copy-icon" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+      <span class="copy-label">复制</span>
+    </button>
+  </div>
+  <pre class="code-block"><code id="code-3fau8iz" class="language-typescript"><span class="token keyword">import</span> { <span class="token builtin">CommonService</span>, Transaction } <span class="token keyword">from</span> <span class="token string">&#039;@ticatec/keelson-core&#039;</span>;
+<span class="token keyword">import</span> { ActionNotFoundError } <span class="token keyword">from</span> <span class="token string">&#039;@ticatec/node-exception&#039;</span>;
+<span class="token keyword">import</span> { GreetingRepository } <span class="token keyword">from</span> <span class="token string">&#039;../repository/GreetingRepository.js&#039;</span>;
+<span class="token keyword">import</span> { Greeting } <span class="token keyword">from</span> <span class="token string">&#039;../dao/GreetingDAO.js&#039;</span>;
+
+<span class="token keyword">export</span> <span class="token keyword">class</span> GreetingService <span class="token keyword">extends</span> <span class="token builtin">CommonService</span> {
+    <span class="token keyword">private</span> <span class="token keyword">get</span> <span class="token function">repo</span>(): GreetingRepository {
+        <span class="token keyword">return</span> this.getRepositoryInstance&lt;GreetingRepository&gt;(<span class="token string">&#039;GreetingRepository&#039;</span>);
+    }
+
+    <span class="token decorator">@Transaction</span>()
+    <span class="token keyword">async</span> <span class="token keyword">get</span>(id: string): <span class="token builtin">Promise</span>&lt;Greeting&gt; {
+        <span class="token keyword">const</span> greeting = <span class="token keyword">await</span> this.repo.<span class="token function">findById</span>(id);
+        <span class="token keyword">if</span> (greeting == <span class="token keyword">null</span>) {
+            <span class="token keyword">throw</span> <span class="token keyword">new</span> <span class="token function">ActionNotFoundError</span>();      <span class="token comment">// 变成 404</span>
+        }
+        <span class="token keyword">return</span> greeting;
+    }
+}</code></pre>
+</div>
+<p><strong><code class="inline-code">src/routes/GreetingRoutes.ts</code></strong> —— HTTP 暴露面。</p>
+
+<div class="code-block-wrapper">
+  <div class="code-block-header">
+    <span class="code-lang-tag">typescript</span>
+    <button class="copy-btn" data-code-id="code-bu93il6" title="复制代码">
+      <svg class="copy-icon" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+      <span class="copy-label">复制</span>
+    </button>
+  </div>
+  <pre class="code-block"><code id="code-bu93il6" class="language-typescript"><span class="token keyword">import</span> { CommonRoutes, routerHelper } <span class="token keyword">from</span> <span class="token string">&#039;@ticatec/keelson-express&#039;</span>;
+<span class="token keyword">import</span> { beanFactory } <span class="token keyword">from</span> <span class="token string">&#039;@ticatec/keelson-core&#039;</span>;
+<span class="token keyword">import</span> { GreetingService } <span class="token keyword">from</span> <span class="token string">&#039;../service/GreetingService.js&#039;</span>;
+
+<span class="token keyword">export</span> <span class="token keyword">default</span> <span class="token keyword">class</span> GreetingRoutes <span class="token keyword">extends</span> CommonRoutes {
+    <span class="token keyword">private</span> <span class="token keyword">get</span> <span class="token function">service</span>(): GreetingService {
+        <span class="token keyword">return</span> beanFactory.createBean&lt;GreetingService&gt;(<span class="token string">&#039;GreetingService&#039;</span>)!;
+    }
+
+    <span class="token keyword">protected</span> <span class="token function">bindRoutes</span>() {
+        this.<span class="token keyword">get</span>(<span class="token string">&#039;/:id&#039;</span>, routerHelper.<span class="token function">invokeRestfulAction</span>(
+            req =&gt; this.service.<span class="token keyword">get</span>(<span class="token function">String</span>(req.params.id))
+        ));
+    }
+}</code></pre>
+</div>
+<p>那个 <code class="inline-code">String(...)</code> 不是装饰。Express 5 把路由参数的类型定为 <code class="inline-code">string | string[]</code>—— 通配段可以匹配多个值——所以把 <code class="inline-code">req.params.id</code> 直接传给 <code class="inline-code">string</code> 形参在 <code class="inline-code">strict</code> 下编译不过。包一层，或者用带类型标注的解构;但别用 <code class="inline-code">as string</code>，那会把真的是数组的情况一起蒙混过去。</p>
+<p><code class="inline-code">invokeRestfulAction</code> 接受一个&quot;输入请求、返回值&quot;的函数。返回值被序列化为 JSON；返回 <code class="inline-code">null</code> 变成 <code class="inline-code">204 No Content</code>；抛出的错误交给错误中间件，带着正确的状态码回来。你完全不碰 <code class="inline-code">res</code>。</p>
+<h2 id="启动" class="heading-anchor"><a href="#启动" class="header-link">#</a> 启动</h2>
+
+<div class="code-block-wrapper">
+  <div class="code-block-header">
+    <span class="code-lang-tag">typescript</span>
+    <button class="copy-btn" data-code-id="code-2j340lp" title="复制代码">
+      <svg class="copy-icon" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+      <span class="copy-label">复制</span>
+    </button>
+  </div>
+  <pre class="code-block"><code id="code-2j340lp" class="language-typescript"><span class="token comment">// src/main.ts</span>
+<span class="token keyword">import</span> <span class="token string">&#039;reflect-metadata&#039;</span>;
+<span class="token keyword">import</span> BaseServer, { AppConf } <span class="token keyword">from</span> <span class="token string">&#039;@ticatec/keelson-express&#039;</span>;
+<span class="token keyword">import</span> { DBManager, beanFactory } <span class="token keyword">from</span> <span class="token string">&#039;@ticatec/keelson-core&#039;</span>;
+<span class="token keyword">import</span> { initializePg } <span class="token keyword">from</span> <span class="token string">&#039;@ticatec/keelson-pg&#039;</span>;
+
+<span class="token keyword">import</span> { GreetingDAO } <span class="token keyword">from</span> <span class="token string">&#039;./dao/GreetingDAO.js&#039;</span>;
+<span class="token keyword">import</span> { GreetingRepository } <span class="token keyword">from</span> <span class="token string">&#039;./repository/GreetingRepository.js&#039;</span>;
+<span class="token keyword">import</span> { GreetingService } <span class="token keyword">from</span> <span class="token string">&#039;./service/GreetingService.js&#039;</span>;
+
+<span class="token keyword">class</span> GreetingServer <span class="token keyword">extends</span> BaseServer {
+    <span class="token keyword">public</span> <span class="token function">constructor</span>() {
+        <span class="token function">super</span>();
+    }
+
+    <span class="token keyword">protected</span> <span class="token keyword">async</span> <span class="token function">loadConfigFile</span>(): <span class="token builtin">Promise</span>&lt;<span class="token keyword">void</span>&gt; {
+        AppConf.<span class="token function">init</span>({
+            web: { port: <span class="token number">3000</span>, ip: <span class="token string">&#039;0.0.0.0&#039;</span>, contextRoot: <span class="token string">&#039;/api&#039;</span> },
+            database: {
+                host: <span class="token string">&#039;localhost&#039;</span>, port: <span class="token number">5432</span>,
+                database: <span class="token string">&#039;demo&#039;</span>, user: <span class="token string">&#039;demo&#039;</span>, password: process.env.DB_PASSWORD,
+                max: <span class="token number">10</span>
+            }
+        });
+    }
+
+    <span class="token keyword">protected</span> <span class="token function">getWebConf</span>(): any {
+        <span class="token keyword">return</span> AppConf.<span class="token function">getInstance</span>()!.<span class="token keyword">get</span>(<span class="token string">&#039;web&#039;</span>);
+    }
+
+    <span class="token keyword">protected</span> <span class="token keyword">async</span> <span class="token function">beforeStart</span>(): <span class="token builtin">Promise</span>&lt;<span class="token keyword">void</span>&gt; {
+        DBManager.<span class="token function">init</span>(<span class="token function">initializePg</span>(AppConf.<span class="token function">getInstance</span>()!.<span class="token keyword">get</span>(<span class="token string">&#039;database&#039;</span>)));
+
+        beanFactory.<span class="token function">register</span>(<span class="token string">&#039;GreetingDAO&#039;</span>, GreetingDAO);
+        beanFactory.<span class="token function">register</span>(<span class="token string">&#039;GreetingRepository&#039;</span>, GreetingRepository);
+        beanFactory.<span class="token function">register</span>(<span class="token string">&#039;GreetingService&#039;</span>, GreetingService);
+    }
+
+    <span class="token keyword">protected</span> <span class="token keyword">async</span> <span class="token function">setupRoutes</span>(): <span class="token builtin">Promise</span>&lt;<span class="token keyword">void</span>&gt; {
+        <span class="token keyword">await</span> this.<span class="token function">bindRoutes</span>(<span class="token string">&#039;/greetings&#039;</span>, () =&gt; <span class="token keyword">import</span>(<span class="token string">&#039;./routes/GreetingRoutes.js&#039;</span>));
+    }
+}
+
+BaseServer.<span class="token function">startup</span>(<span class="token keyword">new</span> <span class="token function">GreetingServer</span>());</code></pre>
+</div>
+<p><code class="inline-code">BaseServer</code> 按固定顺序调用这些方法：<code class="inline-code">loadConfigFile()</code>、<code class="inline-code">beforeStart()</code>、 <code class="inline-code">getWebConf()</code>，然后创建 Express 应用、挂载健康检查、调用 <code class="inline-code">setupRoutes()</code>、开始监听。凡是必须在第一个请求到达之前就绪的东西——数据库、bean 注册——都放进 <code class="inline-code">beforeStart()</code>。</p>
+<p><code class="inline-code">public constructor() { super(); }</code> 是必须的：<code class="inline-code">BaseServer</code> 的构造函数是 <code class="inline-code">protected</code>，不自己声明一个，<code class="inline-code">new GreetingServer()</code> 编译不过。</p>
+<h2 id="不用要就有的东西" class="heading-anchor"><a href="#不用要就有的东西" class="header-link">#</a> 不用要就有的东西</h2>
+
+<div class="code-block-wrapper">
+  <div class="code-block-header">
+    <span class="code-lang-tag">text</span>
+    <button class="copy-btn" data-code-id="code-advpx70" title="复制代码">
+      <svg class="copy-icon" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+      <span class="copy-label">复制</span>
+    </button>
+  </div>
+  <pre class="code-block"><code id="code-advpx70" class="language-text">GET /api/greetings/abc     你的路由
+GET /health/live           进程活着就返回 200
+GET /health/ready          所有关键检查通过返回 200，否则 503
+GET /health                与 /health/ready 相同</code></pre>
+</div>
+<p>健康检查端点挂在你的路由之前且免认证，这正是 Kubernetes 对探针的要求。第 6 章讲怎么注册自己的检查项。</p>
+<p>日志什么都不装就能用：<code class="inline-code">@ticatec/logger-api</code> 回退到 console，按 <code class="inline-code">LOG_LEVEL</code> 过滤。用 <code class="inline-code">LOG_LEVEL=debug</code> 跑起来，你会看到路由注册、连接池创建、每条语句的执行—— 但看不到绑定参数值，原因在第 6 章。</p>
+<h2 id="配置真正该从哪来" class="heading-anchor"><a href="#配置真正该从哪来" class="header-link">#</a> 配置真正该从哪来</h2>
+<p>上面的示例把配置写死，是为了把代码收在一个文件里。真实服务用 <code class="inline-code">@ticatec/config-loader</code> 从 YAML 文件、Nacos 或 Consul 加载，那是第 8 章。形状不变：你传给 <code class="inline-code">AppConf.init()</code> 的是什么，<code class="inline-code">AppConf.getInstance()!.get()</code> 读到的就是什么，嵌套用点号：</p>
+
+<div class="code-block-wrapper">
+  <div class="code-block-header">
+    <span class="code-lang-tag">typescript</span>
+    <button class="copy-btn" data-code-id="code-5wue0cc" title="复制代码">
+      <svg class="copy-icon" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+      <span class="copy-label">复制</span>
+    </button>
+  </div>
+  <pre class="code-block"><code id="code-5wue0cc" class="language-typescript">AppConf.<span class="token function">getInstance</span>()!.<span class="token keyword">get</span>(<span class="token string">&#039;web.port&#039;</span>);        <span class="token comment">// 3000</span>
+AppConf.<span class="token function">getInstance</span>()!.<span class="token keyword">get</span>(<span class="token string">&#039;nope.nothing&#039;</span>);    <span class="token comment">// undefined，不抛异常</span></code></pre>
+</div>
+<p>注意那个 <code class="inline-code">!</code>。<code class="inline-code">getInstance()</code> 的返回类型是 <code class="inline-code">AppConf | null</code>——<code class="inline-code">init()</code> 之前是 null—— 而在一个只会在 <code class="inline-code">loadConfigFile()</code> 之后运行的方法里，这个断言是诚实的。</p>
+<h2 id="起不来的时候" class="heading-anchor"><a href="#起不来的时候" class="header-link">#</a> 起不来的时候</h2>
+<p><strong><code class="inline-code">Cannot read properties of undefined (reading &#039;init&#039;)</code>，或启动时的装饰器报错</strong> —— <code class="inline-code">reflect-metadata</code> 没有最先导入。它必须是入口文件的第一行，排在任何会引入 <code class="inline-code">@Transaction</code> 类的 import 之前。</p>
+<p><strong><code class="inline-code">DBManager is not initialized</code></strong> —— 有代码在 <code class="inline-code">DBManager.init()</code> 之前调用了 DAO。检查 <code class="inline-code">init</code> 是不是写在了 <code class="inline-code">setupRoutes()</code> 而不是 <code class="inline-code">beforeStart()</code> 里。</p>
+<p><strong><code class="inline-code">Express application is not created yet</code></strong> —— 在 <code class="inline-code">setupRoutes()</code> 之外调用了 <code class="inline-code">bindRoutes()</code>。<code class="inline-code">BaseServer</code> 创建应用之前，它并不存在。</p>
+<p><strong>某个没注册过的 bean 名</strong> —— <code class="inline-code">getDAOInstance(&#039;GreetingDAO&#039;)</code> 会抛错并指名道姓。返回 <code class="inline-code">undefined</code> 的是 <code class="inline-code">beanFactory.createBean()</code>；两者为何不同，第 3 章解释。</p>
+<hr class="divider" />
+<p>下一章：<a href="02-layers-and-transactions.html" class="doc-link">分层与事务</a> —— 四层架构换来了什么，以及让它们协同工作的那一个机制。</p>
+        </article>
+
+        <!-- Previous / Next Navigation -->
+        
+    <div class="chapter-pagination">
+      
+        <a href="index.html" class="pagination-btn prev-btn">
+          <span class="pagination-sub">← 上一章</span>
+          <span class="pagination-title">00. 概览与教程目录</span>
+        </a>
+      
+
+      
+        <a href="02-layers-and-transactions.html" class="pagination-btn next-btn">
+          <span class="pagination-sub">下一章 →</span>
+          <span class="pagination-title">02. 分层与事务</span>
+        </a>
+      
+    </div>
+  
+
+        <!-- Document Footer -->
+        <footer class="site-footer">
+          <div class="footer-left">
+            <p>© 2026 Ticatec Keelson Framework. Released under the MIT License.</p>
+          </div>
+          <div class="footer-right">
+            <a href="../en/01-getting-started.html" class="footer-lang-link">
+              🌐 Read in English
+            </a>
+          </div>
+        </footer>
+      </div>
+
+      <!-- Right Table of Contents -->
+      
+      <aside class="right-toc-container">
+        <div class="right-toc-inner">
+          <div class="toc-header">本页目录</div>
+          <ul class="right-toc-list">
+            
+              <li class="toc-item level-2">
+                <a href="#安装" class="toc-link" data-anchor="安装">
+                  安装
+                </a>
+              </li>
+            
+              <li class="toc-item level-2">
+                <a href="#最小的服务" class="toc-link" data-anchor="最小的服务">
+                  最小的服务
+                </a>
+              </li>
+            
+              <li class="toc-item level-2">
+                <a href="#启动" class="toc-link" data-anchor="启动">
+                  启动
+                </a>
+              </li>
+            
+              <li class="toc-item level-2">
+                <a href="#不用要就有的东西" class="toc-link" data-anchor="不用要就有的东西">
+                  不用要就有的东西
+                </a>
+              </li>
+            
+              <li class="toc-item level-2">
+                <a href="#配置真正该从哪来" class="toc-link" data-anchor="配置真正该从哪来">
+                  配置真正该从哪来
+                </a>
+              </li>
+            
+              <li class="toc-item level-2">
+                <a href="#起不来的时候" class="toc-link" data-anchor="起不来的时候">
+                  起不来的时候
+                </a>
+              </li>
+            
+          </ul>
+        </div>
+      </aside>
+    
+    </main>
+  </div>
+
+  <script src="../assets/app.js"></script>
+</body>
+</html>

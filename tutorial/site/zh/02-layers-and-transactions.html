@@ -1,0 +1,552 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>02. 分层与事务 | Keelson 官方教程</title>
+  <meta name="description" content="Keelson TypeScript Framework Official Tutorial - Enterprise TypeScript for Express">
+  <link rel="stylesheet" href="../assets/style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+</head>
+<body class="theme-auto">
+  <!-- Top Navigation Header -->
+  <header class="top-navbar">
+    <div class="navbar-left">
+      <button class="mobile-menu-toggle" id="menuToggle" aria-label="Toggle Navigation">
+        <svg viewBox="0 0 24 24" width="22" height="22" stroke="currentColor" stroke-width="2" fill="none"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+      </button>
+      <a href="index.html" class="brand-logo">
+        <span class="brand-icon">⚡</span>
+        <span class="brand-name">Keelson</span>
+        <span class="brand-badge">教程</span>
+      </a>
+    </div>
+
+    <div class="navbar-right">
+      <!-- Search Input -->
+      <div class="search-box">
+        <svg class="search-icon" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+        <input type="text" id="searchInput" placeholder="在章节中快速搜索..." />
+        <span class="search-kbd">⌘K</span>
+      </div>
+
+      <!-- Language Switch -->
+      <a href="../en/02-layers-and-transactions.html" class="lang-switch-btn" title="切换为英文">
+        <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>
+        <span>English</span>
+      </a>
+
+      <!-- Theme Switch -->
+      <button class="theme-toggle-btn" id="themeToggle" aria-label="Toggle Theme">
+        <svg class="sun-icon" viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
+        <svg class="moon-icon" viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+      </button>
+
+      <!-- GitHub Link -->
+      <a href="https://github.com/ticatec/keelson" target="_blank" rel="noopener noreferrer" class="github-link" title="GitHub Repository">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z"/></svg>
+      </a>
+    </div>
+  </header>
+
+  <div class="layout-container">
+    <!-- Left Navigation Sidebar -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-header">
+        <div class="sidebar-title">教程目录</div>
+        <span class="chapter-count">10 篇文档</span>
+      </div>
+      <nav class="sidebar-nav">
+        <ul class="nav-list" id="navList">
+          
+      <li class="nav-item ">
+        <a href="index.html" class="nav-link" title="教程导读与各章索引">
+          <span class="chapter-badge">00</span>
+          <span class="chapter-text">
+            <span class="chapter-title">概览与教程目录</span>
+            <span class="chapter-desc">教程导读与各章索引</span>
+          </span>
+        </a>
+        
+      </li>
+    
+      <li class="nav-item ">
+        <a href="01-getting-started.html" class="nav-link" title="从空目录到一个能响应请求的服务">
+          <span class="chapter-badge">01</span>
+          <span class="chapter-text">
+            <span class="chapter-title">起步</span>
+            <span class="chapter-desc">从空目录到一个能响应请求的服务</span>
+          </span>
+        </a>
+        
+      </li>
+    
+      <li class="nav-item active">
+        <a href="02-layers-and-transactions.html" class="nav-link" title="为什么分四层，事务如何贯穿">
+          <span class="chapter-badge">02</span>
+          <span class="chapter-text">
+            <span class="chapter-title">分层与事务</span>
+            <span class="chapter-desc">为什么分四层，事务如何贯穿</span>
+          </span>
+        </a>
+        
+      <ul class="sidebar-subnav">
+        
+          <li class="sidebar-subnav-item level-2">
+            <a href="#分层要解决的问题" class="subnav-link" data-toc-target="分层要解决的问题">
+              分层要解决的问题
+            </a>
+          </li>
+        
+          <li class="sidebar-subnav-item level-2">
+            <a href="#那个机制" class="subnav-link" data-toc-target="那个机制">
+              那个机制
+            </a>
+          </li>
+        
+          <li class="sidebar-subnav-item level-2">
+            <a href="#为什么-service-不能直接调-dao" class="subnav-link" data-toc-target="为什么-service-不能直接调-dao">
+              为什么 Service 不能直接调 DAO
+            </a>
+          </li>
+        
+          <li class="sidebar-subnav-item level-2">
+            <a href="#传播行为" class="subnav-link" data-toc-target="传播行为">
+              传播行为
+            </a>
+          </li>
+        
+          <li class="sidebar-subnav-item level-2">
+            <a href="#不用装饰器" class="subnav-link" data-toc-target="不用装饰器">
+              不用装饰器
+            </a>
+          </li>
+        
+          <li class="sidebar-subnav-item level-2">
+            <a href="#谁提交谁不提交" class="subnav-link" data-toc-target="谁提交谁不提交">
+              谁提交，谁不提交
+            </a>
+          </li>
+        
+          <li class="sidebar-subnav-item level-2">
+            <a href="#装饰器是怎么找到你的方法的" class="subnav-link" data-toc-target="装饰器是怎么找到你的方法的">
+              装饰器是怎么找到你的方法的
+            </a>
+          </li>
+        
+          <li class="sidebar-subnav-item level-2">
+            <a href="#读操作仍然需要上下文" class="subnav-link" data-toc-target="读操作仍然需要上下文">
+              读操作仍然需要上下文
+            </a>
+          </li>
+        
+          <li class="sidebar-subnav-item level-2">
+            <a href="#写出不在乎数据库是谁的-sql" class="subnav-link" data-toc-target="写出不在乎数据库是谁的-sql">
+              写出不在乎数据库是谁的 SQL
+            </a>
+          </li>
+        
+          <li class="sidebar-subnav-item level-2">
+            <a href="#什么会回滚什么不会" class="subnav-link" data-toc-target="什么会回滚什么不会">
+              什么会回滚，什么不会
+            </a>
+          </li>
+        
+      </ul>
+      </li>
+    
+      <li class="nav-item ">
+        <a href="03-wiring.html" class="nav-link" title="类与类互相发现，解耦初始化顺序">
+          <span class="chapter-badge">03</span>
+          <span class="chapter-text">
+            <span class="chapter-title">装配与依赖注入</span>
+            <span class="chapter-desc">类与类互相发现，解耦初始化顺序</span>
+          </span>
+        </a>
+        
+      </li>
+    
+      <li class="nav-item ">
+        <a href="04-http-layer.html" class="nav-link" title="路由、控制器、校验与错误映射">
+          <span class="chapter-badge">04</span>
+          <span class="chapter-text">
+            <span class="chapter-title">HTTP 层</span>
+            <span class="chapter-desc">路由、控制器、校验与错误映射</span>
+          </span>
+        </a>
+        
+      </li>
+    
+      <li class="nav-item ">
+        <a href="05-identity.html" class="nav-link" title="req.user 来源与鉴权机制">
+          <span class="chapter-badge">05</span>
+          <span class="chapter-text">
+            <span class="chapter-title">身份与访问控制</span>
+            <span class="chapter-desc">req.user 来源与鉴权机制</span>
+          </span>
+        </a>
+        
+      </li>
+    
+      <li class="nav-item ">
+        <a href="06-logging-and-health.html" class="nav-link" title="记录规范、敏感信息与 K8s 探针">
+          <span class="chapter-badge">06</span>
+          <span class="chapter-text">
+            <span class="chapter-title">日志与健康检查</span>
+            <span class="chapter-desc">记录规范、敏感信息与 K8s 探针</span>
+          </span>
+        </a>
+        
+      </li>
+    
+      <li class="nav-item ">
+        <a href="07-background-work.html" class="nav-link" title="周期任务调度与优雅关停保护">
+          <span class="chapter-badge">07</span>
+          <span class="chapter-text">
+            <span class="chapter-title">后台任务与优雅关停</span>
+            <span class="chapter-desc">周期任务调度与优雅关停保护</span>
+          </span>
+        </a>
+        
+      </li>
+    
+      <li class="nav-item ">
+        <a href="08-config-and-cache.html" class="nav-link" title="YAML、Nacos、Consul 与 Redis 集成">
+          <span class="chapter-badge">08</span>
+          <span class="chapter-text">
+            <span class="chapter-title">配置与缓存</span>
+            <span class="chapter-desc">YAML、Nacos、Consul 与 Redis 集成</span>
+          </span>
+        </a>
+        
+      </li>
+    
+      <li class="nav-item ">
+        <a href="09-production-checklist.html" class="nav-link" title="生产环境准备与关键排查项">
+          <span class="chapter-badge">09</span>
+          <span class="chapter-text">
+            <span class="chapter-title">上线之前检查清单</span>
+            <span class="chapter-desc">生产环境准备与关键排查项</span>
+          </span>
+        </a>
+        
+      </li>
+    
+        </ul>
+      </nav>
+      <div class="sidebar-footer">
+        <a href="https://github.com/ticatec/keelson" target="_blank" rel="noopener">Keelson v1.0.0</a>
+        <span>·</span>
+        <a href="../index.html">返回首页</a>
+      </div>
+    </aside>
+
+    <!-- Overlay for mobile drawer -->
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+    <!-- Main Content Area -->
+    <main class="main-wrapper">
+      <div class="content-container">
+        <!-- Breadcrumbs -->
+        <nav class="breadcrumb-nav">
+          <a href="index.html" class="crumb-link">Keelson</a>
+          <span class="crumb-sep">/</span>
+          <span class="crumb-link">教程</span>
+          <span class="crumb-sep">/</span>
+          <span class="crumb-current">分层与事务</span>
+        </nav>
+
+        <!-- Markdown Generated Content -->
+        <article class="markdown-body">
+          <h1 id="2-分层与事务" class="heading-anchor"><a href="#2-分层与事务" class="header-link">#</a> 2. 分层与事务</h1>
+<p>第 1 章为了读一行数据，让你写了 DAO、Repository、Service 三个类——比这件事本身需要的多了三个。这一章讲这些层是干什么的，以及让这套安排值回票价的那个机制。</p>
+<h2 id="分层要解决的问题" class="heading-anchor"><a href="#分层要解决的问题" class="header-link">#</a> 分层要解决的问题</h2>
+<p>换一个不玩具的用例：两个账户之间转账，写一条流水，再记一条审计。三张表，一条规则—— 要么全都发生，要么一件都不发生。</p>
+<p>没有约定的话，连接就会变成参数：</p>
+
+<div class="code-block-wrapper">
+  <div class="code-block-header">
+    <span class="code-lang-tag">typescript</span>
+    <button class="copy-btn" data-code-id="code-pxr2q1a" title="复制代码">
+      <svg class="copy-icon" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+      <span class="copy-label">复制</span>
+    </button>
+  </div>
+  <pre class="code-block"><code id="code-pxr2q1a" class="language-typescript"><span class="token comment">// 凡是没有早早定下规矩的代码库，最后都会长成这样</span>
+<span class="token keyword">async</span> <span class="token keyword">function</span> <span class="token function">transfer</span>(conn, fromId, toId, amount) {
+    <span class="token keyword">await</span> <span class="token function">debit</span>(conn, fromId, amount);
+    <span class="token keyword">await</span> <span class="token function">credit</span>(conn, toId, amount);
+    <span class="token keyword">await</span> <span class="token function">writeLedger</span>(conn, fromId, toId, amount);
+}</code></pre>
+</div>
+<p>每个函数都多出一个自己并不关心的 <code class="inline-code">conn</code>，只为了传给下一个。漏掉一处，那条语句就静悄悄地跑在事务外面——这是最坏的一类 bug：正常路径看起来一模一样，只有回滚发生时才暴露出损失。</p>
+<p>Keelson 的答案是：连接永远不是参数，它活在调用上下文里。</p>
+<h2 id="那个机制" class="heading-anchor"><a href="#那个机制" class="header-link">#</a> 那个机制</h2>
+<p><code class="inline-code">@Transaction()</code> 开启事务，把连接放进一个 <code class="inline-code">AsyncLocalStorage</code> 上下文，覆盖被装饰方法所 await 的一切，无论嵌套多深。<code class="inline-code">CommonDAO</code> 的 <code class="inline-code">getDBConnection()</code> 从这个上下文里读。没有人需要传递任何东西。</p>
+
+<div class="code-block-wrapper">
+  <div class="code-block-header">
+    <span class="code-lang-tag">typescript</span>
+    <button class="copy-btn" data-code-id="code-bfexd8a" title="复制代码">
+      <svg class="copy-icon" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+      <span class="copy-label">复制</span>
+    </button>
+  </div>
+  <pre class="code-block"><code id="code-bfexd8a" class="language-typescript"><span class="token keyword">export</span> <span class="token keyword">class</span> TransferService <span class="token keyword">extends</span> <span class="token builtin">CommonService</span> {
+    <span class="token keyword">private</span> <span class="token keyword">get</span> <span class="token function">accounts</span>(): AccountRepository {
+        <span class="token keyword">return</span> this.getRepositoryInstance&lt;AccountRepository&gt;(<span class="token string">&#039;AccountRepository&#039;</span>);
+    }
+    <span class="token keyword">private</span> <span class="token keyword">get</span> <span class="token function">ledger</span>(): LedgerRepository {
+        <span class="token keyword">return</span> this.getRepositoryInstance&lt;LedgerRepository&gt;(<span class="token string">&#039;LedgerRepository&#039;</span>);
+    }
+
+    <span class="token decorator">@Transaction</span>()
+    <span class="token keyword">async</span> <span class="token function">transfer</span>(fromId: string, toId: string, amount: number): <span class="token builtin">Promise</span>&lt;<span class="token keyword">void</span>&gt; {
+        <span class="token keyword">const</span> <span class="token keyword">from</span> = <span class="token keyword">await</span> this.accounts.<span class="token function">findById</span>(fromId);
+        <span class="token keyword">if</span> (<span class="token keyword">from</span> == <span class="token keyword">null</span> || <span class="token keyword">from</span>.balance &lt; amount) {
+            <span class="token keyword">throw</span> <span class="token keyword">new</span> <span class="token function">IllegalParameterError</span>(<span class="token string">&#039;余额不足&#039;</span>);
+        }
+        <span class="token keyword">await</span> this.accounts.<span class="token function">debit</span>(fromId, amount);
+        <span class="token keyword">await</span> this.accounts.<span class="token function">credit</span>(toId, amount);
+        <span class="token keyword">await</span> this.ledger.<span class="token function">record</span>(fromId, toId, amount);
+    }
+}</code></pre>
+</div>
+<p>五次调用、两个 Repository、三张表，一个连接，一个事务。正常返回即提交。抛异常——包括上面那个同时也是 400 的 <code class="inline-code">IllegalParameterError</code>——即回滚。没有会被忘掉的 <code class="inline-code">try</code>/<code class="inline-code">catch</code>/<code class="inline-code">rollback</code>。</p>
+<h2 id="为什么-service-不能直接调-dao" class="heading-anchor"><a href="#为什么-service-不能直接调-dao" class="header-link">#</a> 为什么 Service 不能直接调 DAO</h2>
+<p>规矩是：Controller → Service → Repository → DAO，每一层只调用紧邻的下一层。</p>
+<p>这不是分类学。事务边界在 Service 层，而边界只有在&quot;有且只有一个地方可能是它&quot;时才有意义。一旦 Service 可以直接调 DAO，&quot;这条语句在不在转账的事务里&quot;这个问题就不能从代码形状上读出来，只能靠追。</p>
+<p>层次划分是从这条规矩里长出来的：</p>
+<ul class="doc-list">
+<li><strong>DAO</strong> —— 一张表那么多的 SQL。没有业务规则，也不调用别的 DAO。</li>
+<li><strong>Repository</strong> —— 一个领域概念，需要几个 DAO 就用几个。<code class="inline-code">Account</code> 可能横跨</li>
+</ul>
+<p><code class="inline-code">accounts</code> 与 <code class="inline-code">account_limits</code> 两张表，Service 不该知道这件事。</p>
+<ul class="doc-list">
+<li><strong>Service</strong> —— 用例、规则，以及事务边界。</li>
+</ul>
+<p>判断这个划分有没有挣回成本，看一个信号：表结构变了，只有 DAO 需要改；规则变了，只有 Service 需要改。</p>
+<h2 id="传播行为" class="heading-anchor"><a href="#传播行为" class="header-link">#</a> 传播行为</h2>
+<p>嵌套的 <code class="inline-code">@Transaction()</code> 会加入已经打开的那个事务，这几乎总是你要的： <code class="inline-code">TransferService.transfer()</code> 调用 <code class="inline-code">FeeService.charge()</code>，两者应当是一个原子单元。</p>
+<p>有时候恰恰相反。审计记录应当在它所审计的那件事回滚之后依然存在——一次失败的转账，正是最需要留下记录的。</p>
+
+<div class="code-block-wrapper">
+  <div class="code-block-header">
+    <span class="code-lang-tag">typescript</span>
+    <button class="copy-btn" data-code-id="code-wt543xl" title="复制代码">
+      <svg class="copy-icon" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+      <span class="copy-label">复制</span>
+    </button>
+  </div>
+  <pre class="code-block"><code id="code-wt543xl" class="language-typescript"><span class="token decorator">@Transaction</span>(Propagation.REQUIRES_NEW)
+<span class="token keyword">async</span> <span class="token function">recordAttempt</span>(entry: AuditEntry): <span class="token builtin">Promise</span>&lt;<span class="token keyword">void</span>&gt; {
+    <span class="token keyword">await</span> this.auditRepo.<span class="token function">insert</span>(entry);
+}</code></pre>
+</div>
+<p><code class="inline-code">REQUIRES_NEW</code> 会取一个自己的连接，独立提交。调用方的事务回滚了，这一条已经落盘。</p>
+<p>用它之前有两件事值得知道。它会从连接池再取一个连接，所以在循环里调用它可能把池耗干。另外它看不到外层事务尚未提交的数据——这正是它的意义所在，但常让人意外：调用方刚插入的那行，它读不到。</p>
+<h2 id="不用装饰器" class="heading-anchor"><a href="#不用装饰器" class="header-link">#</a> 不用装饰器</h2>
+<p><code class="inline-code">@Transaction</code> 是 <code class="inline-code">TransactionManager</code> 的语法糖。当边界不是一整个方法时——比如一个每一千行提交一次的批处理——直接用它：</p>
+
+<div class="code-block-wrapper">
+  <div class="code-block-header">
+    <span class="code-lang-tag">typescript</span>
+    <button class="copy-btn" data-code-id="code-fmtmv23" title="复制代码">
+      <svg class="copy-icon" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+      <span class="copy-label">复制</span>
+    </button>
+  </div>
+  <pre class="code-block"><code id="code-fmtmv23" class="language-typescript"><span class="token keyword">import</span> { TransactionManager, Propagation } <span class="token keyword">from</span> <span class="token string">&#039;@ticatec/keelson-core&#039;</span>;
+
+<span class="token keyword">await</span> TransactionManager.<span class="token function">execute</span>(Propagation.REQUIRED, <span class="token keyword">async</span> () =&gt; {
+    <span class="token keyword">await</span> this.repo.<span class="token function">doSomething</span>();
+    <span class="token keyword">await</span> this.repo.<span class="token function">doSomethingElse</span>();
+});</code></pre>
+</div>
+<p><code class="inline-code">execute()</code> 是静态方法，传播行为要显式传入。它会把连接作为参数交给你的回调，你可以不理会——下面的一切都从上下文里取，跟用装饰器时完全一样。规则也一样：返回即提交，抛出即回滚。</p>
+<p>第三种传播行为只在这里才有意义：<code class="inline-code">Propagation.NONE</code> 会给回调一个连接但不开事务，用于那些不能待在事务里的语句。</p>
+<h2 id="谁提交谁不提交" class="heading-anchor"><a href="#谁提交谁不提交" class="header-link">#</a> 谁提交，谁不提交</h2>
+<p>&quot;返回即提交，抛出即回滚&quot;说的是<strong>开启</strong>了这个事务的那一帧，不是每一帧：</p>
+<div class="table-container"><table><thead><tr><th>情形</th><th>开启</th><th>提交 / 回滚</th><th>关闭</th></tr></thead><tbody><tr><td><code class="inline-code">REQUIRED</code>，此前没有事务</td><td>是</td><td>是</td><td>是</td></tr><tr><td><code class="inline-code">REQUIRED</code>，加入已有事务</td><td>否</td><td>否——归外层那一帧</td><td>否</td></tr><tr><td><code class="inline-code">REQUIRES_NEW</code></td><td>是，在第二条连接上</td><td>是</td><td>是</td></tr><tr><td><code class="inline-code">NONE</code></td><td>否</td><td>从不</td><td>是</td></tr></tbody></table></div>
+<p>有两条推论值得记住。一个在外层事务里抛出的 <code class="inline-code">REQUIRED</code> 方法，自己不回滚任何东西—— 它把异常往上抛，由开启事务的那一帧回滚。以及，在 <code class="inline-code">NONE</code> 上下文<strong>里面</strong>发起的 <code class="inline-code">REQUIRED</code> 调用没有东西可加入，于是它自己开一个真正的事务。</p>
+<h2 id="装饰器是怎么找到你的方法的" class="heading-anchor"><a href="#装饰器是怎么找到你的方法的" class="header-link">#</a> 装饰器是怎么找到你的方法的</h2>
+<p><code class="inline-code">@Transaction</code> 只写元数据，别的什么都不做。真正的包装发生在 <code class="inline-code">CommonService</code> 的构造函数里：它沿原型链走一遍，把带标记的方法逐个替换掉。由此有三条推论：</p>
+<ul class="doc-list">
+<li>在一个<strong>没有</strong>继承 <code class="inline-code">CommonService</code> 的类上，这个装饰器是静默空操作——不报错、没有事务，</li>
+</ul>
+<p>方法就那么裸跑。这是最费时间的一种故障，因为代码看上去完全正确。</p>
+<ul class="doc-list">
+<li>包装是幂等的，所以一条互相继承的 service 链不会被包两次</li>
+<li>在边界内部，<code class="inline-code">TransactionManager.getCurrentConnection()</code> 能拿到当前连接，</li>
+</ul>
+<p>类型是 <code class="inline-code">DBConnection | undefined</code></p>
+<h2 id="读操作仍然需要上下文" class="heading-anchor"><a href="#读操作仍然需要上下文" class="header-link">#</a> 读操作仍然需要上下文</h2>
+<p>单条 <code class="inline-code">SELECT</code> 不需要<strong>事务</strong>——但它需要<strong>上下文</strong>。<code class="inline-code">CommonDAO</code> 从来不自己从池里取连接；它是从环境上下文里读的，读不到就抛：</p>
+
+<div class="code-block-wrapper">
+  <div class="code-block-header">
+    <span class="code-lang-tag">text</span>
+    <button class="copy-btn" data-code-id="code-dqzfpov" title="复制代码">
+      <svg class="copy-icon" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+      <span class="copy-label">复制</span>
+    </button>
+  </div>
+  <pre class="code-block"><code id="code-dqzfpov" class="language-text">No database connection available. Ensure you are inside a @Transaction or using TransactionManager.execute().</code></pre>
+</div>
+<p><code class="inline-code">Propagation.NONE</code> 是&quot;要连接、不要事务&quot;的正规说法。第 1 章的 <code class="inline-code">GreetingService.get()</code> 带着装饰器，是因为总得有人把上下文建立起来，不是为了形式统一。</p>
+<p>读操作<strong>确实</strong>需要事务的场合是：多次读取必须看到同一个快照——比如一份汇总三张表的报表，不能让数据在脚下变动。</p>
+<h2 id="写出不在乎数据库是谁的-sql" class="heading-anchor"><a href="#写出不在乎数据库是谁的-sql" class="header-link">#</a> 写出不在乎数据库是谁的 SQL</h2>
+<p>占位符各不相同：PostgreSQL 是 <code class="inline-code">$1, $2</code>，MySQL 与达梦是 <code class="inline-code">?</code>。写死它，DAO 就焊死在一种数据库上了。</p>
+<p>对固定语句来说，写死通常没问题，别过度设计。对运行时拼出来的 SQL——比如长度不定的 <code class="inline-code">IN</code> 列表——问连接要：</p>
+
+<div class="code-block-wrapper">
+  <div class="code-block-header">
+    <span class="code-lang-tag">typescript</span>
+    <button class="copy-btn" data-code-id="code-jh7f9yc" title="复制代码">
+      <svg class="copy-icon" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+      <span class="copy-label">复制</span>
+    </button>
+  </div>
+  <pre class="code-block"><code id="code-jh7f9yc" class="language-typescript"><span class="token keyword">const</span> conn = <span class="token keyword">await</span> this.<span class="token function">getDBConnection</span>();
+<span class="token keyword">const</span> placeholders = ids.<span class="token function">map</span>((_, i) =&gt; conn.<span class="token function">getPlaceholder</span>(i + <span class="token number">1</span>)).<span class="token function">join</span>(<span class="token string">&#039;, &#039;</span>);
+<span class="token keyword">return</span> <span class="token keyword">await</span> this.<span class="token function">listQuery</span>(<span class="token string">`SELECT * FROM users WHERE id IN (${placeholders})`</span>, ids);</code></pre>
+</div>
+<p><code class="inline-code">getPlaceholder(i)</code> 从 1 开始计数，返回底层驱动想要的那种写法。</p>
+<p>另有两件事框架替你抹平了，与驱动无关：列名自动转驼峰；列在 <code class="inline-code">booleanFields</code> 里的字段会被转成真正的布尔值——包括 <code class="inline-code">&#039;t&#039;</code>、<code class="inline-code">&#039;f&#039;</code>、<code class="inline-code">&#039;true&#039;</code>、<code class="inline-code">&#039;false&#039;</code>、<code class="inline-code">&#039;1&#039;</code>、<code class="inline-code">&#039;0&#039;</code> 这些字符串形式，且不分大小写。这一条在 MySQL 与达梦上尤其重要，它们没有原生布尔类型。</p>
+<h2 id="什么会回滚什么不会" class="heading-anchor"><a href="#什么会回滚什么不会" class="header-link">#</a> 什么会回滚，什么不会</h2>
+<p>事务覆盖的是数据库。它不覆盖你在方法里做的其他任何事——写出去的文件、发出去的邮件、投递的消息、设置的 Redis 键。回滚之后，这些事依然做过了。</p>
+<p>通常的解法是把它们挪到事务提交之后，而不是放在里面：</p>
+
+<div class="code-block-wrapper">
+  <div class="code-block-header">
+    <span class="code-lang-tag">typescript</span>
+    <button class="copy-btn" data-code-id="code-g4f1bzw" title="复制代码">
+      <svg class="copy-icon" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+      <span class="copy-label">复制</span>
+    </button>
+  </div>
+  <pre class="code-block"><code id="code-g4f1bzw" class="language-typescript"><span class="token decorator">@Transaction</span>()
+<span class="token keyword">async</span> <span class="token function">placeOrder</span>(order: Order): <span class="token builtin">Promise</span>&lt;string&gt; {
+    <span class="token keyword">return</span> <span class="token keyword">await</span> this.orderRepo.<span class="token function">insert</span>(order);     <span class="token comment">// 只碰数据库</span>
+}
+
+<span class="token comment">// 调用方，在任何事务之外</span>
+<span class="token keyword">const</span> id = <span class="token keyword">await</span> orderService.<span class="token function">placeOrder</span>(order);
+<span class="token keyword">await</span> notifier.<span class="token function">sendConfirmation</span>(id);               <span class="token comment">// 只有提交成功才会走到这里</span></code></pre>
+</div>
+<hr class="divider" />
+<p>深入参考：<a href="../docs/prompts/AI_PROMPTS_3_SERVICE_CN.md" class="doc-link">service 提示词</a>、 <a href="../docs/prompts/AI_PROMPTS_5_DAO_CN.md" class="doc-link">DAO 提示词</a>（分层规则），以及 <a href="../packages/keelson-core/README_CN.md" class="doc-link">keelson-core 的 README</a>（每个查询辅助方法）。</p>
+<p>下一章：<a href="03-wiring.html" class="doc-link">装配</a> —— 这些类怎么互相找到。</p>
+        </article>
+
+        <!-- Previous / Next Navigation -->
+        
+    <div class="chapter-pagination">
+      
+        <a href="01-getting-started.html" class="pagination-btn prev-btn">
+          <span class="pagination-sub">← 上一章</span>
+          <span class="pagination-title">01. 起步</span>
+        </a>
+      
+
+      
+        <a href="03-wiring.html" class="pagination-btn next-btn">
+          <span class="pagination-sub">下一章 →</span>
+          <span class="pagination-title">03. 装配与依赖注入</span>
+        </a>
+      
+    </div>
+  
+
+        <!-- Document Footer -->
+        <footer class="site-footer">
+          <div class="footer-left">
+            <p>© 2026 Ticatec Keelson Framework. Released under the MIT License.</p>
+          </div>
+          <div class="footer-right">
+            <a href="../en/02-layers-and-transactions.html" class="footer-lang-link">
+              🌐 Read in English
+            </a>
+          </div>
+        </footer>
+      </div>
+
+      <!-- Right Table of Contents -->
+      
+      <aside class="right-toc-container">
+        <div class="right-toc-inner">
+          <div class="toc-header">本页目录</div>
+          <ul class="right-toc-list">
+            
+              <li class="toc-item level-2">
+                <a href="#分层要解决的问题" class="toc-link" data-anchor="分层要解决的问题">
+                  分层要解决的问题
+                </a>
+              </li>
+            
+              <li class="toc-item level-2">
+                <a href="#那个机制" class="toc-link" data-anchor="那个机制">
+                  那个机制
+                </a>
+              </li>
+            
+              <li class="toc-item level-2">
+                <a href="#为什么-service-不能直接调-dao" class="toc-link" data-anchor="为什么-service-不能直接调-dao">
+                  为什么 Service 不能直接调 DAO
+                </a>
+              </li>
+            
+              <li class="toc-item level-2">
+                <a href="#传播行为" class="toc-link" data-anchor="传播行为">
+                  传播行为
+                </a>
+              </li>
+            
+              <li class="toc-item level-2">
+                <a href="#不用装饰器" class="toc-link" data-anchor="不用装饰器">
+                  不用装饰器
+                </a>
+              </li>
+            
+              <li class="toc-item level-2">
+                <a href="#谁提交谁不提交" class="toc-link" data-anchor="谁提交谁不提交">
+                  谁提交，谁不提交
+                </a>
+              </li>
+            
+              <li class="toc-item level-2">
+                <a href="#装饰器是怎么找到你的方法的" class="toc-link" data-anchor="装饰器是怎么找到你的方法的">
+                  装饰器是怎么找到你的方法的
+                </a>
+              </li>
+            
+              <li class="toc-item level-2">
+                <a href="#读操作仍然需要上下文" class="toc-link" data-anchor="读操作仍然需要上下文">
+                  读操作仍然需要上下文
+                </a>
+              </li>
+            
+              <li class="toc-item level-2">
+                <a href="#写出不在乎数据库是谁的-sql" class="toc-link" data-anchor="写出不在乎数据库是谁的-sql">
+                  写出不在乎数据库是谁的 SQL
+                </a>
+              </li>
+            
+              <li class="toc-item level-2">
+                <a href="#什么会回滚什么不会" class="toc-link" data-anchor="什么会回滚什么不会">
+                  什么会回滚，什么不会
+                </a>
+              </li>
+            
+          </ul>
+        </div>
+      </aside>
+    
+    </main>
+  </div>
+
+  <script src="../assets/app.js"></script>
+</body>
+</html>

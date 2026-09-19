@@ -1,6 +1,6 @@
 {
   "name": "@ticatec/redis-client",
-  "version": "1.2.0",
+  "version": "2.0.0",
   "description": "A lightweight TypeScript wrapper around ioredis with singleton/multi-instance pattern support, logging through the @ticatec/logger-api contract, mock Redis for testing, and an abstract caching framework.",
   "main": "lib/cjs/index.js",
   "module": "lib/esm/index.js",

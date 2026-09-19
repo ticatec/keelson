@@ -1,0 +1,546 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>08. Config &amp; Cache | Keelson Official Tutorial</title>
+  <meta name="description" content="Keelson TypeScript Framework Official Tutorial - Enterprise TypeScript for Express">
+  <link rel="stylesheet" href="../assets/style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+</head>
+<body class="theme-auto">
+  <!-- Top Navigation Header -->
+  <header class="top-navbar">
+    <div class="navbar-left">
+      <button class="mobile-menu-toggle" id="menuToggle" aria-label="Toggle Navigation">
+        <svg viewBox="0 0 24 24" width="22" height="22" stroke="currentColor" stroke-width="2" fill="none"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+      </button>
+      <a href="index.html" class="brand-logo">
+        <span class="brand-icon">⚡</span>
+        <span class="brand-name">Keelson</span>
+        <span class="brand-badge">Tutorial</span>
+      </a>
+    </div>
+
+    <div class="navbar-right">
+      <!-- Search Input -->
+      <div class="search-box">
+        <svg class="search-icon" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+        <input type="text" id="searchInput" placeholder="Search chapters..." />
+        <span class="search-kbd">⌘K</span>
+      </div>
+
+      <!-- Language Switch -->
+      <a href="../zh/08-config-and-cache.html" class="lang-switch-btn" title="Switch to Chinese">
+        <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>
+        <span>中文</span>
+      </a>
+
+      <!-- Theme Switch -->
+      <button class="theme-toggle-btn" id="themeToggle" aria-label="Toggle Theme">
+        <svg class="sun-icon" viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
+        <svg class="moon-icon" viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+      </button>
+
+      <!-- GitHub Link -->
+      <a href="https://github.com/ticatec/keelson" target="_blank" rel="noopener noreferrer" class="github-link" title="GitHub Repository">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z"/></svg>
+      </a>
+    </div>
+  </header>
+
+  <div class="layout-container">
+    <!-- Left Navigation Sidebar -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-header">
+        <div class="sidebar-title">Chapters</div>
+        <span class="chapter-count">10 Docs</span>
+      </div>
+      <nav class="sidebar-nav">
+        <ul class="nav-list" id="navList">
+          
+      <li class="nav-item ">
+        <a href="index.html" class="nav-link" title="Tutorial overview &amp; index">
+          <span class="chapter-badge">00</span>
+          <span class="chapter-text">
+            <span class="chapter-title">Overview &amp; Table of Contents</span>
+            <span class="chapter-desc">Tutorial overview &amp; index</span>
+          </span>
+        </a>
+        
+      </li>
+    
+      <li class="nav-item ">
+        <a href="01-getting-started.html" class="nav-link" title="From empty directory to responsive service">
+          <span class="chapter-badge">01</span>
+          <span class="chapter-text">
+            <span class="chapter-title">Getting Started</span>
+            <span class="chapter-desc">From empty directory to responsive service</span>
+          </span>
+        </a>
+        
+      </li>
+    
+      <li class="nav-item ">
+        <a href="02-layers-and-transactions.html" class="nav-link" title="Why four layers and declarative transactions">
+          <span class="chapter-badge">02</span>
+          <span class="chapter-text">
+            <span class="chapter-title">Layers &amp; Transactions</span>
+            <span class="chapter-desc">Why four layers and declarative transactions</span>
+          </span>
+        </a>
+        
+      </li>
+    
+      <li class="nav-item ">
+        <a href="03-wiring.html" class="nav-link" title="Component discovery &amp; initialization">
+          <span class="chapter-badge">03</span>
+          <span class="chapter-text">
+            <span class="chapter-title">Wiring &amp; Dependency Injection</span>
+            <span class="chapter-desc">Component discovery &amp; initialization</span>
+          </span>
+        </a>
+        
+      </li>
+    
+      <li class="nav-item ">
+        <a href="04-http-layer.html" class="nav-link" title="Routes, controllers, validation &amp; errors">
+          <span class="chapter-badge">04</span>
+          <span class="chapter-text">
+            <span class="chapter-title">HTTP Layer</span>
+            <span class="chapter-desc">Routes, controllers, validation &amp; errors</span>
+          </span>
+        </a>
+        
+      </li>
+    
+      <li class="nav-item ">
+        <a href="05-identity.html" class="nav-link" title="req.user origin &amp; auth mechanism">
+          <span class="chapter-badge">05</span>
+          <span class="chapter-text">
+            <span class="chapter-title">Identity &amp; Access Control</span>
+            <span class="chapter-desc">req.user origin &amp; auth mechanism</span>
+          </span>
+        </a>
+        
+      </li>
+    
+      <li class="nav-item ">
+        <a href="06-logging-and-health.html" class="nav-link" title="Logging policies &amp; K8s probes">
+          <span class="chapter-badge">06</span>
+          <span class="chapter-text">
+            <span class="chapter-title">Logging &amp; Health Checks</span>
+            <span class="chapter-desc">Logging policies &amp; K8s probes</span>
+          </span>
+        </a>
+        
+      </li>
+    
+      <li class="nav-item ">
+        <a href="07-background-work.html" class="nav-link" title="Scheduled tasks &amp; graceful shutdown">
+          <span class="chapter-badge">07</span>
+          <span class="chapter-text">
+            <span class="chapter-title">Background Work &amp; Shutdown</span>
+            <span class="chapter-desc">Scheduled tasks &amp; graceful shutdown</span>
+          </span>
+        </a>
+        
+      </li>
+    
+      <li class="nav-item active">
+        <a href="08-config-and-cache.html" class="nav-link" title="Local YAML, Nacos, Consul &amp; Redis">
+          <span class="chapter-badge">08</span>
+          <span class="chapter-text">
+            <span class="chapter-title">Config &amp; Cache</span>
+            <span class="chapter-desc">Local YAML, Nacos, Consul &amp; Redis</span>
+          </span>
+        </a>
+        
+      <ul class="sidebar-subnav">
+        
+          <li class="sidebar-subnav-item level-2">
+            <a href="#configuration" class="subnav-link" data-toc-target="configuration">
+              Configuration
+            </a>
+          </li>
+        
+          <li class="sidebar-subnav-item level-3">
+            <a href="#local-yaml-or-json" class="subnav-link" data-toc-target="local-yaml-or-json">
+              Local YAML or JSON
+            </a>
+          </li>
+        
+          <li class="sidebar-subnav-item level-3">
+            <a href="#nacos-or-consul" class="subnav-link" data-toc-target="nacos-or-consul">
+              Nacos or Consul
+            </a>
+          </li>
+        
+          <li class="sidebar-subnav-item level-3">
+            <a href="#post-loaders" class="subnav-link" data-toc-target="post-loaders">
+              Post-loaders
+            </a>
+          </li>
+        
+          <li class="sidebar-subnav-item level-2">
+            <a href="#cache" class="subnav-link" data-toc-target="cache">
+              Cache
+            </a>
+          </li>
+        
+          <li class="sidebar-subnav-item level-3">
+            <a href="#reading-and-writing" class="subnav-link" data-toc-target="reading-and-writing">
+              Reading and writing
+            </a>
+          </li>
+        
+          <li class="sidebar-subnav-item level-3">
+            <a href="#cache-aside-in-one-call" class="subnav-link" data-toc-target="cache-aside-in-one-call">
+              Cache-aside in one call
+            </a>
+          </li>
+        
+          <li class="sidebar-subnav-item level-3">
+            <a href="#invalidation-belongs-with-the-write" class="subnav-link" data-toc-target="invalidation-belongs-with-the-write">
+              Invalidation belongs with the write
+            </a>
+          </li>
+        
+          <li class="sidebar-subnav-item level-3">
+            <a href="#health" class="subnav-link" data-toc-target="health">
+              Health
+            </a>
+          </li>
+        
+      </ul>
+      </li>
+    
+      <li class="nav-item ">
+        <a href="09-production-checklist.html" class="nav-link" title="Production readiness checklist">
+          <span class="chapter-badge">09</span>
+          <span class="chapter-text">
+            <span class="chapter-title">Production Checklist</span>
+            <span class="chapter-desc">Production readiness checklist</span>
+          </span>
+        </a>
+        
+      </li>
+    
+        </ul>
+      </nav>
+      <div class="sidebar-footer">
+        <a href="https://github.com/ticatec/keelson" target="_blank" rel="noopener">Keelson v1.0.0</a>
+        <span>·</span>
+        <a href="../index.html">Home</a>
+      </div>
+    </aside>
+
+    <!-- Overlay for mobile drawer -->
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+    <!-- Main Content Area -->
+    <main class="main-wrapper">
+      <div class="content-container">
+        <!-- Breadcrumbs -->
+        <nav class="breadcrumb-nav">
+          <a href="index.html" class="crumb-link">Keelson</a>
+          <span class="crumb-sep">/</span>
+          <span class="crumb-link">Tutorial</span>
+          <span class="crumb-sep">/</span>
+          <span class="crumb-current">Config &amp; Cache</span>
+        </nav>
+
+        <!-- Markdown Generated Content -->
+        <article class="markdown-body">
+          <h1 id="8-configuration-and-cache" class="heading-anchor"><a href="#8-configuration-and-cache" class="header-link">#</a> 8. Configuration and cache</h1>
+<p>Getting configuration in from wherever operations keeps it, and putting a cache in front of the things that do not change every second.</p>
+<h2 id="configuration" class="heading-anchor"><a href="#configuration" class="header-link">#</a> Configuration</h2>
+<p><code class="inline-code">AppConf</code> is the in-memory holder: you initialise it once with an object, and read from it with dot notation.</p>
+
+<div class="code-block-wrapper">
+  <div class="code-block-header">
+    <span class="code-lang-tag">typescript</span>
+    <button class="copy-btn" data-code-id="code-n7r7ivy" title="复制代码">
+      <svg class="copy-icon" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+      <span class="copy-label">复制</span>
+    </button>
+  </div>
+  <pre class="code-block"><code id="code-n7r7ivy" class="language-typescript">AppConf.<span class="token function">init</span>(config);
+
+AppConf.<span class="token function">getInstance</span>()!.<span class="token keyword">get</span>(<span class="token string">&#039;web.port&#039;</span>);         <span class="token comment">// 3000</span>
+AppConf.<span class="token function">getInstance</span>()!.<span class="token keyword">get</span>(<span class="token string">&#039;database.host&#039;</span>);    <span class="token comment">// &#039;db.internal&#039;</span>
+AppConf.<span class="token function">getInstance</span>()!.<span class="token keyword">get</span>(<span class="token string">&#039;nope.nothing&#039;</span>);     <span class="token comment">// undefined, no throw</span></code></pre>
+</div>
+<p><code class="inline-code">init()</code> is idempotent in the unhelpful direction: a second call keeps the first config and ignores the new one. Initialise once, in <code class="inline-code">loadConfigFile()</code>.</p>
+<p>The lookup reads own properties only, so <code class="inline-code">get(&#039;constructor&#039;)</code> and <code class="inline-code">get(&#039;toString&#039;)</code> return <code class="inline-code">undefined</code> rather than something off <code class="inline-code">Object.prototype</code>. That matters when a key comes from somewhere other than your own source.</p>
+<p>Where the object comes from is <code class="inline-code">@ticatec/config-loader</code>&#039;s job.</p>
+<h3 id="local-yaml-or-json" class="heading-anchor"><a href="#local-yaml-or-json" class="header-link">#</a> Local YAML or JSON</h3>
+
+<div class="code-block-wrapper">
+  <div class="code-block-header">
+    <span class="code-lang-tag">typescript</span>
+    <button class="copy-btn" data-code-id="code-0rn0x8p" title="复制代码">
+      <svg class="copy-icon" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+      <span class="copy-label">复制</span>
+    </button>
+  </div>
+  <pre class="code-block"><code id="code-0rn0x8p" class="language-typescript"><span class="token keyword">import</span> { loadConfig } <span class="token keyword">from</span> <span class="token string">&#039;@ticatec/config-loader&#039;</span>;
+
+<span class="token keyword">protected</span> <span class="token keyword">async</span> <span class="token function">loadConfigFile</span>(): <span class="token builtin">Promise</span>&lt;<span class="token keyword">void</span>&gt; {
+    <span class="token keyword">const</span> { appConf, loggerConf } = <span class="token keyword">await</span> <span class="token function">loadConfig</span>(<span class="token string">&#039;local&#039;</span>, <span class="token string">&#039;app.yaml&#039;</span>, <span class="token string">&#039;logger.yaml&#039;</span>);
+    <span class="token function">initialize</span>(loggerConf);      <span class="token comment">// @ticatec/logger-pino</span>
+    AppConf.<span class="token function">init</span>(appConf);
+}</code></pre>
+</div>
+<p><code class="inline-code">loadConfig(mode, configFile, logFile)</code> reads both documents and returns them separately. Two files rather than one section of a bigger file, because the logger has to be configured before anything else runs — including whatever reads the application config.</p>
+<p>Local files are resolved against <code class="inline-code">CONFIG_DIR</code> if set, otherwise <code class="inline-code">./config</code>. A <code class="inline-code">LocalFileLoader</code> can be constructed with an explicit root when you need one.</p>
+<h3 id="nacos-or-consul" class="heading-anchor"><a href="#nacos-or-consul" class="header-link">#</a> Nacos or Consul</h3>
+
+<div class="code-block-wrapper">
+  <div class="code-block-header">
+    <span class="code-lang-tag">typescript</span>
+    <button class="copy-btn" data-code-id="code-4cmzb7v" title="复制代码">
+      <svg class="copy-icon" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+      <span class="copy-label">复制</span>
+    </button>
+  </div>
+  <pre class="code-block"><code id="code-4cmzb7v" class="language-typescript"><span class="token keyword">const</span> { appConf, loggerConf } = <span class="token keyword">await</span> <span class="token function">loadConfig</span>(<span class="token string">&#039;nacos&#039;</span>, <span class="token string">&#039;app.yaml&#039;</span>, <span class="token string">&#039;logger.yaml&#039;</span>);</code></pre>
+</div>
+<p>Same call, different first argument — <code class="inline-code">&#039;local&#039;</code>, <code class="inline-code">&#039;nacos&#039;</code> or <code class="inline-code">&#039;consul&#039;</code>. The two remote loaders need their client library installed (<code class="inline-code">nacos</code> or <code class="inline-code">consul</code>), which is why they are optional peers and are loaded dynamically: a service using local files does not pay for either.</p>
+<p>Connection details come from environment variables — <code class="inline-code">NACOS_SERVER_ADDR</code> or <code class="inline-code">NACOS_ENDPOINT</code>, <code class="inline-code">CONSUL_HTTP_ADDR</code> and their token variables. Configuration about where configuration lives cannot itself live in the configuration.</p>
+<p><code class="inline-code">loadConfig()</code> closes the loader when it is done, so a Nacos heartbeat thread does not keep the process alive after startup.</p>
+<h3 id="post-loaders" class="heading-anchor"><a href="#post-loaders" class="header-link">#</a> Post-loaders</h3>
+<p>The fourth and fifth arguments hook each document, and they are narrower than they look: <code class="inline-code">(content: string) =&gt; string</code>, applied to the <strong>raw text before it is parsed</strong>, and synchronous. So they are for text substitution, not for reshaping a parsed object:</p>
+
+<div class="code-block-wrapper">
+  <div class="code-block-header">
+    <span class="code-lang-tag">typescript</span>
+    <button class="copy-btn" data-code-id="code-j6anqo8" title="复制代码">
+      <svg class="copy-icon" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+      <span class="copy-label">复制</span>
+    </button>
+  </div>
+  <pre class="code-block"><code id="code-j6anqo8" class="language-typescript"><span class="token keyword">const</span> { appConf, loggerConf } = <span class="token keyword">await</span> <span class="token function">loadConfig</span>(
+    <span class="token string">&#039;local&#039;</span>, <span class="token string">&#039;app.yaml&#039;</span>, <span class="token string">&#039;logger.yaml&#039;</span>,
+    <span class="token keyword">null</span>,                                              <span class="token comment">// no hook for the logger document</span>
+    (text) =&gt; text.<span class="token function">replace</span>(/\$\{(\w+)\}/g, (_, name) =&gt; process.env[name] ?? <span class="token string">&#039;&#039;</span>)
+);</code></pre>
+</div>
+<p>With that hook, <code class="inline-code">password: ${DB_PASSWORD}</code> in the YAML picks the value up from the environment.</p>
+<p>Anything asynchronous — reading a secret from a vault — happens after the load and before <code class="inline-code">AppConf.init()</code>, where you have a plain object and can await:</p>
+
+<div class="code-block-wrapper">
+  <div class="code-block-header">
+    <span class="code-lang-tag">typescript</span>
+    <button class="copy-btn" data-code-id="code-js5esgn" title="复制代码">
+      <svg class="copy-icon" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+      <span class="copy-label">复制</span>
+    </button>
+  </div>
+  <pre class="code-block"><code id="code-js5esgn" class="language-typescript"><span class="token keyword">const</span> { appConf, loggerConf } = <span class="token keyword">await</span> <span class="token function">loadConfig</span>(<span class="token string">&#039;local&#039;</span>, <span class="token string">&#039;app.yaml&#039;</span>, <span class="token string">&#039;logger.yaml&#039;</span>);
+appConf.database.password = <span class="token keyword">await</span> vault.<span class="token function">read</span>(<span class="token string">&#039;db&#039;</span>);
+<span class="token function">initialize</span>(loggerConf);
+AppConf.<span class="token function">init</span>(appConf);</code></pre>
+</div>
+<p>Either way the password ends up in the config object and never in a log — which is why the framework logs a connection summary rather than the config it was given (chapter 6).</p>
+<h2 id="cache" class="heading-anchor"><a href="#cache" class="header-link">#</a> Cache</h2>
+<p><code class="inline-code">@ticatec/redis-client</code> wraps ioredis with named singletons.</p>
+
+<div class="code-block-wrapper">
+  <div class="code-block-header">
+    <span class="code-lang-tag">typescript</span>
+    <button class="copy-btn" data-code-id="code-cvw55r6" title="复制代码">
+      <svg class="copy-icon" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+      <span class="copy-label">复制</span>
+    </button>
+  </div>
+  <pre class="code-block"><code id="code-cvw55r6" class="language-typescript"><span class="token keyword">import</span> { RedisClient } <span class="token keyword">from</span> <span class="token string">&#039;@ticatec/redis-client&#039;</span>;
+
+<span class="token keyword">protected</span> <span class="token keyword">async</span> <span class="token function">beforeStart</span>(): <span class="token builtin">Promise</span>&lt;<span class="token keyword">void</span>&gt; {
+    <span class="token keyword">await</span> RedisClient.<span class="token function">init</span>(AppConf.<span class="token function">getInstance</span>()!.<span class="token keyword">get</span>(<span class="token string">&#039;redis&#039;</span>));          <span class="token comment">// &#039;default&#039;</span>
+    <span class="token keyword">await</span> RedisClient.<span class="token function">init</span>(AppConf.<span class="token function">getInstance</span>()!.<span class="token keyword">get</span>(<span class="token string">&#039;sessions&#039;</span>), <span class="token string">&#039;sessions&#039;</span>);
+}</code></pre>
+</div>
+<p><code class="inline-code">init()</code> takes an ioredis options object, a <code class="inline-code">redis://</code> / <code class="inline-code">rediss://</code> URL, or <code class="inline-code">null</code> for an in-memory mock (development only — the mock is a dev dependency and asking for it in production throws with an explanation).</p>
+<p>Reach an instance by name:</p>
+
+<div class="code-block-wrapper">
+  <div class="code-block-header">
+    <span class="code-lang-tag">typescript</span>
+    <button class="copy-btn" data-code-id="code-c5a8ai6" title="复制代码">
+      <svg class="copy-icon" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+      <span class="copy-label">复制</span>
+    </button>
+  </div>
+  <pre class="code-block"><code id="code-c5a8ai6" class="language-typescript"><span class="token keyword">const</span> redis = RedisClient.<span class="token function">getInstance</span>();              <span class="token comment">// &#039;default&#039;</span>
+<span class="token keyword">const</span> sessions = RedisClient.<span class="token function">getInstance</span>(<span class="token string">&#039;sessions&#039;</span>);</code></pre>
+</div>
+<p><code class="inline-code">getInstance()</code> throws if that name was never initialised, naming it. Like the bean accessors, a missing dependency fails immediately rather than returning <code class="inline-code">undefined</code>.</p>
+<h3 id="reading-and-writing" class="heading-anchor"><a href="#reading-and-writing" class="header-link">#</a> Reading and writing</h3>
+
+<div class="code-block-wrapper">
+  <div class="code-block-header">
+    <span class="code-lang-tag">typescript</span>
+    <button class="copy-btn" data-code-id="code-zfqkz45" title="复制代码">
+      <svg class="copy-icon" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+      <span class="copy-label">复制</span>
+    </button>
+  </div>
+  <pre class="code-block"><code id="code-zfqkz45" class="language-typescript"><span class="token keyword">await</span> redis.<span class="token keyword">set</span>(<span class="token string">&#039;greeting&#039;</span>, <span class="token string">&#039;hello&#039;</span>, <span class="token number">300</span>);            <span class="token comment">// string, 300s TTL</span>
+<span class="token keyword">const</span> s = <span class="token keyword">await</span> redis.<span class="token keyword">get</span>(<span class="token string">&#039;greeting&#039;</span>);
+
+<span class="token keyword">await</span> redis.<span class="token function">setObject</span>(<span class="token string">&#039;user:U1&#039;</span>, user, <span class="token number">600</span>);          <span class="token comment">// JSON round-trip</span>
+<span class="token keyword">const</span> u = <span class="token keyword">await</span> redis.getObject&lt;AppUser&gt;(<span class="token string">&#039;user:U1&#039;</span>);
+
+<span class="token keyword">await</span> redis.<span class="token function">del</span>(<span class="token string">&#039;user:U1&#039;</span>);</code></pre>
+</div>
+<p><code class="inline-code">set</code>/<code class="inline-code">get</code> are strings; <code class="inline-code">setObject</code>/<code class="inline-code">getObject</code> serialise. Keep them paired — a value written with <code class="inline-code">set</code> and read with <code class="inline-code">getObject</code> gives you a parse error, and the reverse gives you a string of JSON.</p>
+<h3 id="cache-aside-in-one-call" class="heading-anchor"><a href="#cache-aside-in-one-call" class="header-link">#</a> Cache-aside in one call</h3>
+
+<div class="code-block-wrapper">
+  <div class="code-block-header">
+    <span class="code-lang-tag">typescript</span>
+    <button class="copy-btn" data-code-id="code-kkv9ec0" title="复制代码">
+      <svg class="copy-icon" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+      <span class="copy-label">复制</span>
+    </button>
+  </div>
+  <pre class="code-block"><code id="code-kkv9ec0" class="language-typescript"><span class="token keyword">const</span> profile = <span class="token keyword">await</span> redis.getOrSet&lt;Profile&gt;(
+    <span class="token string">`profile:${id}`</span>,
+    () =&gt; this.service.<span class="token function">loadProfile</span>(id),
+    <span class="token number">600</span>
+);</code></pre>
+</div>
+<p>On a hit it returns the cached value; on a miss it calls your function, stores the result and returns it. Two things to know: the fetch runs while the cache is cold, so a hot key expiring under load means several concurrent fetches — pre-warm the ones that matter. And the value round-trips through JSON, so a <code class="inline-code">Date</code> comes back as a string. Cache what serialises cleanly, or restore the types on the way out.</p>
+<h3 id="invalidation-belongs-with-the-write" class="heading-anchor"><a href="#invalidation-belongs-with-the-write" class="header-link">#</a> Invalidation belongs with the write</h3>
+<p>The cache does not know your data changed. Delete the key where the change happens — in the service, after the transaction commits, not inside it:</p>
+
+<div class="code-block-wrapper">
+  <div class="code-block-header">
+    <span class="code-lang-tag">typescript</span>
+    <button class="copy-btn" data-code-id="code-n8yprvy" title="复制代码">
+      <svg class="copy-icon" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+      <span class="copy-label">复制</span>
+    </button>
+  </div>
+  <pre class="code-block"><code id="code-n8yprvy" class="language-typescript"><span class="token decorator">@Transaction</span>()
+<span class="token keyword">async</span> <span class="token function">updateProfile</span>(user: AppUser, profile: Profile): <span class="token builtin">Promise</span>&lt;<span class="token keyword">void</span>&gt; {
+    <span class="token keyword">await</span> this.repo.<span class="token function">update</span>(profile);
+}
+
+<span class="token comment">// the caller</span>
+<span class="token keyword">await</span> profileService.<span class="token function">updateProfile</span>(user, profile);
+<span class="token keyword">await</span> RedisClient.<span class="token function">getInstance</span>().<span class="token function">del</span>(<span class="token string">`profile:${profile.id}`</span>);</code></pre>
+</div>
+<p>Deleting inside the transaction is the classic mistake: the delete is not transactional, so a rollback leaves the cache empty — harmless — but a delete that happens <em>before</em> a concurrent read repopulates it from the not-yet-committed state leaves the cache holding a value that was rolled back. Invalidate after the commit.</p>
+<h3 id="health" class="heading-anchor"><a href="#health" class="header-link">#</a> Health</h3>
+<p>Redis is usually a non-critical dependency — a cold cache is slower, not broken. Register it that way (chapter 6) so an outage degrades the service instead of taking it out of rotation.</p>
+<hr class="divider" />
+<p>Next: <a href="09-production-checklist.html" class="doc-link">Before you go live</a>.</p>
+        </article>
+
+        <!-- Previous / Next Navigation -->
+        
+    <div class="chapter-pagination">
+      
+        <a href="07-background-work.html" class="pagination-btn prev-btn">
+          <span class="pagination-sub">← Previous</span>
+          <span class="pagination-title">07. Background Work &amp; Shutdown</span>
+        </a>
+      
+
+      
+        <a href="09-production-checklist.html" class="pagination-btn next-btn">
+          <span class="pagination-sub">Next →</span>
+          <span class="pagination-title">09. Production Checklist</span>
+        </a>
+      
+    </div>
+  
+
+        <!-- Document Footer -->
+        <footer class="site-footer">
+          <div class="footer-left">
+            <p>© 2026 Ticatec Keelson Framework. Released under the MIT License.</p>
+          </div>
+          <div class="footer-right">
+            <a href="../zh/08-config-and-cache.html" class="footer-lang-link">
+              🌐 中文阅读
+            </a>
+          </div>
+        </footer>
+      </div>
+
+      <!-- Right Table of Contents -->
+      
+      <aside class="right-toc-container">
+        <div class="right-toc-inner">
+          <div class="toc-header">On this page</div>
+          <ul class="right-toc-list">
+            
+              <li class="toc-item level-2">
+                <a href="#configuration" class="toc-link" data-anchor="configuration">
+                  Configuration
+                </a>
+              </li>
+            
+              <li class="toc-item level-3">
+                <a href="#local-yaml-or-json" class="toc-link" data-anchor="local-yaml-or-json">
+                  Local YAML or JSON
+                </a>
+              </li>
+            
+              <li class="toc-item level-3">
+                <a href="#nacos-or-consul" class="toc-link" data-anchor="nacos-or-consul">
+                  Nacos or Consul
+                </a>
+              </li>
+            
+              <li class="toc-item level-3">
+                <a href="#post-loaders" class="toc-link" data-anchor="post-loaders">
+                  Post-loaders
+                </a>
+              </li>
+            
+              <li class="toc-item level-2">
+                <a href="#cache" class="toc-link" data-anchor="cache">
+                  Cache
+                </a>
+              </li>
+            
+              <li class="toc-item level-3">
+                <a href="#reading-and-writing" class="toc-link" data-anchor="reading-and-writing">
+                  Reading and writing
+                </a>
+              </li>
+            
+              <li class="toc-item level-3">
+                <a href="#cache-aside-in-one-call" class="toc-link" data-anchor="cache-aside-in-one-call">
+                  Cache-aside in one call
+                </a>
+              </li>
+            
+              <li class="toc-item level-3">
+                <a href="#invalidation-belongs-with-the-write" class="toc-link" data-anchor="invalidation-belongs-with-the-write">
+                  Invalidation belongs with the write
+                </a>
+              </li>
+            
+              <li class="toc-item level-3">
+                <a href="#health" class="toc-link" data-anchor="health">
+                  Health
+                </a>
+              </li>
+            
+          </ul>
+        </div>
+      </aside>
+    
+    </main>
+  </div>
+
+  <script src="../assets/app.js"></script>
+</body>
+</html>

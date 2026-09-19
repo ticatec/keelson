@@ -1,0 +1,547 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>05. 身份与访问控制 | Keelson 官方教程</title>
+  <meta name="description" content="Keelson TypeScript Framework Official Tutorial - Enterprise TypeScript for Express">
+  <link rel="stylesheet" href="../assets/style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+</head>
+<body class="theme-auto">
+  <!-- Top Navigation Header -->
+  <header class="top-navbar">
+    <div class="navbar-left">
+      <button class="mobile-menu-toggle" id="menuToggle" aria-label="Toggle Navigation">
+        <svg viewBox="0 0 24 24" width="22" height="22" stroke="currentColor" stroke-width="2" fill="none"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+      </button>
+      <a href="index.html" class="brand-logo">
+        <span class="brand-icon">⚡</span>
+        <span class="brand-name">Keelson</span>
+        <span class="brand-badge">教程</span>
+      </a>
+    </div>
+
+    <div class="navbar-right">
+      <!-- Search Input -->
+      <div class="search-box">
+        <svg class="search-icon" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+        <input type="text" id="searchInput" placeholder="在章节中快速搜索..." />
+        <span class="search-kbd">⌘K</span>
+      </div>
+
+      <!-- Language Switch -->
+      <a href="../en/05-identity.html" class="lang-switch-btn" title="切换为英文">
+        <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>
+        <span>English</span>
+      </a>
+
+      <!-- Theme Switch -->
+      <button class="theme-toggle-btn" id="themeToggle" aria-label="Toggle Theme">
+        <svg class="sun-icon" viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
+        <svg class="moon-icon" viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+      </button>
+
+      <!-- GitHub Link -->
+      <a href="https://github.com/ticatec/keelson" target="_blank" rel="noopener noreferrer" class="github-link" title="GitHub Repository">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z"/></svg>
+      </a>
+    </div>
+  </header>
+
+  <div class="layout-container">
+    <!-- Left Navigation Sidebar -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-header">
+        <div class="sidebar-title">教程目录</div>
+        <span class="chapter-count">10 篇文档</span>
+      </div>
+      <nav class="sidebar-nav">
+        <ul class="nav-list" id="navList">
+          
+      <li class="nav-item ">
+        <a href="index.html" class="nav-link" title="教程导读与各章索引">
+          <span class="chapter-badge">00</span>
+          <span class="chapter-text">
+            <span class="chapter-title">概览与教程目录</span>
+            <span class="chapter-desc">教程导读与各章索引</span>
+          </span>
+        </a>
+        
+      </li>
+    
+      <li class="nav-item ">
+        <a href="01-getting-started.html" class="nav-link" title="从空目录到一个能响应请求的服务">
+          <span class="chapter-badge">01</span>
+          <span class="chapter-text">
+            <span class="chapter-title">起步</span>
+            <span class="chapter-desc">从空目录到一个能响应请求的服务</span>
+          </span>
+        </a>
+        
+      </li>
+    
+      <li class="nav-item ">
+        <a href="02-layers-and-transactions.html" class="nav-link" title="为什么分四层，事务如何贯穿">
+          <span class="chapter-badge">02</span>
+          <span class="chapter-text">
+            <span class="chapter-title">分层与事务</span>
+            <span class="chapter-desc">为什么分四层，事务如何贯穿</span>
+          </span>
+        </a>
+        
+      </li>
+    
+      <li class="nav-item ">
+        <a href="03-wiring.html" class="nav-link" title="类与类互相发现，解耦初始化顺序">
+          <span class="chapter-badge">03</span>
+          <span class="chapter-text">
+            <span class="chapter-title">装配与依赖注入</span>
+            <span class="chapter-desc">类与类互相发现，解耦初始化顺序</span>
+          </span>
+        </a>
+        
+      </li>
+    
+      <li class="nav-item ">
+        <a href="04-http-layer.html" class="nav-link" title="路由、控制器、校验与错误映射">
+          <span class="chapter-badge">04</span>
+          <span class="chapter-text">
+            <span class="chapter-title">HTTP 层</span>
+            <span class="chapter-desc">路由、控制器、校验与错误映射</span>
+          </span>
+        </a>
+        
+      </li>
+    
+      <li class="nav-item active">
+        <a href="05-identity.html" class="nav-link" title="req.user 来源与鉴权机制">
+          <span class="chapter-badge">05</span>
+          <span class="chapter-text">
+            <span class="chapter-title">身份与访问控制</span>
+            <span class="chapter-desc">req.user 来源与鉴权机制</span>
+          </span>
+        </a>
+        
+      <ul class="sidebar-subnav">
+        
+          <li class="sidebar-subnav-item level-2">
+            <a href="#默认方式网关告诉你调用者是谁" class="subnav-link" data-toc-target="默认方式网关告诉你调用者是谁">
+              默认方式：网关告诉你调用者是谁
+            </a>
+          </li>
+        
+          <li class="sidebar-subnav-item level-2">
+            <a href="#替换解析器" class="subnav-link" data-toc-target="替换解析器">
+              替换解析器
+            </a>
+          </li>
+        
+          <li class="sidebar-subnav-item level-2">
+            <a href="#把用户标注成自己的模型" class="subnav-link" data-toc-target="把用户标注成自己的模型">
+              把用户标注成自己的模型
+            </a>
+          </li>
+        
+          <li class="sidebar-subnav-item level-2">
+            <a href="#代理身份" class="subnav-link" data-toc-target="代理身份">
+              代理身份
+            </a>
+          </li>
+        
+          <li class="sidebar-subnav-item level-2">
+            <a href="#鉴权三个位置三个问题" class="subnav-link" data-toc-target="鉴权三个位置三个问题">
+              鉴权：三个位置，三个问题
+            </a>
+          </li>
+        
+          <li class="sidebar-subnav-item level-2">
+            <a href="#在检查之前充实用户" class="subnav-link" data-toc-target="在检查之前充实用户">
+              在检查之前充实用户
+            </a>
+          </li>
+        
+          <li class="sidebar-subnav-item level-2">
+            <a href="#什么不会被记录" class="subnav-link" data-toc-target="什么不会被记录">
+              什么不会被记录
+            </a>
+          </li>
+        
+      </ul>
+      </li>
+    
+      <li class="nav-item ">
+        <a href="06-logging-and-health.html" class="nav-link" title="记录规范、敏感信息与 K8s 探针">
+          <span class="chapter-badge">06</span>
+          <span class="chapter-text">
+            <span class="chapter-title">日志与健康检查</span>
+            <span class="chapter-desc">记录规范、敏感信息与 K8s 探针</span>
+          </span>
+        </a>
+        
+      </li>
+    
+      <li class="nav-item ">
+        <a href="07-background-work.html" class="nav-link" title="周期任务调度与优雅关停保护">
+          <span class="chapter-badge">07</span>
+          <span class="chapter-text">
+            <span class="chapter-title">后台任务与优雅关停</span>
+            <span class="chapter-desc">周期任务调度与优雅关停保护</span>
+          </span>
+        </a>
+        
+      </li>
+    
+      <li class="nav-item ">
+        <a href="08-config-and-cache.html" class="nav-link" title="YAML、Nacos、Consul 与 Redis 集成">
+          <span class="chapter-badge">08</span>
+          <span class="chapter-text">
+            <span class="chapter-title">配置与缓存</span>
+            <span class="chapter-desc">YAML、Nacos、Consul 与 Redis 集成</span>
+          </span>
+        </a>
+        
+      </li>
+    
+      <li class="nav-item ">
+        <a href="09-production-checklist.html" class="nav-link" title="生产环境准备与关键排查项">
+          <span class="chapter-badge">09</span>
+          <span class="chapter-text">
+            <span class="chapter-title">上线之前检查清单</span>
+            <span class="chapter-desc">生产环境准备与关键排查项</span>
+          </span>
+        </a>
+        
+      </li>
+    
+        </ul>
+      </nav>
+      <div class="sidebar-footer">
+        <a href="https://github.com/ticatec/keelson" target="_blank" rel="noopener">Keelson v1.0.0</a>
+        <span>·</span>
+        <a href="../index.html">返回首页</a>
+      </div>
+    </aside>
+
+    <!-- Overlay for mobile drawer -->
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+    <!-- Main Content Area -->
+    <main class="main-wrapper">
+      <div class="content-container">
+        <!-- Breadcrumbs -->
+        <nav class="breadcrumb-nav">
+          <a href="index.html" class="crumb-link">Keelson</a>
+          <span class="crumb-sep">/</span>
+          <span class="crumb-link">教程</span>
+          <span class="crumb-sep">/</span>
+          <span class="crumb-current">身份与访问控制</span>
+        </nav>
+
+        <!-- Markdown Generated Content -->
+        <article class="markdown-body">
+          <h1 id="5-身份与访问控制" class="heading-anchor"><a href="#5-身份与访问控制" class="header-link">#</a> 5. 身份与访问控制</h1>
+<p><code class="inline-code">req.user</code> 从哪来、怎么把它标注成你自己的用户模型，以及一个请求可能在哪三个地方被挡回去。</p>
+<h2 id="默认方式网关告诉你调用者是谁" class="heading-anchor"><a href="#默认方式网关告诉你调用者是谁" class="header-link">#</a> 默认方式：网关告诉你调用者是谁</h2>
+<p>Keelson 假定自己部署在一个已经完成认证的 API 网关之后，网关把认证结果作为请求头注入。 <code class="inline-code">HeaderUserResolver</code> 读的就是它：</p>
+<ul class="doc-list">
+<li><code class="inline-code">user</code> —— URL 编码的 JSON，描述调用者</li>
+<li><code class="inline-code">x-language</code> —— 可选，会被写到用户对象的 <code class="inline-code">language</code> 上</li>
+</ul>
+
+<div class="code-block-wrapper">
+  <div class="code-block-header">
+    <span class="code-lang-tag">text</span>
+    <button class="copy-btn" data-code-id="code-tz6zs3p" title="复制代码">
+      <svg class="copy-icon" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+      <span class="copy-label">复制</span>
+    </button>
+  </div>
+  <pre class="code-block"><code id="code-tz6zs3p" class="language-text">user: %7B%22accountCode%22%3A%22U1%22%2C%22name%22%3A%22Ada%22%7D</code></pre>
+</div>
+<p>变成 <code class="inline-code">req.user = { accountCode: &#039;U1&#039;, name: &#039;Ada&#039;, language: &#039;zh-CN&#039; }</code>。</p>
+<blockquote><p><strong>这个头是被完全信任的。</strong> 头里是什么，调用者就是谁。只有当服务除了经由网关之外无法被访问，并且网关<strong>剥掉客户端带来的同名头</strong>再设置自己的，这才是安全的。一旦服务被直接暴露——一条配错的 ingress、一个调试端口、同事在 pod 里 curl 一下—— 任何客户端都能把自己声明成任何人，包括管理员。  如果你无法保证这一点，就别用默认解析器，换一个验签的。</p></blockquote>
+<p>这个阶段不拒绝任何请求。没有 <code class="inline-code">user</code> 头的请求就是没有 <code class="inline-code">req.user</code>，公开路由正是靠这个保持公开。头格式不对时会记一条日志并同样按匿名处理——一个乱码的头不是认证失败，是没有身份。</p>
+<h2 id="替换解析器" class="heading-anchor"><a href="#替换解析器" class="header-link">#</a> 替换解析器</h2>
+<p>只改其中一步，继承 <code class="inline-code">HeaderUserResolver</code>：</p>
+
+<div class="code-block-wrapper">
+  <div class="code-block-header">
+    <span class="code-lang-tag">typescript</span>
+    <button class="copy-btn" data-code-id="code-emitqzq" title="复制代码">
+      <svg class="copy-icon" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+      <span class="copy-label">复制</span>
+    </button>
+  </div>
+  <pre class="code-block"><code id="code-emitqzq" class="language-typescript"><span class="token keyword">import</span> { HeaderUserResolver, setUserResolver } <span class="token keyword">from</span> <span class="token string">&#039;@ticatec/keelson-express&#039;</span>;
+
+<span class="token keyword">class</span> BearerResolver <span class="token keyword">extends</span> HeaderUserResolver {
+    <span class="token keyword">protected</span> override <span class="token function">userHeader</span>(): string {
+        <span class="token keyword">return</span> <span class="token string">&#039;authorization&#039;</span>;
+    }
+    <span class="token keyword">protected</span> override <span class="token function">decode</span>(raw: string): unknown {
+        <span class="token keyword">return</span> <span class="token function">verifyJwt</span>(raw.<span class="token function">replace</span>(/^Bearer /, <span class="token string">&#039;&#039;</span>));   <span class="token comment">// token 不合法就抛</span>
+    }
+}</code></pre>
+</div>
+<p>其余环节——读头、语言头、注入语言——照旧。从 <code class="inline-code">decode()</code> 抛异常是可以的：它会被记录，请求按匿名继续，随后由路由层在需要用户时拒绝它。</p>
+<p>身份完全不来自请求头时，直接继承 <code class="inline-code">UserResolver</code>：</p>
+
+<div class="code-block-wrapper">
+  <div class="code-block-header">
+    <span class="code-lang-tag">typescript</span>
+    <button class="copy-btn" data-code-id="code-3zbw8i5" title="复制代码">
+      <svg class="copy-icon" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+      <span class="copy-label">复制</span>
+    </button>
+  </div>
+  <pre class="code-block"><code id="code-3zbw8i5" class="language-typescript"><span class="token keyword">import</span> { UserResolver, setUserResolver } <span class="token keyword">from</span> <span class="token string">&#039;@ticatec/keelson-express&#039;</span>;
+<span class="token keyword">import</span> { Request } <span class="token keyword">from</span> <span class="token string">&#039;express&#039;</span>;
+
+<span class="token keyword">class</span> SessionResolver <span class="token keyword">extends</span> UserResolver {
+    <span class="token keyword">async</span> <span class="token function">resolve</span>(req: Request) {
+        <span class="token keyword">const</span> sid = req.cookies?.sid;
+        <span class="token keyword">return</span> sid ? <span class="token keyword">await</span> sessions.<span class="token keyword">get</span>(sid) : <span class="token keyword">undefined</span>;
+    }
+}</code></pre>
+</div>
+<p>在应用入口注册一次，服务启动之前：</p>
+
+<div class="code-block-wrapper">
+  <div class="code-block-header">
+    <span class="code-lang-tag">typescript</span>
+    <button class="copy-btn" data-code-id="code-46sh3iv" title="复制代码">
+      <svg class="copy-icon" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+      <span class="copy-label">复制</span>
+    </button>
+  </div>
+  <pre class="code-block"><code id="code-46sh3iv" class="language-typescript"><span class="token keyword">protected</span> <span class="token keyword">async</span> <span class="token function">beforeStart</span>(): <span class="token builtin">Promise</span>&lt;<span class="token keyword">void</span>&gt; {
+    <span class="token function">setUserResolver</span>(<span class="token keyword">new</span> <span class="token function">SessionResolver</span>());
+}</code></pre>
+</div>
+<p>解析器从不拒绝请求。返回 <code class="inline-code">undefined</code> 表示匿名；鉴权是下面另一件事。</p>
+<h2 id="把用户标注成自己的模型" class="heading-anchor"><a href="#把用户标注成自己的模型" class="header-link">#</a> 把用户标注成自己的模型</h2>
+<p><code class="inline-code">CommonUser</code> 与 <code class="inline-code">LoggedUser</code> 刻意是空的——框架从不读取用户对象上的任何字段，因此也不声明任何字段。你的应用通过增强 <code class="inline-code">CustomUserRegistry</code> 声明一次形状：</p>
+
+<div class="code-block-wrapper">
+  <div class="code-block-header">
+    <span class="code-lang-tag">typescript</span>
+    <button class="copy-btn" data-code-id="code-ptbg5i0" title="复制代码">
+      <svg class="copy-icon" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+      <span class="copy-label">复制</span>
+    </button>
+  </div>
+  <pre class="code-block"><code id="code-ptbg5i0" class="language-typescript"><span class="token comment">// types/keelson-express.d.ts</span>
+<span class="token keyword">import</span> <span class="token string">&#039;@ticatec/keelson-express&#039;</span>;
+
+<span class="token keyword">interface</span> AppUser {
+    accountCode: string;
+    name: string;
+    isPlatform?: boolean;
+    tenant?: { code: string; name: string };
+    actAs?: AppUser;
+}
+
+declare module <span class="token string">&#039;@ticatec/keelson-express&#039;</span> {
+    <span class="token keyword">interface</span> CustomUserRegistry {
+        user: AppUser;
+    }
+}</code></pre>
+</div>
+<p>从此 <code class="inline-code">req.user</code> 与 <code class="inline-code">getLoggedUser(req)</code> 在任何地方都是 <code class="inline-code">AppUser</code> 类型，不需要任何类型断言。<code class="inline-code">req.user</code> 已由本包声明在 Express 的 <code class="inline-code">Request</code> 上，你不必自己去增强 <code class="inline-code">Express.Request</code>。</p>
+<h2 id="代理身份" class="heading-anchor"><a href="#代理身份" class="header-link">#</a> 代理身份</h2>
+<p>用户对象上的 <code class="inline-code">actAs</code> 字段表示&quot;这个管理员正在以那个用户的身份操作&quot;。由此引出两条规则。</p>
+<p><code class="inline-code">getLoggedUser(req)</code> 在存在 <code class="inline-code">actAs</code> 时返回<strong>被代理的那个用户</strong>，否则返回真实用户。业务代码因此操作的始终是&quot;这个请求正在代表谁&quot;，而不需要知道代理身份这回事：</p>
+
+<div class="code-block-wrapper">
+  <div class="code-block-header">
+    <span class="code-lang-tag">typescript</span>
+    <button class="copy-btn" data-code-id="code-wfksjhp" title="复制代码">
+      <svg class="copy-icon" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+      <span class="copy-label">复制</span>
+    </button>
+  </div>
+  <pre class="code-block"><code id="code-wfksjhp" class="language-typescript"><span class="token keyword">protected</span> <span class="token function">getCreateNewArguments</span>(req: Request): <span class="token builtin">Array</span>&lt;any&gt; {
+    <span class="token keyword">return</span> [this.<span class="token function">getLoggedUser</span>(req), req.body];   <span class="token comment">// 有 actAs 时就是 actAs</span>
+}</code></pre>
+</div>
+<p><code class="inline-code">isValidUser()</code> 拿到的同样是 <code class="inline-code">actAs</code>（如果有）。这正是你要的——要问的是<strong>被代理的那个账号</strong>能不能做这件事——但也意味着真实管理员在这一步没有被再次检查。如果你的规则需要同时判断两者，直接读 <code class="inline-code">req.user</code>。</p>
+<h2 id="鉴权三个位置三个问题" class="heading-anchor"><a href="#鉴权三个位置三个问题" class="header-link">#</a> 鉴权：三个位置，三个问题</h2>
+<p><strong>1. 这组路由需要用户吗？</strong></p>
+
+<div class="code-block-wrapper">
+  <div class="code-block-header">
+    <span class="code-lang-tag">typescript</span>
+    <button class="copy-btn" data-code-id="code-bvkvt5v" title="复制代码">
+      <svg class="copy-icon" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+      <span class="copy-label">复制</span>
+    </button>
+  </div>
+  <pre class="code-block"><code id="code-bvkvt5v" class="language-typescript"><span class="token keyword">export</span> <span class="token keyword">default</span> <span class="token keyword">class</span> UserRoutes <span class="token keyword">extends</span> AuthenticatedRoutes { <span class="token comment">/* ... */</span> }</code></pre>
+</div>
+<p><code class="inline-code">AuthenticatedRoutes</code> 拒绝没有用户的请求——<code class="inline-code">401</code>。<code class="inline-code">CommonRoutes</code> 是开放的。</p>
+<p><strong>2. 这个用户能进这组路由吗？</strong></p>
+
+<div class="code-block-wrapper">
+  <div class="code-block-header">
+    <span class="code-lang-tag">typescript</span>
+    <button class="copy-btn" data-code-id="code-7av9xz2" title="复制代码">
+      <svg class="copy-icon" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+      <span class="copy-label">复制</span>
+    </button>
+  </div>
+  <pre class="code-block"><code id="code-7av9xz2" class="language-typescript"><span class="token keyword">export</span> <span class="token keyword">default</span> <span class="token keyword">class</span> AdminRoutes <span class="token keyword">extends</span> CommonRoutes {
+    <span class="token keyword">protected</span> override <span class="token keyword">async</span> <span class="token function">isValidUser</span>(user: RegisteredUser): <span class="token builtin">Promise</span>&lt;boolean&gt; {
+        <span class="token keyword">if</span> (user == <span class="token keyword">null</span>) {
+            <span class="token keyword">return</span> <span class="token keyword">false</span>;
+        }
+        <span class="token keyword">const</span> account = <span class="token keyword">await</span> accounts.<span class="token function">find</span>(user.accountCode);
+        <span class="token keyword">return</span> account?.status === <span class="token string">&#039;active&#039;</span> &amp;&amp; account.role === <span class="token string">&#039;admin&#039;</span>;
+    }
+}</code></pre>
+</div>
+<p>返回 false 得到 <code class="inline-code">401</code>。抛异常则交给中间件，所以当 <code class="inline-code">403</code> 才是诚实的答案时——&quot;你确实是你说的那个人，但你依然不能&quot;——就抛 <code class="inline-code">InsufficientPermissionError()</code>。</p>
+<p>这个检查每个请求执行一次，在任何处理函数之前。它适合粗粒度的问题：账号是否启用、租户是否开通、角色是否匹配这组路由。</p>
+<p><strong>3. 这个用户能对这条记录做这件事吗？</strong></p>
+<p>这属于 Service，因为它需要那条记录：</p>
+
+<div class="code-block-wrapper">
+  <div class="code-block-header">
+    <span class="code-lang-tag">typescript</span>
+    <button class="copy-btn" data-code-id="code-d9f3paw" title="复制代码">
+      <svg class="copy-icon" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+      <span class="copy-label">复制</span>
+    </button>
+  </div>
+  <pre class="code-block"><code id="code-d9f3paw" class="language-typescript"><span class="token decorator">@Transaction</span>()
+<span class="token keyword">async</span> <span class="token function">updateOrder</span>(user: AppUser, order: Order): <span class="token builtin">Promise</span>&lt;<span class="token keyword">void</span>&gt; {
+    <span class="token keyword">const</span> existing = <span class="token keyword">await</span> this.orders.<span class="token function">findById</span>(order.id);
+    <span class="token keyword">if</span> (existing == <span class="token keyword">null</span>) {
+        <span class="token keyword">throw</span> <span class="token keyword">new</span> <span class="token function">ActionNotFoundError</span>();
+    }
+    <span class="token keyword">if</span> (existing.tenantCode !== user.tenant?.code) {
+        <span class="token keyword">throw</span> <span class="token keyword">new</span> <span class="token function">ActionNotFoundError</span>();      <span class="token comment">// 不是 403——理由见下</span>
+    }
+    <span class="token keyword">await</span> this.orders.<span class="token function">update</span>(order);
+}</code></pre>
+</div>
+<p>注意对&quot;属于别的租户的记录&quot;返回的是 <code class="inline-code">404</code>。<code class="inline-code">403</code> 会确认这条记录存在，让人得以枚举其他租户的 id。就当它不存在来回答——从那个调用方的视角看，它确实不存在。</p>
+<h2 id="在检查之前充实用户" class="heading-anchor"><a href="#在检查之前充实用户" class="header-link">#</a> 在检查之前充实用户</h2>
+<p><code class="inline-code">getUserHook()</code> 在 <code class="inline-code">isValidUser()</code> 之前运行，可以替换 <code class="inline-code">req.user</code>：</p>
+
+<div class="code-block-wrapper">
+  <div class="code-block-header">
+    <span class="code-lang-tag">typescript</span>
+    <button class="copy-btn" data-code-id="code-uu27ju9" title="复制代码">
+      <svg class="copy-icon" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+      <span class="copy-label">复制</span>
+    </button>
+  </div>
+  <pre class="code-block"><code id="code-uu27ju9" class="language-typescript"><span class="token keyword">protected</span> override <span class="token function">getUserHook</span>() {
+    <span class="token keyword">return</span> <span class="token keyword">async</span> (user: RegisteredUser) =&gt; {
+        (user as AppUser).permissions = <span class="token keyword">await</span> permissions.<span class="token function">load</span>((user as AppUser).accountCode);
+        <span class="token keyword">return</span> user;
+    };
+}</code></pre>
+</div>
+<p>它对这组路由的每个请求都执行，也就是每个请求一次数据库往返。要么加缓存（第 8 章），要么把这些数据折叠进网关注入的那个头里。</p>
+<h2 id="什么不会被记录" class="heading-anchor"><a href="#什么不会被记录" class="header-link">#</a> 什么不会被记录</h2>
+<p>框架不会把用户标识写进日志。<code class="inline-code">user</code> 头不会被回显，<code class="inline-code">isValidUser()</code> 失败时记录的是哪条路由、是否处于代理身份状态——而不是被拒的是谁。</p>
+<p>这是刻意的默认值，不是疏漏：一份点名每个调用者的 debug 日志，就是一个没人规划过的个人数据存储。需要按用户追踪请求，在你自己的中间件里加，由你来决定保留策略。</p>
+<hr class="divider" />
+<p>下一章：<a href="06-logging-and-health.html" class="doc-link">日志与健康检查</a>。</p>
+        </article>
+
+        <!-- Previous / Next Navigation -->
+        
+    <div class="chapter-pagination">
+      
+        <a href="04-http-layer.html" class="pagination-btn prev-btn">
+          <span class="pagination-sub">← 上一章</span>
+          <span class="pagination-title">04. HTTP 层</span>
+        </a>
+      
+
+      
+        <a href="06-logging-and-health.html" class="pagination-btn next-btn">
+          <span class="pagination-sub">下一章 →</span>
+          <span class="pagination-title">06. 日志与健康检查</span>
+        </a>
+      
+    </div>
+  
+
+        <!-- Document Footer -->
+        <footer class="site-footer">
+          <div class="footer-left">
+            <p>© 2026 Ticatec Keelson Framework. Released under the MIT License.</p>
+          </div>
+          <div class="footer-right">
+            <a href="../en/05-identity.html" class="footer-lang-link">
+              🌐 Read in English
+            </a>
+          </div>
+        </footer>
+      </div>
+
+      <!-- Right Table of Contents -->
+      
+      <aside class="right-toc-container">
+        <div class="right-toc-inner">
+          <div class="toc-header">本页目录</div>
+          <ul class="right-toc-list">
+            
+              <li class="toc-item level-2">
+                <a href="#默认方式网关告诉你调用者是谁" class="toc-link" data-anchor="默认方式网关告诉你调用者是谁">
+                  默认方式：网关告诉你调用者是谁
+                </a>
+              </li>
+            
+              <li class="toc-item level-2">
+                <a href="#替换解析器" class="toc-link" data-anchor="替换解析器">
+                  替换解析器
+                </a>
+              </li>
+            
+              <li class="toc-item level-2">
+                <a href="#把用户标注成自己的模型" class="toc-link" data-anchor="把用户标注成自己的模型">
+                  把用户标注成自己的模型
+                </a>
+              </li>
+            
+              <li class="toc-item level-2">
+                <a href="#代理身份" class="toc-link" data-anchor="代理身份">
+                  代理身份
+                </a>
+              </li>
+            
+              <li class="toc-item level-2">
+                <a href="#鉴权三个位置三个问题" class="toc-link" data-anchor="鉴权三个位置三个问题">
+                  鉴权：三个位置，三个问题
+                </a>
+              </li>
+            
+              <li class="toc-item level-2">
+                <a href="#在检查之前充实用户" class="toc-link" data-anchor="在检查之前充实用户">
+                  在检查之前充实用户
+                </a>
+              </li>
+            
+              <li class="toc-item level-2">
+                <a href="#什么不会被记录" class="toc-link" data-anchor="什么不会被记录">
+                  什么不会被记录
+                </a>
+              </li>
+            
+          </ul>
+        </div>
+      </aside>
+    
+    </main>
+  </div>
+
+  <script src="../assets/app.js"></script>
+</body>
+</html>

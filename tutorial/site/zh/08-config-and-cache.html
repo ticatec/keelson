@@ -1,0 +1,546 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>08. 配置与缓存 | Keelson 官方教程</title>
+  <meta name="description" content="Keelson TypeScript Framework Official Tutorial - Enterprise TypeScript for Express">
+  <link rel="stylesheet" href="../assets/style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+</head>
+<body class="theme-auto">
+  <!-- Top Navigation Header -->
+  <header class="top-navbar">
+    <div class="navbar-left">
+      <button class="mobile-menu-toggle" id="menuToggle" aria-label="Toggle Navigation">
+        <svg viewBox="0 0 24 24" width="22" height="22" stroke="currentColor" stroke-width="2" fill="none"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+      </button>
+      <a href="index.html" class="brand-logo">
+        <span class="brand-icon">⚡</span>
+        <span class="brand-name">Keelson</span>
+        <span class="brand-badge">教程</span>
+      </a>
+    </div>
+
+    <div class="navbar-right">
+      <!-- Search Input -->
+      <div class="search-box">
+        <svg class="search-icon" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+        <input type="text" id="searchInput" placeholder="在章节中快速搜索..." />
+        <span class="search-kbd">⌘K</span>
+      </div>
+
+      <!-- Language Switch -->
+      <a href="../en/08-config-and-cache.html" class="lang-switch-btn" title="切换为英文">
+        <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>
+        <span>English</span>
+      </a>
+
+      <!-- Theme Switch -->
+      <button class="theme-toggle-btn" id="themeToggle" aria-label="Toggle Theme">
+        <svg class="sun-icon" viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
+        <svg class="moon-icon" viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+      </button>
+
+      <!-- GitHub Link -->
+      <a href="https://github.com/ticatec/keelson" target="_blank" rel="noopener noreferrer" class="github-link" title="GitHub Repository">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z"/></svg>
+      </a>
+    </div>
+  </header>
+
+  <div class="layout-container">
+    <!-- Left Navigation Sidebar -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-header">
+        <div class="sidebar-title">教程目录</div>
+        <span class="chapter-count">10 篇文档</span>
+      </div>
+      <nav class="sidebar-nav">
+        <ul class="nav-list" id="navList">
+          
+      <li class="nav-item ">
+        <a href="index.html" class="nav-link" title="教程导读与各章索引">
+          <span class="chapter-badge">00</span>
+          <span class="chapter-text">
+            <span class="chapter-title">概览与教程目录</span>
+            <span class="chapter-desc">教程导读与各章索引</span>
+          </span>
+        </a>
+        
+      </li>
+    
+      <li class="nav-item ">
+        <a href="01-getting-started.html" class="nav-link" title="从空目录到一个能响应请求的服务">
+          <span class="chapter-badge">01</span>
+          <span class="chapter-text">
+            <span class="chapter-title">起步</span>
+            <span class="chapter-desc">从空目录到一个能响应请求的服务</span>
+          </span>
+        </a>
+        
+      </li>
+    
+      <li class="nav-item ">
+        <a href="02-layers-and-transactions.html" class="nav-link" title="为什么分四层，事务如何贯穿">
+          <span class="chapter-badge">02</span>
+          <span class="chapter-text">
+            <span class="chapter-title">分层与事务</span>
+            <span class="chapter-desc">为什么分四层，事务如何贯穿</span>
+          </span>
+        </a>
+        
+      </li>
+    
+      <li class="nav-item ">
+        <a href="03-wiring.html" class="nav-link" title="类与类互相发现，解耦初始化顺序">
+          <span class="chapter-badge">03</span>
+          <span class="chapter-text">
+            <span class="chapter-title">装配与依赖注入</span>
+            <span class="chapter-desc">类与类互相发现，解耦初始化顺序</span>
+          </span>
+        </a>
+        
+      </li>
+    
+      <li class="nav-item ">
+        <a href="04-http-layer.html" class="nav-link" title="路由、控制器、校验与错误映射">
+          <span class="chapter-badge">04</span>
+          <span class="chapter-text">
+            <span class="chapter-title">HTTP 层</span>
+            <span class="chapter-desc">路由、控制器、校验与错误映射</span>
+          </span>
+        </a>
+        
+      </li>
+    
+      <li class="nav-item ">
+        <a href="05-identity.html" class="nav-link" title="req.user 来源与鉴权机制">
+          <span class="chapter-badge">05</span>
+          <span class="chapter-text">
+            <span class="chapter-title">身份与访问控制</span>
+            <span class="chapter-desc">req.user 来源与鉴权机制</span>
+          </span>
+        </a>
+        
+      </li>
+    
+      <li class="nav-item ">
+        <a href="06-logging-and-health.html" class="nav-link" title="记录规范、敏感信息与 K8s 探针">
+          <span class="chapter-badge">06</span>
+          <span class="chapter-text">
+            <span class="chapter-title">日志与健康检查</span>
+            <span class="chapter-desc">记录规范、敏感信息与 K8s 探针</span>
+          </span>
+        </a>
+        
+      </li>
+    
+      <li class="nav-item ">
+        <a href="07-background-work.html" class="nav-link" title="周期任务调度与优雅关停保护">
+          <span class="chapter-badge">07</span>
+          <span class="chapter-text">
+            <span class="chapter-title">后台任务与优雅关停</span>
+            <span class="chapter-desc">周期任务调度与优雅关停保护</span>
+          </span>
+        </a>
+        
+      </li>
+    
+      <li class="nav-item active">
+        <a href="08-config-and-cache.html" class="nav-link" title="YAML、Nacos、Consul 与 Redis 集成">
+          <span class="chapter-badge">08</span>
+          <span class="chapter-text">
+            <span class="chapter-title">配置与缓存</span>
+            <span class="chapter-desc">YAML、Nacos、Consul 与 Redis 集成</span>
+          </span>
+        </a>
+        
+      <ul class="sidebar-subnav">
+        
+          <li class="sidebar-subnav-item level-2">
+            <a href="#配置" class="subnav-link" data-toc-target="配置">
+              配置
+            </a>
+          </li>
+        
+          <li class="sidebar-subnav-item level-3">
+            <a href="#本地-yaml-或-json" class="subnav-link" data-toc-target="本地-yaml-或-json">
+              本地 YAML 或 JSON
+            </a>
+          </li>
+        
+          <li class="sidebar-subnav-item level-3">
+            <a href="#nacos-或-consul" class="subnav-link" data-toc-target="nacos-或-consul">
+              Nacos 或 Consul
+            </a>
+          </li>
+        
+          <li class="sidebar-subnav-item level-3">
+            <a href="#后处理器" class="subnav-link" data-toc-target="后处理器">
+              后处理器
+            </a>
+          </li>
+        
+          <li class="sidebar-subnav-item level-2">
+            <a href="#缓存" class="subnav-link" data-toc-target="缓存">
+              缓存
+            </a>
+          </li>
+        
+          <li class="sidebar-subnav-item level-3">
+            <a href="#读写" class="subnav-link" data-toc-target="读写">
+              读写
+            </a>
+          </li>
+        
+          <li class="sidebar-subnav-item level-3">
+            <a href="#一行搞定-cache-aside" class="subnav-link" data-toc-target="一行搞定-cache-aside">
+              一行搞定 cache-aside
+            </a>
+          </li>
+        
+          <li class="sidebar-subnav-item level-3">
+            <a href="#失效要跟着写操作走" class="subnav-link" data-toc-target="失效要跟着写操作走">
+              失效要跟着写操作走
+            </a>
+          </li>
+        
+          <li class="sidebar-subnav-item level-3">
+            <a href="#健康检查" class="subnav-link" data-toc-target="健康检查">
+              健康检查
+            </a>
+          </li>
+        
+      </ul>
+      </li>
+    
+      <li class="nav-item ">
+        <a href="09-production-checklist.html" class="nav-link" title="生产环境准备与关键排查项">
+          <span class="chapter-badge">09</span>
+          <span class="chapter-text">
+            <span class="chapter-title">上线之前检查清单</span>
+            <span class="chapter-desc">生产环境准备与关键排查项</span>
+          </span>
+        </a>
+        
+      </li>
+    
+        </ul>
+      </nav>
+      <div class="sidebar-footer">
+        <a href="https://github.com/ticatec/keelson" target="_blank" rel="noopener">Keelson v1.0.0</a>
+        <span>·</span>
+        <a href="../index.html">返回首页</a>
+      </div>
+    </aside>
+
+    <!-- Overlay for mobile drawer -->
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+    <!-- Main Content Area -->
+    <main class="main-wrapper">
+      <div class="content-container">
+        <!-- Breadcrumbs -->
+        <nav class="breadcrumb-nav">
+          <a href="index.html" class="crumb-link">Keelson</a>
+          <span class="crumb-sep">/</span>
+          <span class="crumb-link">教程</span>
+          <span class="crumb-sep">/</span>
+          <span class="crumb-current">配置与缓存</span>
+        </nav>
+
+        <!-- Markdown Generated Content -->
+        <article class="markdown-body">
+          <h1 id="8-配置与缓存" class="heading-anchor"><a href="#8-配置与缓存" class="header-link">#</a> 8. 配置与缓存</h1>
+<p>把配置从运维放它的地方取进来，再给那些不是每秒都变的东西加一层缓存。</p>
+<h2 id="配置" class="heading-anchor"><a href="#配置" class="header-link">#</a> 配置</h2>
+<p><code class="inline-code">AppConf</code> 是内存里的持有者：用一个对象初始化一次，之后用点号路径读取。</p>
+
+<div class="code-block-wrapper">
+  <div class="code-block-header">
+    <span class="code-lang-tag">typescript</span>
+    <button class="copy-btn" data-code-id="code-r5nhkhu" title="复制代码">
+      <svg class="copy-icon" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+      <span class="copy-label">复制</span>
+    </button>
+  </div>
+  <pre class="code-block"><code id="code-r5nhkhu" class="language-typescript">AppConf.<span class="token function">init</span>(config);
+
+AppConf.<span class="token function">getInstance</span>()!.<span class="token keyword">get</span>(<span class="token string">&#039;web.port&#039;</span>);         <span class="token comment">// 3000</span>
+AppConf.<span class="token function">getInstance</span>()!.<span class="token keyword">get</span>(<span class="token string">&#039;database.host&#039;</span>);    <span class="token comment">// &#039;db.internal&#039;</span>
+AppConf.<span class="token function">getInstance</span>()!.<span class="token keyword">get</span>(<span class="token string">&#039;nope.nothing&#039;</span>);     <span class="token comment">// undefined，不抛异常</span></code></pre>
+</div>
+<p><code class="inline-code">init()</code> 的幂等方向不太友好：第二次调用会保留第一份配置、忽略新的那份。所以只初始化一次，在 <code class="inline-code">loadConfigFile()</code> 里。</p>
+<p>查找只看自有属性，所以 <code class="inline-code">get(&#039;constructor&#039;)</code> 与 <code class="inline-code">get(&#039;toString&#039;)</code> 返回 <code class="inline-code">undefined</code>，而不是 <code class="inline-code">Object.prototype</code> 上的东西。当键名来自你源码之外的地方时，这一点有意义。</p>
+<p>那个对象从哪来，是 <code class="inline-code">@ticatec/config-loader</code> 的事。</p>
+<h3 id="本地-yaml-或-json" class="heading-anchor"><a href="#本地-yaml-或-json" class="header-link">#</a> 本地 YAML 或 JSON</h3>
+
+<div class="code-block-wrapper">
+  <div class="code-block-header">
+    <span class="code-lang-tag">typescript</span>
+    <button class="copy-btn" data-code-id="code-zarmw9q" title="复制代码">
+      <svg class="copy-icon" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+      <span class="copy-label">复制</span>
+    </button>
+  </div>
+  <pre class="code-block"><code id="code-zarmw9q" class="language-typescript"><span class="token keyword">import</span> { loadConfig } <span class="token keyword">from</span> <span class="token string">&#039;@ticatec/config-loader&#039;</span>;
+
+<span class="token keyword">protected</span> <span class="token keyword">async</span> <span class="token function">loadConfigFile</span>(): <span class="token builtin">Promise</span>&lt;<span class="token keyword">void</span>&gt; {
+    <span class="token keyword">const</span> { appConf, loggerConf } = <span class="token keyword">await</span> <span class="token function">loadConfig</span>(<span class="token string">&#039;local&#039;</span>, <span class="token string">&#039;app.yaml&#039;</span>, <span class="token string">&#039;logger.yaml&#039;</span>);
+    <span class="token function">initialize</span>(loggerConf);      <span class="token comment">// @ticatec/logger-pino</span>
+    AppConf.<span class="token function">init</span>(appConf);
+}</code></pre>
+</div>
+<p><code class="inline-code">loadConfig(mode, configFile, logFile)</code> 读取两份文档并分别返回。是两个文件而不是同一个文件里的两段，因为日志必须在其他一切之前配好——包括读取应用配置的那段代码本身。</p>
+<p>本地文件以 <code class="inline-code">CONFIG_DIR</code> 为根解析，没设就是 <code class="inline-code">./config</code>。需要指定根目录时，可以自己构造 <code class="inline-code">LocalFileLoader</code>。</p>
+<h3 id="nacos-或-consul" class="heading-anchor"><a href="#nacos-或-consul" class="header-link">#</a> Nacos 或 Consul</h3>
+
+<div class="code-block-wrapper">
+  <div class="code-block-header">
+    <span class="code-lang-tag">typescript</span>
+    <button class="copy-btn" data-code-id="code-0d623bz" title="复制代码">
+      <svg class="copy-icon" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+      <span class="copy-label">复制</span>
+    </button>
+  </div>
+  <pre class="code-block"><code id="code-0d623bz" class="language-typescript"><span class="token keyword">const</span> { appConf, loggerConf } = <span class="token keyword">await</span> <span class="token function">loadConfig</span>(<span class="token string">&#039;nacos&#039;</span>, <span class="token string">&#039;app.yaml&#039;</span>, <span class="token string">&#039;logger.yaml&#039;</span>);</code></pre>
+</div>
+<p>同一个调用，换第一个参数——<code class="inline-code">&#039;local&#039;</code>、<code class="inline-code">&#039;nacos&#039;</code> 或 <code class="inline-code">&#039;consul&#039;</code>。两个远程加载器需要对应的客户端库（<code class="inline-code">nacos</code> 或 <code class="inline-code">consul</code>），所以它们是可选对等依赖且按需动态加载：用本地文件的服务不必为它们付出任何代价。</p>
+<p>连接信息来自环境变量——<code class="inline-code">NACOS_SERVER_ADDR</code> 或 <code class="inline-code">NACOS_ENDPOINT</code>、<code class="inline-code">CONSUL_HTTP_ADDR</code> 以及各自的 token 变量。&quot;配置放在哪&quot;这件事本身，不可能放在配置里。</p>
+<p><code class="inline-code">loadConfig()</code> 读完会关掉加载器，免得 Nacos 的心跳线程在启动之后还吊着进程不退。</p>
+<h3 id="后处理器" class="heading-anchor"><a href="#后处理器" class="header-link">#</a> 后处理器</h3>
+<p>第四、第五个参数是两份文档的钩子，它们比看上去窄：签名是 <code class="inline-code">(content: string) =&gt; string</code>，作用在<strong>解析之前的原始文本</strong>上，而且是同步的。所以它们用于文本替换，不是用来改造已解析的对象：</p>
+
+<div class="code-block-wrapper">
+  <div class="code-block-header">
+    <span class="code-lang-tag">typescript</span>
+    <button class="copy-btn" data-code-id="code-fw48scv" title="复制代码">
+      <svg class="copy-icon" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+      <span class="copy-label">复制</span>
+    </button>
+  </div>
+  <pre class="code-block"><code id="code-fw48scv" class="language-typescript"><span class="token keyword">const</span> { appConf, loggerConf } = <span class="token keyword">await</span> <span class="token function">loadConfig</span>(
+    <span class="token string">&#039;local&#039;</span>, <span class="token string">&#039;app.yaml&#039;</span>, <span class="token string">&#039;logger.yaml&#039;</span>,
+    <span class="token keyword">null</span>,                                              <span class="token comment">// 日志那份不挂钩子</span>
+    (text) =&gt; text.<span class="token function">replace</span>(/\$\{(\w+)\}/g, (_, name) =&gt; process.env[name] ?? <span class="token string">&#039;&#039;</span>)
+);</code></pre>
+</div>
+<p>有了这个钩子，YAML 里写 <code class="inline-code">password: ${DB_PASSWORD}</code> 就会从环境变量取值。</p>
+<p>任何异步的事情——比如从 vault 读密钥——放在加载之后、<code class="inline-code">AppConf.init()</code> 之前，那时你手里是一个普通对象，可以 await：</p>
+
+<div class="code-block-wrapper">
+  <div class="code-block-header">
+    <span class="code-lang-tag">typescript</span>
+    <button class="copy-btn" data-code-id="code-8a714yt" title="复制代码">
+      <svg class="copy-icon" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+      <span class="copy-label">复制</span>
+    </button>
+  </div>
+  <pre class="code-block"><code id="code-8a714yt" class="language-typescript"><span class="token keyword">const</span> { appConf, loggerConf } = <span class="token keyword">await</span> <span class="token function">loadConfig</span>(<span class="token string">&#039;local&#039;</span>, <span class="token string">&#039;app.yaml&#039;</span>, <span class="token string">&#039;logger.yaml&#039;</span>);
+appConf.database.password = <span class="token keyword">await</span> vault.<span class="token function">read</span>(<span class="token string">&#039;db&#039;</span>);
+<span class="token function">initialize</span>(loggerConf);
+AppConf.<span class="token function">init</span>(appConf);</code></pre>
+</div>
+<p>两种写法下口令最终都落在配置对象里、永远不落在日志里——这也正是框架记录连接摘要而不是记录收到的配置对象的原因（第 6 章）。</p>
+<h2 id="缓存" class="heading-anchor"><a href="#缓存" class="header-link">#</a> 缓存</h2>
+<p><code class="inline-code">@ticatec/redis-client</code> 是 ioredis 的封装，提供具名单例。</p>
+
+<div class="code-block-wrapper">
+  <div class="code-block-header">
+    <span class="code-lang-tag">typescript</span>
+    <button class="copy-btn" data-code-id="code-fiyook1" title="复制代码">
+      <svg class="copy-icon" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+      <span class="copy-label">复制</span>
+    </button>
+  </div>
+  <pre class="code-block"><code id="code-fiyook1" class="language-typescript"><span class="token keyword">import</span> { RedisClient } <span class="token keyword">from</span> <span class="token string">&#039;@ticatec/redis-client&#039;</span>;
+
+<span class="token keyword">protected</span> <span class="token keyword">async</span> <span class="token function">beforeStart</span>(): <span class="token builtin">Promise</span>&lt;<span class="token keyword">void</span>&gt; {
+    <span class="token keyword">await</span> RedisClient.<span class="token function">init</span>(AppConf.<span class="token function">getInstance</span>()!.<span class="token keyword">get</span>(<span class="token string">&#039;redis&#039;</span>));          <span class="token comment">// &#039;default&#039;</span>
+    <span class="token keyword">await</span> RedisClient.<span class="token function">init</span>(AppConf.<span class="token function">getInstance</span>()!.<span class="token keyword">get</span>(<span class="token string">&#039;sessions&#039;</span>), <span class="token string">&#039;sessions&#039;</span>);
+}</code></pre>
+</div>
+<p><code class="inline-code">init()</code> 接受 ioredis 的选项对象、<code class="inline-code">redis://</code> / <code class="inline-code">rediss://</code> URL，或者 <code class="inline-code">null</code> 表示内存 mock（仅限开发——mock 是 dev 依赖，在生产环境索要它会抛出带说明的异常）。</p>
+<p>按名字取实例：</p>
+
+<div class="code-block-wrapper">
+  <div class="code-block-header">
+    <span class="code-lang-tag">typescript</span>
+    <button class="copy-btn" data-code-id="code-hiuhras" title="复制代码">
+      <svg class="copy-icon" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+      <span class="copy-label">复制</span>
+    </button>
+  </div>
+  <pre class="code-block"><code id="code-hiuhras" class="language-typescript"><span class="token keyword">const</span> redis = RedisClient.<span class="token function">getInstance</span>();              <span class="token comment">// &#039;default&#039;</span>
+<span class="token keyword">const</span> sessions = RedisClient.<span class="token function">getInstance</span>(<span class="token string">&#039;sessions&#039;</span>);</code></pre>
+</div>
+<p><code class="inline-code">getInstance()</code> 在该名字未初始化时抛错并点名。和 bean 的访问器一样，缺失的依赖当场失败，而不是返回 <code class="inline-code">undefined</code>。</p>
+<h3 id="读写" class="heading-anchor"><a href="#读写" class="header-link">#</a> 读写</h3>
+
+<div class="code-block-wrapper">
+  <div class="code-block-header">
+    <span class="code-lang-tag">typescript</span>
+    <button class="copy-btn" data-code-id="code-smoi57y" title="复制代码">
+      <svg class="copy-icon" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+      <span class="copy-label">复制</span>
+    </button>
+  </div>
+  <pre class="code-block"><code id="code-smoi57y" class="language-typescript"><span class="token keyword">await</span> redis.<span class="token keyword">set</span>(<span class="token string">&#039;greeting&#039;</span>, <span class="token string">&#039;hello&#039;</span>, <span class="token number">300</span>);            <span class="token comment">// 字符串，300 秒 TTL</span>
+<span class="token keyword">const</span> s = <span class="token keyword">await</span> redis.<span class="token keyword">get</span>(<span class="token string">&#039;greeting&#039;</span>);
+
+<span class="token keyword">await</span> redis.<span class="token function">setObject</span>(<span class="token string">&#039;user:U1&#039;</span>, user, <span class="token number">600</span>);          <span class="token comment">// JSON 往返</span>
+<span class="token keyword">const</span> u = <span class="token keyword">await</span> redis.getObject&lt;AppUser&gt;(<span class="token string">&#039;user:U1&#039;</span>);
+
+<span class="token keyword">await</span> redis.<span class="token function">del</span>(<span class="token string">&#039;user:U1&#039;</span>);</code></pre>
+</div>
+<p><code class="inline-code">set</code>/<code class="inline-code">get</code> 存取字符串，<code class="inline-code">setObject</code>/<code class="inline-code">getObject</code> 负责序列化。要成对使用——用 <code class="inline-code">set</code> 写、用 <code class="inline-code">getObject</code> 读会得到解析错误，反过来会得到一串 JSON 文本。</p>
+<h3 id="一行搞定-cache-aside" class="heading-anchor"><a href="#一行搞定-cache-aside" class="header-link">#</a> 一行搞定 cache-aside</h3>
+
+<div class="code-block-wrapper">
+  <div class="code-block-header">
+    <span class="code-lang-tag">typescript</span>
+    <button class="copy-btn" data-code-id="code-zjd4w89" title="复制代码">
+      <svg class="copy-icon" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+      <span class="copy-label">复制</span>
+    </button>
+  </div>
+  <pre class="code-block"><code id="code-zjd4w89" class="language-typescript"><span class="token keyword">const</span> profile = <span class="token keyword">await</span> redis.getOrSet&lt;Profile&gt;(
+    <span class="token string">`profile:${id}`</span>,
+    () =&gt; this.service.<span class="token function">loadProfile</span>(id),
+    <span class="token number">600</span>
+);</code></pre>
+</div>
+<p>命中就返回缓存值；未命中就调用你给的函数、把结果存进去再返回。有两点要知道：取数函数在缓存冷的时候执行，所以一个热点键在高负载下过期会引发多个并发取数—— 重要的键请预热。另外值要经过 JSON 往返，<code class="inline-code">Date</code> 回来会变成字符串。缓存那些能干净序列化的东西，或者在取出来时把类型还原。</p>
+<h3 id="失效要跟着写操作走" class="heading-anchor"><a href="#失效要跟着写操作走" class="header-link">#</a> 失效要跟着写操作走</h3>
+<p>缓存不知道你的数据变了。在变更发生的地方删键——在 service 里，事务<strong>提交之后</strong>，不是在事务里面：</p>
+
+<div class="code-block-wrapper">
+  <div class="code-block-header">
+    <span class="code-lang-tag">typescript</span>
+    <button class="copy-btn" data-code-id="code-8db4vzy" title="复制代码">
+      <svg class="copy-icon" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+      <span class="copy-label">复制</span>
+    </button>
+  </div>
+  <pre class="code-block"><code id="code-8db4vzy" class="language-typescript"><span class="token decorator">@Transaction</span>()
+<span class="token keyword">async</span> <span class="token function">updateProfile</span>(user: AppUser, profile: Profile): <span class="token builtin">Promise</span>&lt;<span class="token keyword">void</span>&gt; {
+    <span class="token keyword">await</span> this.repo.<span class="token function">update</span>(profile);
+}
+
+<span class="token comment">// 调用方</span>
+<span class="token keyword">await</span> profileService.<span class="token function">updateProfile</span>(user, profile);
+<span class="token keyword">await</span> RedisClient.<span class="token function">getInstance</span>().<span class="token function">del</span>(<span class="token string">`profile:${profile.id}`</span>);</code></pre>
+</div>
+<p>在事务内部删除是典型错误：删除本身不是事务性的，所以回滚之后缓存是空的——这无害；但如果删除发生在某个并发读之前，那次读会用尚未提交的状态把缓存填回去，最终缓存里留着一个已经被回滚掉的值。提交之后再失效。</p>
+<h3 id="健康检查" class="heading-anchor"><a href="#健康检查" class="header-link">#</a> 健康检查</h3>
+<p>Redis 通常是非关键依赖——缓存冷了是慢，不是坏。就按非关键注册它（第 6 章），这样一次故障只会让服务降级，而不是把它移出负载均衡。</p>
+<hr class="divider" />
+<p>下一章：<a href="09-production-checklist.html" class="doc-link">上线之前</a>。</p>
+        </article>
+
+        <!-- Previous / Next Navigation -->
+        
+    <div class="chapter-pagination">
+      
+        <a href="07-background-work.html" class="pagination-btn prev-btn">
+          <span class="pagination-sub">← 上一章</span>
+          <span class="pagination-title">07. 后台任务与优雅关停</span>
+        </a>
+      
+
+      
+        <a href="09-production-checklist.html" class="pagination-btn next-btn">
+          <span class="pagination-sub">下一章 →</span>
+          <span class="pagination-title">09. 上线之前检查清单</span>
+        </a>
+      
+    </div>
+  
+
+        <!-- Document Footer -->
+        <footer class="site-footer">
+          <div class="footer-left">
+            <p>© 2026 Ticatec Keelson Framework. Released under the MIT License.</p>
+          </div>
+          <div class="footer-right">
+            <a href="../en/08-config-and-cache.html" class="footer-lang-link">
+              🌐 Read in English
+            </a>
+          </div>
+        </footer>
+      </div>
+
+      <!-- Right Table of Contents -->
+      
+      <aside class="right-toc-container">
+        <div class="right-toc-inner">
+          <div class="toc-header">本页目录</div>
+          <ul class="right-toc-list">
+            
+              <li class="toc-item level-2">
+                <a href="#配置" class="toc-link" data-anchor="配置">
+                  配置
+                </a>
+              </li>
+            
+              <li class="toc-item level-3">
+                <a href="#本地-yaml-或-json" class="toc-link" data-anchor="本地-yaml-或-json">
+                  本地 YAML 或 JSON
+                </a>
+              </li>
+            
+              <li class="toc-item level-3">
+                <a href="#nacos-或-consul" class="toc-link" data-anchor="nacos-或-consul">
+                  Nacos 或 Consul
+                </a>
+              </li>
+            
+              <li class="toc-item level-3">
+                <a href="#后处理器" class="toc-link" data-anchor="后处理器">
+                  后处理器
+                </a>
+              </li>
+            
+              <li class="toc-item level-2">
+                <a href="#缓存" class="toc-link" data-anchor="缓存">
+                  缓存
+                </a>
+              </li>
+            
+              <li class="toc-item level-3">
+                <a href="#读写" class="toc-link" data-anchor="读写">
+                  读写
+                </a>
+              </li>
+            
+              <li class="toc-item level-3">
+                <a href="#一行搞定-cache-aside" class="toc-link" data-anchor="一行搞定-cache-aside">
+                  一行搞定 cache-aside
+                </a>
+              </li>
+            
+              <li class="toc-item level-3">
+                <a href="#失效要跟着写操作走" class="toc-link" data-anchor="失效要跟着写操作走">
+                  失效要跟着写操作走
+                </a>
+              </li>
+            
+              <li class="toc-item level-3">
+                <a href="#健康检查" class="toc-link" data-anchor="健康检查">
+                  健康检查
+                </a>
+              </li>
+            
+          </ul>
+        </div>
+      </aside>
+    
+    </main>
+  </div>
+
+  <script src="../assets/app.js"></script>
+</body>
+</html>

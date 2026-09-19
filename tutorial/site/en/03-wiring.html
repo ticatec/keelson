@@ -1,0 +1,535 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>03. Wiring &amp; Dependency Injection | Keelson Official Tutorial</title>
+  <meta name="description" content="Keelson TypeScript Framework Official Tutorial - Enterprise TypeScript for Express">
+  <link rel="stylesheet" href="../assets/style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+</head>
+<body class="theme-auto">
+  <!-- Top Navigation Header -->
+  <header class="top-navbar">
+    <div class="navbar-left">
+      <button class="mobile-menu-toggle" id="menuToggle" aria-label="Toggle Navigation">
+        <svg viewBox="0 0 24 24" width="22" height="22" stroke="currentColor" stroke-width="2" fill="none"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+      </button>
+      <a href="index.html" class="brand-logo">
+        <span class="brand-icon">⚡</span>
+        <span class="brand-name">Keelson</span>
+        <span class="brand-badge">Tutorial</span>
+      </a>
+    </div>
+
+    <div class="navbar-right">
+      <!-- Search Input -->
+      <div class="search-box">
+        <svg class="search-icon" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+        <input type="text" id="searchInput" placeholder="Search chapters..." />
+        <span class="search-kbd">⌘K</span>
+      </div>
+
+      <!-- Language Switch -->
+      <a href="../zh/03-wiring.html" class="lang-switch-btn" title="Switch to Chinese">
+        <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>
+        <span>中文</span>
+      </a>
+
+      <!-- Theme Switch -->
+      <button class="theme-toggle-btn" id="themeToggle" aria-label="Toggle Theme">
+        <svg class="sun-icon" viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
+        <svg class="moon-icon" viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+      </button>
+
+      <!-- GitHub Link -->
+      <a href="https://github.com/ticatec/keelson" target="_blank" rel="noopener noreferrer" class="github-link" title="GitHub Repository">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z"/></svg>
+      </a>
+    </div>
+  </header>
+
+  <div class="layout-container">
+    <!-- Left Navigation Sidebar -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-header">
+        <div class="sidebar-title">Chapters</div>
+        <span class="chapter-count">10 Docs</span>
+      </div>
+      <nav class="sidebar-nav">
+        <ul class="nav-list" id="navList">
+          
+      <li class="nav-item ">
+        <a href="index.html" class="nav-link" title="Tutorial overview &amp; index">
+          <span class="chapter-badge">00</span>
+          <span class="chapter-text">
+            <span class="chapter-title">Overview &amp; Table of Contents</span>
+            <span class="chapter-desc">Tutorial overview &amp; index</span>
+          </span>
+        </a>
+        
+      </li>
+    
+      <li class="nav-item ">
+        <a href="01-getting-started.html" class="nav-link" title="From empty directory to responsive service">
+          <span class="chapter-badge">01</span>
+          <span class="chapter-text">
+            <span class="chapter-title">Getting Started</span>
+            <span class="chapter-desc">From empty directory to responsive service</span>
+          </span>
+        </a>
+        
+      </li>
+    
+      <li class="nav-item ">
+        <a href="02-layers-and-transactions.html" class="nav-link" title="Why four layers and declarative transactions">
+          <span class="chapter-badge">02</span>
+          <span class="chapter-text">
+            <span class="chapter-title">Layers &amp; Transactions</span>
+            <span class="chapter-desc">Why four layers and declarative transactions</span>
+          </span>
+        </a>
+        
+      </li>
+    
+      <li class="nav-item active">
+        <a href="03-wiring.html" class="nav-link" title="Component discovery &amp; initialization">
+          <span class="chapter-badge">03</span>
+          <span class="chapter-text">
+            <span class="chapter-title">Wiring &amp; Dependency Injection</span>
+            <span class="chapter-desc">Component discovery &amp; initialization</span>
+          </span>
+        </a>
+        
+      <ul class="sidebar-subnav">
+        
+          <li class="sidebar-subnav-item level-2">
+            <a href="#register-then-ask-by-name" class="subnav-link" data-toc-target="register-then-ask-by-name">
+              Register, then ask by name
+            </a>
+          </li>
+        
+          <li class="sidebar-subnav-item level-2">
+            <a href="#inside-the-layers-use-the-typed-accessors" class="subnav-link" data-toc-target="inside-the-layers-use-the-typed-accessors">
+              Inside the layers, use the typed accessors
+            </a>
+          </li>
+        
+          <li class="sidebar-subnav-item level-2">
+            <a href="#why-a-getter-and-not-a-field" class="subnav-link" data-toc-target="why-a-getter-and-not-a-field">
+              Why a getter and not a field
+            </a>
+          </li>
+        
+          <li class="sidebar-subnav-item level-2">
+            <a href="#circular-dependencies" class="subnav-link" data-toc-target="circular-dependencies">
+              Circular dependencies
+            </a>
+          </li>
+        
+          <li class="sidebar-subnav-item level-2">
+            <a href="#registering-a-lot-of-beans" class="subnav-link" data-toc-target="registering-a-lot-of-beans">
+              Registering a lot of beans
+            </a>
+          </li>
+        
+          <li class="sidebar-subnav-item level-2">
+            <a href="#where-registration-belongs" class="subnav-link" data-toc-target="where-registration-belongs">
+              Where registration belongs
+            </a>
+          </li>
+        
+          <li class="sidebar-subnav-item level-2">
+            <a href="#one-registry-per-process" class="subnav-link" data-toc-target="one-registry-per-process">
+              One registry per process
+            </a>
+          </li>
+        
+          <li class="sidebar-subnav-item level-2">
+            <a href="#when-a-bean-is-missing" class="subnav-link" data-toc-target="when-a-bean-is-missing">
+              When a bean is missing
+            </a>
+          </li>
+        
+          <li class="sidebar-subnav-item level-2">
+            <a href="#keep-beans-stateless" class="subnav-link" data-toc-target="keep-beans-stateless">
+              Keep beans stateless
+            </a>
+          </li>
+        
+          <li class="sidebar-subnav-item level-2">
+            <a href="#a-registry-of-your-own" class="subnav-link" data-toc-target="a-registry-of-your-own">
+              A registry of your own
+            </a>
+          </li>
+        
+      </ul>
+      </li>
+    
+      <li class="nav-item ">
+        <a href="04-http-layer.html" class="nav-link" title="Routes, controllers, validation &amp; errors">
+          <span class="chapter-badge">04</span>
+          <span class="chapter-text">
+            <span class="chapter-title">HTTP Layer</span>
+            <span class="chapter-desc">Routes, controllers, validation &amp; errors</span>
+          </span>
+        </a>
+        
+      </li>
+    
+      <li class="nav-item ">
+        <a href="05-identity.html" class="nav-link" title="req.user origin &amp; auth mechanism">
+          <span class="chapter-badge">05</span>
+          <span class="chapter-text">
+            <span class="chapter-title">Identity &amp; Access Control</span>
+            <span class="chapter-desc">req.user origin &amp; auth mechanism</span>
+          </span>
+        </a>
+        
+      </li>
+    
+      <li class="nav-item ">
+        <a href="06-logging-and-health.html" class="nav-link" title="Logging policies &amp; K8s probes">
+          <span class="chapter-badge">06</span>
+          <span class="chapter-text">
+            <span class="chapter-title">Logging &amp; Health Checks</span>
+            <span class="chapter-desc">Logging policies &amp; K8s probes</span>
+          </span>
+        </a>
+        
+      </li>
+    
+      <li class="nav-item ">
+        <a href="07-background-work.html" class="nav-link" title="Scheduled tasks &amp; graceful shutdown">
+          <span class="chapter-badge">07</span>
+          <span class="chapter-text">
+            <span class="chapter-title">Background Work &amp; Shutdown</span>
+            <span class="chapter-desc">Scheduled tasks &amp; graceful shutdown</span>
+          </span>
+        </a>
+        
+      </li>
+    
+      <li class="nav-item ">
+        <a href="08-config-and-cache.html" class="nav-link" title="Local YAML, Nacos, Consul &amp; Redis">
+          <span class="chapter-badge">08</span>
+          <span class="chapter-text">
+            <span class="chapter-title">Config &amp; Cache</span>
+            <span class="chapter-desc">Local YAML, Nacos, Consul &amp; Redis</span>
+          </span>
+        </a>
+        
+      </li>
+    
+      <li class="nav-item ">
+        <a href="09-production-checklist.html" class="nav-link" title="Production readiness checklist">
+          <span class="chapter-badge">09</span>
+          <span class="chapter-text">
+            <span class="chapter-title">Production Checklist</span>
+            <span class="chapter-desc">Production readiness checklist</span>
+          </span>
+        </a>
+        
+      </li>
+    
+        </ul>
+      </nav>
+      <div class="sidebar-footer">
+        <a href="https://github.com/ticatec/keelson" target="_blank" rel="noopener">Keelson v1.0.0</a>
+        <span>·</span>
+        <a href="../index.html">Home</a>
+      </div>
+    </aside>
+
+    <!-- Overlay for mobile drawer -->
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+    <!-- Main Content Area -->
+    <main class="main-wrapper">
+      <div class="content-container">
+        <!-- Breadcrumbs -->
+        <nav class="breadcrumb-nav">
+          <a href="index.html" class="crumb-link">Keelson</a>
+          <span class="crumb-sep">/</span>
+          <span class="crumb-link">Tutorial</span>
+          <span class="crumb-sep">/</span>
+          <span class="crumb-current">Wiring &amp; Dependency Injection</span>
+        </nav>
+
+        <!-- Markdown Generated Content -->
+        <article class="markdown-body">
+          <h1 id="3-wiring" class="heading-anchor"><a href="#3-wiring" class="header-link">#</a> 3. Wiring</h1>
+<p>A Service needs a Repository, which needs a DAO. Written with <code class="inline-code">new</code>, that becomes an initialisation order you have to get right and keep right. Keelson&#039;s answer is a registry of names and a proxy that defers construction until first use.</p>
+<h2 id="register-then-ask-by-name" class="heading-anchor"><a href="#register-then-ask-by-name" class="header-link">#</a> Register, then ask by name</h2>
+
+<div class="code-block-wrapper">
+  <div class="code-block-header">
+    <span class="code-lang-tag">typescript</span>
+    <button class="copy-btn" data-code-id="code-cbzcusg" title="复制代码">
+      <svg class="copy-icon" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+      <span class="copy-label">复制</span>
+    </button>
+  </div>
+  <pre class="code-block"><code id="code-cbzcusg" class="language-typescript"><span class="token keyword">import</span> { beanFactory } <span class="token keyword">from</span> <span class="token string">&#039;@ticatec/keelson-core&#039;</span>;
+
+beanFactory.<span class="token function">register</span>(<span class="token string">&#039;UserDAO&#039;</span>, UserDAO);
+beanFactory.<span class="token function">register</span>(<span class="token string">&#039;UserRepository&#039;</span>, UserRepository);
+beanFactory.<span class="token function">register</span>(<span class="token string">&#039;UserService&#039;</span>, UserService);</code></pre>
+</div>
+<p><code class="inline-code">register()</code> stores the class. It does not call the constructor — nothing is instantiated here, so the order of these three lines does not matter.</p>
+<p>Asking for one back:</p>
+
+<div class="code-block-wrapper">
+  <div class="code-block-header">
+    <span class="code-lang-tag">typescript</span>
+    <button class="copy-btn" data-code-id="code-jph7nls" title="复制代码">
+      <svg class="copy-icon" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+      <span class="copy-label">复制</span>
+    </button>
+  </div>
+  <pre class="code-block"><code id="code-jph7nls" class="language-typescript"><span class="token keyword">const</span> service = beanFactory.createBean&lt;UserService&gt;(<span class="token string">&#039;UserService&#039;</span>);</code></pre>
+</div>
+<p>What comes back is a <code class="inline-code">Proxy</code>. The real <code class="inline-code">UserService</code> is constructed the first time you touch a property or call a method on it, and cached from then on. Call <code class="inline-code">createBean</code> again with the same name and you get the same proxy, backed by the same instance.</p>
+<p>That is what removes the ordering problem. <code class="inline-code">UserService</code>&#039;s constructor can reference <code class="inline-code">UserRepository</code>, which references <code class="inline-code">UserDAO</code>, and none of them is built until a request actually arrives — by which time everything is registered.</p>
+<h2 id="inside-the-layers-use-the-typed-accessors" class="heading-anchor"><a href="#inside-the-layers-use-the-typed-accessors" class="header-link">#</a> Inside the layers, use the typed accessors</h2>
+<p><code class="inline-code">beanFactory.createBean()</code> is the entry point from outside — your startup code, a route class. Inside the layers, use the accessor the base class gives you:</p>
+
+<div class="code-block-wrapper">
+  <div class="code-block-header">
+    <span class="code-lang-tag">typescript</span>
+    <button class="copy-btn" data-code-id="code-7plpys1" title="复制代码">
+      <svg class="copy-icon" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+      <span class="copy-label">复制</span>
+    </button>
+  </div>
+  <pre class="code-block"><code id="code-7plpys1" class="language-typescript"><span class="token keyword">export</span> <span class="token keyword">class</span> UserService <span class="token keyword">extends</span> <span class="token builtin">CommonService</span> {
+    <span class="token keyword">private</span> <span class="token keyword">get</span> <span class="token function">userRepo</span>(): UserRepository {
+        <span class="token keyword">return</span> this.getRepositoryInstance&lt;UserRepository&gt;(<span class="token string">&#039;UserRepository&#039;</span>);
+    }
+}
+
+<span class="token keyword">export</span> <span class="token keyword">class</span> UserRepository <span class="token keyword">extends</span> <span class="token builtin">CommonRepository</span> {
+    <span class="token keyword">private</span> <span class="token keyword">get</span> <span class="token function">userDAO</span>(): UserDAO {
+        <span class="token keyword">return</span> this.getDAOInstance&lt;UserDAO&gt;(<span class="token string">&#039;UserDAO&#039;</span>);
+    }
+}</code></pre>
+</div>
+<p>They differ in one way that matters. <code class="inline-code">createBean&lt;T&gt;()</code> returns <code class="inline-code">T | undefined</code> — undefined when the name was never registered — so <code class="inline-code">strict</code> makes you handle it, usually with <code class="inline-code">!</code>. <code class="inline-code">getRepositoryInstance()</code> and <code class="inline-code">getDAOInstance()</code> return <code class="inline-code">T</code> and <strong>throw</strong> when the name is missing, with a message naming the bean and telling you to register it.</p>
+<p>The asymmetry is deliberate: a missing bean deep inside a request is a programming error you want loud and immediate, not an <code class="inline-code">undefined</code> that travels three more frames before turning into <code class="inline-code">Cannot read properties of undefined</code>.</p>
+<h2 id="why-a-getter-and-not-a-field" class="heading-anchor"><a href="#why-a-getter-and-not-a-field" class="header-link">#</a> Why a getter and not a field</h2>
+<p>Notice the accessors are getters, not fields assigned in the constructor:</p>
+
+<div class="code-block-wrapper">
+  <div class="code-block-header">
+    <span class="code-lang-tag">typescript</span>
+    <button class="copy-btn" data-code-id="code-8t8z1a7" title="复制代码">
+      <svg class="copy-icon" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+      <span class="copy-label">复制</span>
+    </button>
+  </div>
+  <pre class="code-block"><code id="code-8t8z1a7" class="language-typescript"><span class="token comment">// do this</span>
+<span class="token keyword">private</span> <span class="token keyword">get</span> <span class="token function">userRepo</span>(): UserRepository {
+    <span class="token keyword">return</span> this.getRepositoryInstance&lt;UserRepository&gt;(<span class="token string">&#039;UserRepository&#039;</span>);
+}
+
+<span class="token comment">// not this</span>
+<span class="token keyword">private</span> userRepo = this.getRepositoryInstance&lt;UserRepository&gt;(<span class="token string">&#039;UserRepository&#039;</span>);</code></pre>
+</div>
+<p>A field initialiser runs during construction. Since construction happens lazily on first use, a field would resolve its dependency at that moment — which is usually fine, but ties the two lifetimes together for no benefit. A getter resolves on each access and costs a map lookup, because the proxy is cached.</p>
+<h2 id="circular-dependencies" class="heading-anchor"><a href="#circular-dependencies" class="header-link">#</a> Circular dependencies</h2>
+<p><code class="inline-code">UserService</code> uses <code class="inline-code">AccountService</code>, which uses <code class="inline-code">UserService</code>. With <code class="inline-code">new</code>, that is a stack overflow. With lazy proxies, it is fine — as long as neither constructor <em>uses</em> the other during construction.</p>
+
+<div class="code-block-wrapper">
+  <div class="code-block-header">
+    <span class="code-lang-tag">typescript</span>
+    <button class="copy-btn" data-code-id="code-q3hrmfw" title="复制代码">
+      <svg class="copy-icon" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+      <span class="copy-label">复制</span>
+    </button>
+  </div>
+  <pre class="code-block"><code id="code-q3hrmfw" class="language-typescript"><span class="token comment">// fine: each only resolves the other when a method actually runs</span>
+<span class="token keyword">class</span> UserService <span class="token keyword">extends</span> <span class="token builtin">CommonService</span> {
+    <span class="token keyword">private</span> <span class="token keyword">get</span> <span class="token function">accounts</span>(): AccountService {
+        <span class="token keyword">return</span> beanFactory.createBean&lt;AccountService&gt;(<span class="token string">&#039;AccountService&#039;</span>)!;
+    }
+}</code></pre>
+</div>
+<p>What is not fine is calling into the other one from a constructor. The factory detects that and throws with the chain spelled out:</p>
+
+<div class="code-block-wrapper">
+  <div class="code-block-header">
+    <span class="code-lang-tag">text</span>
+    <button class="copy-btn" data-code-id="code-pnv9vt7" title="复制代码">
+      <svg class="copy-icon" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+      <span class="copy-label">复制</span>
+    </button>
+  </div>
+  <pre class="code-block"><code id="code-pnv9vt7" class="language-text">Circular dependency detected: UserService -&gt; AccountService -&gt; UserService</code></pre>
+</div>
+<p>That message is telling you a constructor is doing work it should not. Move it into a method.</p>
+<h2 id="registering-a-lot-of-beans" class="heading-anchor"><a href="#registering-a-lot-of-beans" class="header-link">#</a> Registering a lot of beans</h2>
+<p>Listing every class in <code class="inline-code">beforeStart()</code> gets long, and each one is an import at the top of your entry file — which means every class is loaded at startup whether the process ever uses it or not. <code class="inline-code">Beans</code> registers <em>loaders</em> instead:</p>
+
+<div class="code-block-wrapper">
+  <div class="code-block-header">
+    <span class="code-lang-tag">typescript</span>
+    <button class="copy-btn" data-code-id="code-vsqzar3" title="复制代码">
+      <svg class="copy-icon" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+      <span class="copy-label">复制</span>
+    </button>
+  </div>
+  <pre class="code-block"><code id="code-vsqzar3" class="language-typescript"><span class="token keyword">import</span> { Beans } <span class="token keyword">from</span> <span class="token string">&#039;@ticatec/keelson-core&#039;</span>;
+
+<span class="token keyword">protected</span> <span class="token keyword">async</span> <span class="token function">beforeStart</span>(): <span class="token builtin">Promise</span>&lt;<span class="token keyword">void</span>&gt; {
+    DBManager.<span class="token function">init</span>(<span class="token function">initializePg</span>(AppConf.<span class="token function">getInstance</span>()!.<span class="token keyword">get</span>(<span class="token string">&#039;database&#039;</span>)));
+
+    <span class="token keyword">const</span> beans = Beans.<span class="token function">getInstance</span>();
+    beans.<span class="token function">register</span>(<span class="token string">&#039;UserDAO&#039;</span>, () =&gt; <span class="token keyword">import</span>(<span class="token string">&#039;./dao/UserDAO.js&#039;</span>));
+    beans.<span class="token function">register</span>(<span class="token string">&#039;UserRepository&#039;</span>, () =&gt; <span class="token keyword">import</span>(<span class="token string">&#039;./repository/UserRepository.js&#039;</span>));
+    beans.<span class="token function">register</span>(<span class="token string">&#039;UserService&#039;</span>, () =&gt; <span class="token keyword">import</span>(<span class="token string">&#039;./service/UserService.js&#039;</span>));
+
+    <span class="token keyword">await</span> beans.<span class="token function">load</span>();
+}</code></pre>
+</div>
+<p>Each loader is a dynamic import whose module&#039;s <strong>default export</strong> is the class. <code class="inline-code">load()</code> walks them, imports each one and hands the class to <code class="inline-code">beanFactory</code> under that name. From there everything behaves exactly as before.</p>
+<p>This also breaks import cycles at the module level, which the lazy proxy cannot help with — two modules that import each other at the top are a problem before any of your code runs.</p>
+<h2 id="where-registration-belongs" class="heading-anchor"><a href="#where-registration-belongs" class="header-link">#</a> Where registration belongs</h2>
+<p>In <code class="inline-code">beforeStart()</code>, always. It runs after config is loaded and before the Express app exists, which is the window where the database has been initialised and no request can arrive yet.</p>
+<p>Registering inside <code class="inline-code">setupRoutes()</code> works by accident — routes are bound before the server listens — but it puts the registration after <code class="inline-code">addHealthCheck()</code>, so a health indicator that resolves a bean would find it missing.</p>
+<h2 id="one-registry-per-process" class="heading-anchor"><a href="#one-registry-per-process" class="header-link">#</a> One registry per process</h2>
+<p><code class="inline-code">beanFactory</code> is a singleton, and singletons in a package that ships both CommonJS and ESM are a trap: two module formats, two module-level variables, two registries. Register through one and resolve through the other, and the bean is simply not there.</p>
+<p>Keelson anchors it on <code class="inline-code">globalThis</code> under a <code class="inline-code">Symbol.for()</code> key, so both builds share one registry. You do not have to do anything about this — it is worth knowing only because it explains why <code class="inline-code">beanFactory</code> is not just an exported <code class="inline-code">const</code>.</p>
+<h2 id="when-a-bean-is-missing" class="heading-anchor"><a href="#when-a-bean-is-missing" class="header-link">#</a> When a bean is missing</h2>
+
+<div class="code-block-wrapper">
+  <div class="code-block-header">
+    <span class="code-lang-tag">text</span>
+    <button class="copy-btn" data-code-id="code-snbf13g" title="复制代码">
+      <svg class="copy-icon" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+      <span class="copy-label">复制</span>
+    </button>
+  </div>
+  <pre class="code-block"><code id="code-snbf13g" class="language-text">Repository &quot;UserRepository&quot; is not registered in BeanFactory.
+Please register it via beanFactory.register(&#039;UserRepository&#039;, Class) before usage.</code></pre>
+</div>
+<p>Three usual causes, in order of likelihood: a typo between the <code class="inline-code">register</code> name and the lookup name — they are strings, nothing checks them; registration in the wrong lifecycle method; or a <code class="inline-code">Beans</code> loader pointing at a module with no <code class="inline-code">default</code> export.</p>
+<h2 id="keep-beans-stateless" class="heading-anchor"><a href="#keep-beans-stateless" class="header-link">#</a> Keep beans stateless</h2>
+<p>A bean is one instance shared by every request in the process. Anything you assign to <code class="inline-code">this</code> outside the constructor is visible to the next request, and under load that is two requests writing the same field. Per-request state travels as arguments, or in the transaction context — never on the service.</p>
+<h2 id="a-registry-of-your-own" class="heading-anchor"><a href="#a-registry-of-your-own" class="header-link">#</a> A registry of your own</h2>
+<p><code class="inline-code">BeanFactory</code> is exported as a class as well as a singleton, so <code class="inline-code">new BeanFactory()</code> gives you a private registry that nothing else can see.</p>
+<p>It is narrower than it sounds. <code class="inline-code">CommonService.getRepositoryInstance()</code> and <code class="inline-code">CommonRepository.getDAOInstance()</code> read the module-level singleton and take no registry argument, so a test that exercises a service or a repository has to register onto the global <code class="inline-code">beanFactory</code> regardless. A private instance is only useful for code that calls the registry directly.</p>
+<hr class="divider" />
+<p>Next: <a href="04-http-layer.html" class="doc-link">The HTTP layer</a> — routes, controllers, validation and errors.</p>
+        </article>
+
+        <!-- Previous / Next Navigation -->
+        
+    <div class="chapter-pagination">
+      
+        <a href="02-layers-and-transactions.html" class="pagination-btn prev-btn">
+          <span class="pagination-sub">← Previous</span>
+          <span class="pagination-title">02. Layers &amp; Transactions</span>
+        </a>
+      
+
+      
+        <a href="04-http-layer.html" class="pagination-btn next-btn">
+          <span class="pagination-sub">Next →</span>
+          <span class="pagination-title">04. HTTP Layer</span>
+        </a>
+      
+    </div>
+  
+
+        <!-- Document Footer -->
+        <footer class="site-footer">
+          <div class="footer-left">
+            <p>© 2026 Ticatec Keelson Framework. Released under the MIT License.</p>
+          </div>
+          <div class="footer-right">
+            <a href="../zh/03-wiring.html" class="footer-lang-link">
+              🌐 中文阅读
+            </a>
+          </div>
+        </footer>
+      </div>
+
+      <!-- Right Table of Contents -->
+      
+      <aside class="right-toc-container">
+        <div class="right-toc-inner">
+          <div class="toc-header">On this page</div>
+          <ul class="right-toc-list">
+            
+              <li class="toc-item level-2">
+                <a href="#register-then-ask-by-name" class="toc-link" data-anchor="register-then-ask-by-name">
+                  Register, then ask by name
+                </a>
+              </li>
+            
+              <li class="toc-item level-2">
+                <a href="#inside-the-layers-use-the-typed-accessors" class="toc-link" data-anchor="inside-the-layers-use-the-typed-accessors">
+                  Inside the layers, use the typed accessors
+                </a>
+              </li>
+            
+              <li class="toc-item level-2">
+                <a href="#why-a-getter-and-not-a-field" class="toc-link" data-anchor="why-a-getter-and-not-a-field">
+                  Why a getter and not a field
+                </a>
+              </li>
+            
+              <li class="toc-item level-2">
+                <a href="#circular-dependencies" class="toc-link" data-anchor="circular-dependencies">
+                  Circular dependencies
+                </a>
+              </li>
+            
+              <li class="toc-item level-2">
+                <a href="#registering-a-lot-of-beans" class="toc-link" data-anchor="registering-a-lot-of-beans">
+                  Registering a lot of beans
+                </a>
+              </li>
+            
+              <li class="toc-item level-2">
+                <a href="#where-registration-belongs" class="toc-link" data-anchor="where-registration-belongs">
+                  Where registration belongs
+                </a>
+              </li>
+            
+              <li class="toc-item level-2">
+                <a href="#one-registry-per-process" class="toc-link" data-anchor="one-registry-per-process">
+                  One registry per process
+                </a>
+              </li>
+            
+              <li class="toc-item level-2">
+                <a href="#when-a-bean-is-missing" class="toc-link" data-anchor="when-a-bean-is-missing">
+                  When a bean is missing
+                </a>
+              </li>
+            
+              <li class="toc-item level-2">
+                <a href="#keep-beans-stateless" class="toc-link" data-anchor="keep-beans-stateless">
+                  Keep beans stateless
+                </a>
+              </li>
+            
+              <li class="toc-item level-2">
+                <a href="#a-registry-of-your-own" class="toc-link" data-anchor="a-registry-of-your-own">
+                  A registry of your own
+                </a>
+              </li>
+            
+          </ul>
+        </div>
+      </aside>
+    
+    </main>
+  </div>
+
+  <script src="../assets/app.js"></script>
+</body>
+</html>

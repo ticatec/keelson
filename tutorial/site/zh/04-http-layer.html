@@ -1,0 +1,595 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>04. HTTP 层 | Keelson 官方教程</title>
+  <meta name="description" content="Keelson TypeScript Framework Official Tutorial - Enterprise TypeScript for Express">
+  <link rel="stylesheet" href="../assets/style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+</head>
+<body class="theme-auto">
+  <!-- Top Navigation Header -->
+  <header class="top-navbar">
+    <div class="navbar-left">
+      <button class="mobile-menu-toggle" id="menuToggle" aria-label="Toggle Navigation">
+        <svg viewBox="0 0 24 24" width="22" height="22" stroke="currentColor" stroke-width="2" fill="none"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+      </button>
+      <a href="index.html" class="brand-logo">
+        <span class="brand-icon">⚡</span>
+        <span class="brand-name">Keelson</span>
+        <span class="brand-badge">教程</span>
+      </a>
+    </div>
+
+    <div class="navbar-right">
+      <!-- Search Input -->
+      <div class="search-box">
+        <svg class="search-icon" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+        <input type="text" id="searchInput" placeholder="在章节中快速搜索..." />
+        <span class="search-kbd">⌘K</span>
+      </div>
+
+      <!-- Language Switch -->
+      <a href="../en/04-http-layer.html" class="lang-switch-btn" title="切换为英文">
+        <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>
+        <span>English</span>
+      </a>
+
+      <!-- Theme Switch -->
+      <button class="theme-toggle-btn" id="themeToggle" aria-label="Toggle Theme">
+        <svg class="sun-icon" viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
+        <svg class="moon-icon" viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+      </button>
+
+      <!-- GitHub Link -->
+      <a href="https://github.com/ticatec/keelson" target="_blank" rel="noopener noreferrer" class="github-link" title="GitHub Repository">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z"/></svg>
+      </a>
+    </div>
+  </header>
+
+  <div class="layout-container">
+    <!-- Left Navigation Sidebar -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-header">
+        <div class="sidebar-title">教程目录</div>
+        <span class="chapter-count">10 篇文档</span>
+      </div>
+      <nav class="sidebar-nav">
+        <ul class="nav-list" id="navList">
+          
+      <li class="nav-item ">
+        <a href="index.html" class="nav-link" title="教程导读与各章索引">
+          <span class="chapter-badge">00</span>
+          <span class="chapter-text">
+            <span class="chapter-title">概览与教程目录</span>
+            <span class="chapter-desc">教程导读与各章索引</span>
+          </span>
+        </a>
+        
+      </li>
+    
+      <li class="nav-item ">
+        <a href="01-getting-started.html" class="nav-link" title="从空目录到一个能响应请求的服务">
+          <span class="chapter-badge">01</span>
+          <span class="chapter-text">
+            <span class="chapter-title">起步</span>
+            <span class="chapter-desc">从空目录到一个能响应请求的服务</span>
+          </span>
+        </a>
+        
+      </li>
+    
+      <li class="nav-item ">
+        <a href="02-layers-and-transactions.html" class="nav-link" title="为什么分四层，事务如何贯穿">
+          <span class="chapter-badge">02</span>
+          <span class="chapter-text">
+            <span class="chapter-title">分层与事务</span>
+            <span class="chapter-desc">为什么分四层，事务如何贯穿</span>
+          </span>
+        </a>
+        
+      </li>
+    
+      <li class="nav-item ">
+        <a href="03-wiring.html" class="nav-link" title="类与类互相发现，解耦初始化顺序">
+          <span class="chapter-badge">03</span>
+          <span class="chapter-text">
+            <span class="chapter-title">装配与依赖注入</span>
+            <span class="chapter-desc">类与类互相发现，解耦初始化顺序</span>
+          </span>
+        </a>
+        
+      </li>
+    
+      <li class="nav-item active">
+        <a href="04-http-layer.html" class="nav-link" title="路由、控制器、校验与错误映射">
+          <span class="chapter-badge">04</span>
+          <span class="chapter-text">
+            <span class="chapter-title">HTTP 层</span>
+            <span class="chapter-desc">路由、控制器、校验与错误映射</span>
+          </span>
+        </a>
+        
+      <ul class="sidebar-subnav">
+        
+          <li class="sidebar-subnav-item level-2">
+            <a href="#路由" class="subnav-link" data-toc-target="路由">
+              路由
+            </a>
+          </li>
+        
+          <li class="sidebar-subnav-item level-2">
+            <a href="#两种处理函数包装" class="subnav-link" data-toc-target="两种处理函数包装">
+              两种处理函数包装
+            </a>
+          </li>
+        
+          <li class="sidebar-subnav-item level-2">
+            <a href="#控制器" class="subnav-link" data-toc-target="控制器">
+              控制器
+            </a>
+          </li>
+        
+          <li class="sidebar-subnav-item level-3">
+            <a href="#传给-service-的是什么" class="subnav-link" data-toc-target="传给-service-的是什么">
+              传给 service 的是什么
+            </a>
+          </li>
+        
+          <li class="sidebar-subnav-item level-3">
+            <a href="#del-需要你自己写" class="subnav-link" data-toc-target="del-需要你自己写">
+              del() 需要你自己写
+            </a>
+          </li>
+        
+          <li class="sidebar-subnav-item level-3">
+            <a href="#不是-crud-的接口" class="subnav-link" data-toc-target="不是-crud-的接口">
+              不是 CRUD 的接口
+            </a>
+          </li>
+        
+          <li class="sidebar-subnav-item level-2">
+            <a href="#校验" class="subnav-link" data-toc-target="校验">
+              校验
+            </a>
+          </li>
+        
+          <li class="sidebar-subnav-item level-2">
+            <a href="#错误" class="subnav-link" data-toc-target="错误">
+              错误
+            </a>
+          </li>
+        
+          <li class="sidebar-subnav-item level-2">
+            <a href="#路由组与认证" class="subnav-link" data-toc-target="路由组与认证">
+              路由组与认证
+            </a>
+          </li>
+        
+      </ul>
+      </li>
+    
+      <li class="nav-item ">
+        <a href="05-identity.html" class="nav-link" title="req.user 来源与鉴权机制">
+          <span class="chapter-badge">05</span>
+          <span class="chapter-text">
+            <span class="chapter-title">身份与访问控制</span>
+            <span class="chapter-desc">req.user 来源与鉴权机制</span>
+          </span>
+        </a>
+        
+      </li>
+    
+      <li class="nav-item ">
+        <a href="06-logging-and-health.html" class="nav-link" title="记录规范、敏感信息与 K8s 探针">
+          <span class="chapter-badge">06</span>
+          <span class="chapter-text">
+            <span class="chapter-title">日志与健康检查</span>
+            <span class="chapter-desc">记录规范、敏感信息与 K8s 探针</span>
+          </span>
+        </a>
+        
+      </li>
+    
+      <li class="nav-item ">
+        <a href="07-background-work.html" class="nav-link" title="周期任务调度与优雅关停保护">
+          <span class="chapter-badge">07</span>
+          <span class="chapter-text">
+            <span class="chapter-title">后台任务与优雅关停</span>
+            <span class="chapter-desc">周期任务调度与优雅关停保护</span>
+          </span>
+        </a>
+        
+      </li>
+    
+      <li class="nav-item ">
+        <a href="08-config-and-cache.html" class="nav-link" title="YAML、Nacos、Consul 与 Redis 集成">
+          <span class="chapter-badge">08</span>
+          <span class="chapter-text">
+            <span class="chapter-title">配置与缓存</span>
+            <span class="chapter-desc">YAML、Nacos、Consul 与 Redis 集成</span>
+          </span>
+        </a>
+        
+      </li>
+    
+      <li class="nav-item ">
+        <a href="09-production-checklist.html" class="nav-link" title="生产环境准备与关键排查项">
+          <span class="chapter-badge">09</span>
+          <span class="chapter-text">
+            <span class="chapter-title">上线之前检查清单</span>
+            <span class="chapter-desc">生产环境准备与关键排查项</span>
+          </span>
+        </a>
+        
+      </li>
+    
+        </ul>
+      </nav>
+      <div class="sidebar-footer">
+        <a href="https://github.com/ticatec/keelson" target="_blank" rel="noopener">Keelson v1.0.0</a>
+        <span>·</span>
+        <a href="../index.html">返回首页</a>
+      </div>
+    </aside>
+
+    <!-- Overlay for mobile drawer -->
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+    <!-- Main Content Area -->
+    <main class="main-wrapper">
+      <div class="content-container">
+        <!-- Breadcrumbs -->
+        <nav class="breadcrumb-nav">
+          <a href="index.html" class="crumb-link">Keelson</a>
+          <span class="crumb-sep">/</span>
+          <span class="crumb-link">教程</span>
+          <span class="crumb-sep">/</span>
+          <span class="crumb-current">HTTP 层</span>
+        </nav>
+
+        <!-- Markdown Generated Content -->
+        <article class="markdown-body">
+          <h1 id="4-http-层" class="heading-anchor"><a href="#4-http-层" class="header-link">#</a> 4. HTTP 层</h1>
+<p>从 socket 到你的 Service 之间的一切：路由怎么声明、控制器怎么把请求映射成一次服务调用、请求体怎么校验，以及抛出的错误怎么变成状态码。</p>
+<h2 id="路由" class="heading-anchor"><a href="#路由" class="header-link">#</a> 路由</h2>
+<p>一组路由是一个类。它拥有一个路径前缀和它下面的处理函数。</p>
+
+<div class="code-block-wrapper">
+  <div class="code-block-header">
+    <span class="code-lang-tag">typescript</span>
+    <button class="copy-btn" data-code-id="code-18lufg6" title="复制代码">
+      <svg class="copy-icon" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+      <span class="copy-label">复制</span>
+    </button>
+  </div>
+  <pre class="code-block"><code id="code-18lufg6" class="language-typescript"><span class="token keyword">import</span> { CommonRoutes, routerHelper } <span class="token keyword">from</span> <span class="token string">&#039;@ticatec/keelson-express&#039;</span>;
+
+<span class="token keyword">export</span> <span class="token keyword">default</span> <span class="token keyword">class</span> UserRoutes <span class="token keyword">extends</span> CommonRoutes {
+    <span class="token keyword">protected</span> <span class="token function">bindRoutes</span>() {
+        this.<span class="token keyword">get</span>(<span class="token string">&#039;/&#039;</span>, routerHelper.<span class="token function">invokeRestfulAction</span>(req =&gt; this.<span class="token function">list</span>(req)));
+        this.<span class="token keyword">get</span>(<span class="token string">&#039;/:id&#039;</span>, routerHelper.<span class="token function">invokeRestfulAction</span>(req =&gt; this.<span class="token function">find</span>(req)));
+        this.<span class="token function">post</span>(<span class="token string">&#039;/&#039;</span>, routerHelper.<span class="token function">invokeRestfulAction</span>(req =&gt; this.<span class="token function">create</span>(req)));
+    }
+    <span class="token comment">// ...</span>
+}</code></pre>
+</div>
+<p>在服务端挂载：</p>
+
+<div class="code-block-wrapper">
+  <div class="code-block-header">
+    <span class="code-lang-tag">typescript</span>
+    <button class="copy-btn" data-code-id="code-fqil87e" title="复制代码">
+      <svg class="copy-icon" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+      <span class="copy-label">复制</span>
+    </button>
+  </div>
+  <pre class="code-block"><code id="code-fqil87e" class="language-typescript"><span class="token keyword">protected</span> <span class="token keyword">async</span> <span class="token function">setupRoutes</span>(): <span class="token builtin">Promise</span>&lt;<span class="token keyword">void</span>&gt; {
+    <span class="token keyword">await</span> this.<span class="token function">bindRoutes</span>(<span class="token string">&#039;/users&#039;</span>, () =&gt; <span class="token keyword">import</span>(<span class="token string">&#039;./routes/UserRoutes.js&#039;</span>));
+}</code></pre>
+</div>
+<p>最终路径是 <code class="inline-code">contextRoot</code> + 挂载路径 + 路由路径，所以在 <code class="inline-code">contextRoot: &#039;/api&#039;</code> 下，第二个处理函数响应的是 <code class="inline-code">GET /api/users/:id</code>。模块的<strong>默认导出</strong>必须是这个类，而且它是动态 import 的——服务器挂载之前，这个路由文件不会被加载。</p>
+<h2 id="两种处理函数包装" class="heading-anchor"><a href="#两种处理函数包装" class="header-link">#</a> 两种处理函数包装</h2>
+<p><code class="inline-code">invokeRestfulAction(fn)</code> 用于&quot;返回一个值&quot;的处理函数：</p>
+
+<div class="code-block-wrapper">
+  <div class="code-block-header">
+    <span class="code-lang-tag">typescript</span>
+    <button class="copy-btn" data-code-id="code-yk6qdm8" title="复制代码">
+      <svg class="copy-icon" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+      <span class="copy-label">复制</span>
+    </button>
+  </div>
+  <pre class="code-block"><code id="code-yk6qdm8" class="language-typescript">routerHelper.<span class="token function">invokeRestfulAction</span>(<span class="token keyword">async</span> (req) =&gt; {
+    <span class="token keyword">return</span> <span class="token keyword">await</span> this.service.<span class="token function">find</span>(<span class="token function">String</span>(req.params.id));
+})</code></pre>
+</div>
+<p>返回值被序列化为 JSON。返回 <code class="inline-code">null</code> 或 <code class="inline-code">undefined</code> 变成 <code class="inline-code">204 No Content</code>。抛出的错误交给错误中间件。你完全不碰 <code class="inline-code">res</code>，这意味着你不可能忘记发送响应。</p>
+<p><code class="inline-code">invokeController(fn)</code> 用于必须自己控制响应的处理函数——文件下载、流式输出、非 JSON 的内容类型：</p>
+
+<div class="code-block-wrapper">
+  <div class="code-block-header">
+    <span class="code-lang-tag">typescript</span>
+    <button class="copy-btn" data-code-id="code-itiuzb8" title="复制代码">
+      <svg class="copy-icon" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+      <span class="copy-label">复制</span>
+    </button>
+  </div>
+  <pre class="code-block"><code id="code-itiuzb8" class="language-typescript">routerHelper.<span class="token function">invokeController</span>(<span class="token keyword">async</span> (req, res) =&gt; {
+    <span class="token keyword">const</span> file = <span class="token keyword">await</span> this.service.<span class="token keyword">export</span>(<span class="token function">String</span>(req.params.id));
+    res.<span class="token function">setHeader</span>(<span class="token string">&#039;Content-Type&#039;</span>, <span class="token string">&#039;text/csv&#039;</span>);
+    res.<span class="token function">send</span>(file);
+})</code></pre>
+</div>
+<p>错误依然替你接住。区别只是响应归你管。</p>
+<p>除此之外就是普通的 Express 处理函数——<code class="inline-code">this.get(&#039;/x&#039;, (req, res) =&gt; {...})</code> 能用，只是没有了错误处理。</p>
+<h2 id="控制器" class="heading-anchor"><a href="#控制器" class="header-link">#</a> 控制器</h2>
+<p>对于常见的 CRUD 形状，<code class="inline-code">CommonController&lt;T&gt;</code> 包住一个 service 并给你现成的处理函数：</p>
+
+<div class="code-block-wrapper">
+  <div class="code-block-header">
+    <span class="code-lang-tag">typescript</span>
+    <button class="copy-btn" data-code-id="code-zuz1yqb" title="复制代码">
+      <svg class="copy-icon" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+      <span class="copy-label">复制</span>
+    </button>
+  </div>
+  <pre class="code-block"><code id="code-zuz1yqb" class="language-typescript"><span class="token keyword">import</span> { CommonSearchController } <span class="token keyword">from</span> <span class="token string">&#039;@ticatec/keelson-express&#039;</span>;
+<span class="token keyword">import</span> { beanFactory } <span class="token keyword">from</span> <span class="token string">&#039;@ticatec/keelson-core&#039;</span>;
+
+<span class="token keyword">export</span> <span class="token keyword">class</span> UserController <span class="token keyword">extends</span> CommonSearchController&lt;UserService&gt; {
+    <span class="token function">constructor</span>() {
+        <span class="token function">super</span>(beanFactory.createBean&lt;UserService&gt;(<span class="token string">&#039;UserService&#039;</span>)!);
+    }
+}
+
+<span class="token keyword">export</span> <span class="token keyword">default</span> <span class="token keyword">class</span> UserRoutes <span class="token keyword">extends</span> AuthenticatedRoutes {
+    <span class="token keyword">private</span> controller = <span class="token keyword">new</span> <span class="token function">UserController</span>();
+
+    <span class="token keyword">protected</span> <span class="token function">bindRoutes</span>() {
+        this.<span class="token function">post</span>(<span class="token string">&#039;/&#039;</span>, routerHelper.<span class="token function">invokeRestfulAction</span>(this.controller.<span class="token function">createNew</span>()));
+        this.<span class="token function">put</span>(<span class="token string">&#039;/&#039;</span>, routerHelper.<span class="token function">invokeRestfulAction</span>(this.controller.<span class="token function">update</span>()));
+        this.<span class="token keyword">get</span>(<span class="token string">&#039;/&#039;</span>, routerHelper.<span class="token function">invokeRestfulAction</span>(this.controller.<span class="token function">search</span>()));
+    }
+}</code></pre>
+</div>
+<p><code class="inline-code">CommonController</code> 提供 <code class="inline-code">createNew()</code>、<code class="inline-code">update()</code>、<code class="inline-code">del()</code>；<code class="inline-code">CommonSearchController</code> 另加 <code class="inline-code">search()</code>，它把 <code class="inline-code">req.query</code> 作为查询条件传给 service。每个方法返回一个处理函数，路径与动词仍由你决定。</p>
+<p>控制器调用的是同名的 service 方法——<code class="inline-code">createNew()</code> 调 <code class="inline-code">service.createNew(...)</code>—— 如果 service 没有这个方法，就抛 <code class="inline-code">ActionNotFoundError</code>（404）。这就是控制器不需要接口约束也能通用的原因：检查发生在调用时，并且以一个干净的 404 结束，而不是 <code class="inline-code">undefined is not a function</code>。</p>
+<h3 id="传给-service-的是什么" class="heading-anchor"><a href="#传给-service-的是什么" class="header-link">#</a> 传给 service 的是什么</h3>
+<p>默认是登录用户和请求体：</p>
+
+<div class="code-block-wrapper">
+  <div class="code-block-header">
+    <span class="code-lang-tag">typescript</span>
+    <button class="copy-btn" data-code-id="code-4jtwjoh" title="复制代码">
+      <svg class="copy-icon" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+      <span class="copy-label">复制</span>
+    </button>
+  </div>
+  <pre class="code-block"><code id="code-4jtwjoh" class="language-typescript"><span class="token keyword">protected</span> <span class="token function">getCreateNewArguments</span>(req: Request): <span class="token builtin">Array</span>&lt;any&gt; {
+    <span class="token keyword">return</span> [this.<span class="token function">getLoggedUser</span>(req), req.body];
+}</code></pre>
+</div>
+<p>service 想要别的东西时覆写它——路径里的租户、某个请求头：</p>
+
+<div class="code-block-wrapper">
+  <div class="code-block-header">
+    <span class="code-lang-tag">typescript</span>
+    <button class="copy-btn" data-code-id="code-75jmg2p" title="复制代码">
+      <svg class="copy-icon" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+      <span class="copy-label">复制</span>
+    </button>
+  </div>
+  <pre class="code-block"><code id="code-75jmg2p" class="language-typescript"><span class="token keyword">export</span> <span class="token keyword">class</span> UserController <span class="token keyword">extends</span> CommonSearchController&lt;UserService&gt; {
+    <span class="token keyword">protected</span> override <span class="token function">getCreateNewArguments</span>(req: Request): <span class="token builtin">Array</span>&lt;any&gt; {
+        <span class="token keyword">return</span> [this.<span class="token function">getLoggedUser</span>(req), <span class="token function">String</span>(req.params.tenantId), req.body];
+    }
+}</code></pre>
+</div>
+<p><code class="inline-code">getLoggedUser(req)</code> 在代理身份生效时返回被代理的那个用户，否则返回真实用户——第 5 章。</p>
+<p>想在校验之前改造请求体，覆写 <code class="inline-code">buildNewEntry(req)</code> / <code class="inline-code">buildUpdatedEntry(req)</code>。</p>
+<h3 id="del-需要你自己写" class="heading-anchor"><a href="#del-需要你自己写" class="header-link">#</a> <code class="inline-code">del()</code> 需要你自己写</h3>
+<p><code class="inline-code">_del()</code> 默认直接抛 <code class="inline-code">ActionNotFoundError</code>，除非你覆写它。删除很少只是&quot;拿 id 调一下 service&quot;——通常有软删标记、级联关系，或者关于谁有权删的规则——所以框架拒绝替你猜。</p>
+<h3 id="不是-crud-的接口" class="heading-anchor"><a href="#不是-crud-的接口" class="header-link">#</a> 不是 CRUD 的接口</h3>
+<p><code class="inline-code">BaseController&lt;T&gt;</code> 是 <code class="inline-code">CommonController</code> 下面的那一层：它只持有注入进来的 service 和 logger，别的什么都没有。当一个接口有自己的形状时继承它——导出、审批、批量操作—— 方法自己写。</p>
+<p>在它里面，两个受保护的辅助方法给你和 CRUD 方法一样的延迟派发：</p>
+
+<div class="code-block-wrapper">
+  <div class="code-block-header">
+    <span class="code-lang-tag">typescript</span>
+    <button class="copy-btn" data-code-id="code-tbnf0xi" title="复制代码">
+      <svg class="copy-icon" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+      <span class="copy-label">复制</span>
+    </button>
+  </div>
+  <pre class="code-block"><code id="code-tbnf0xi" class="language-typescript"><span class="token keyword">import</span> { BaseController } <span class="token keyword">from</span> <span class="token string">&#039;@ticatec/keelson-express&#039;</span>;
+<span class="token keyword">import</span> <span class="token keyword">type</span> { RestfulFunction } <span class="token keyword">from</span> <span class="token string">&#039;@ticatec/keelson-express&#039;</span>;
+
+<span class="token keyword">export</span> <span class="token keyword">class</span> ReportController <span class="token keyword">extends</span> BaseController&lt;ReportService&gt; {
+
+    <span class="token function">constructor</span>(service: ReportService) {
+        <span class="token function">super</span>(service);          <span class="token comment">// BaseController 的构造函数是 protected，自己声明一个 public 的</span>
+    }
+
+    <span class="token function">exportCsv</span>(): RestfulFunction {
+        <span class="token keyword">return</span> <span class="token keyword">async</span> (req) =&gt; this.service.<span class="token function">exportCsv</span>(
+            this.<span class="token function">getLoggedUser</span>(req), <span class="token function">String</span>(req.query.month)
+        );
+    }
+}</code></pre>
+</div>
+<p>这里的 service 是有类型的，直接调就行。延迟派发的那一对——<code class="inline-code">checkInterface(name)</code> 在方法不存在时抛 <code class="inline-code">ActionNotFoundError</code>，<code class="inline-code">invokeServiceInterface(name, args)</code> 负责调用—— 在上一层的 <code class="inline-code">CommonController</code> 上，正是它让 CRUD 方法能对一个没有接口约束的 service 保持通用。需要它们就继承 <code class="inline-code">CommonController</code>。</p>
+<p><code class="inline-code">RestfulFunction</code> 接收请求、返回一个值——它不是 Express 的处理函数，所以绑定的时候一样要过 <code class="inline-code">routerHelper.invokeRestfulAction(...)</code>。</p>
+<h2 id="校验" class="heading-anchor"><a href="#校验" class="header-link">#</a> 校验</h2>
+<p>声明规则，控制器会在调用 service 之前执行它们。</p>
+
+<div class="code-block-wrapper">
+  <div class="code-block-header">
+    <span class="code-lang-tag">typescript</span>
+    <button class="copy-btn" data-code-id="code-zea09o2" title="复制代码">
+      <svg class="copy-icon" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+      <span class="copy-label">复制</span>
+    </button>
+  </div>
+  <pre class="code-block"><code id="code-zea09o2" class="language-typescript"><span class="token keyword">import</span> { StringValidator, NumberValidator, ValidationRules } <span class="token keyword">from</span> <span class="token string">&#039;@ticatec/bean-validator&#039;</span>;
+
+<span class="token keyword">protected</span> <span class="token function">getCreateRules</span>(): ValidationRules {
+    <span class="token keyword">return</span> [
+        <span class="token keyword">new</span> <span class="token function">StringValidator</span>(<span class="token string">&#039;name&#039;</span>, { required: <span class="token keyword">true</span>, maxLen: <span class="token number">64</span> }),
+        <span class="token keyword">new</span> <span class="token function">StringValidator</span>(<span class="token string">&#039;email&#039;</span>, {
+            required: <span class="token keyword">true</span>,
+            maxLen: <span class="token number">128</span>,
+            format: { regex: /^[^@\s]+@[^@\s]+\.[^@\s]+$/, message: <span class="token string">&#039;邮箱格式不正确&#039;</span> }
+        }),
+        <span class="token keyword">new</span> <span class="token function">NumberValidator</span>(<span class="token string">&#039;age&#039;</span>, { minValue: <span class="token number">0</span>, maxValue: <span class="token number">150</span> })
+    ];
+}</code></pre>
+</div>
+<p><code class="inline-code">getCreateRules()</code> 与 <code class="inline-code">getUpdateRules()</code> 都回落到 <code class="inline-code">getRules()</code>，所以新建和更新形状一致时，覆写 <code class="inline-code">getRules()</code> 一次即可。但它们不一致的情况比你以为的多——更新通常要求一个新建时不该出现的 <code class="inline-code">id</code>——所以它们是两个独立的钩子。</p>
+<p>校验失败抛出 <code class="inline-code">IllegalParameterError</code>，错误中间件把它渲染成带校验消息的 <code class="inline-code">400</code>。校验器同时也做净化：字符串默认 <code class="inline-code">trim</code>，另有 <code class="inline-code">toLowerCase</code> / <code class="inline-code">toUpperCase</code> 可用。</p>
+<p>校验只覆盖规则提到的字段。没有规则的字段原样穿过，所以一个读 <code class="inline-code">body.isAdmin</code> 的 service 会老老实实读到客户端发来的任何值。要么把你打算接受的每个字段都声明出来，要么在 <code class="inline-code">buildNewEntry()</code> 里显式构造实体。</p>
+<h2 id="错误" class="heading-anchor"><a href="#错误" class="header-link">#</a> 错误</h2>
+<p>在调用树的任何位置抛出，中间件把类型映射成状态码：</p>
+<div class="table-container"><table><thead><tr><th>抛出</th><th>状态码</th></tr></thead><tbody><tr><td><code class="inline-code">IllegalParameterError(message)</code></td><td>400</td></tr><tr><td><code class="inline-code">UnauthenticatedError()</code></td><td>401</td></tr><tr><td><code class="inline-code">InsufficientPermissionError()</code></td><td>403</td></tr><tr><td><code class="inline-code">ActionNotFoundError()</code></td><td>404</td></tr><tr><td><code class="inline-code">ConflictError(message)</code></td><td>409</td></tr><tr><td><code class="inline-code">TimeoutError()</code></td><td>408</td></tr><tr><td><code class="inline-code">TooManyRequestsError()</code></td><td>429</td></tr><tr><td><code class="inline-code">AppError(message?)</code></td><td>500</td></tr><tr><td><code class="inline-code">ProxyError()</code></td><td>502</td></tr><tr><td><code class="inline-code">ServiceUnavailableError()</code></td><td>503</td></tr></tbody></table></div>
+<p>只有那些消息本身要给调用方看的才接受 message 参数。<code class="inline-code">ActionNotFoundError</code> 与 <code class="inline-code">UnauthenticatedError</code> 的消息是固定的——告诉一个未认证的调用方认证<strong>为什么</strong>失败，正是账号枚举漏洞的造法。</p>
+<p>每个构造函数也接受 <code class="inline-code">ErrorOptions</code>，原始异常因此得以保留：</p>
+
+<div class="code-block-wrapper">
+  <div class="code-block-header">
+    <span class="code-lang-tag">typescript</span>
+    <button class="copy-btn" data-code-id="code-c4h8b6w" title="复制代码">
+      <svg class="copy-icon" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+      <span class="copy-label">复制</span>
+    </button>
+  </div>
+  <pre class="code-block"><code id="code-c4h8b6w" class="language-typescript"><span class="token keyword">throw</span> <span class="token keyword">new</span> <span class="token function">IllegalParameterError</span>(<span class="token string">&#039;日期区间不合法&#039;</span>, { cause: parseError });</code></pre>
+</div>
+<p>不是 <code class="inline-code">HttpError</code> 的异常一律变成 500 并返回一个通用响应体。堆栈只在非生产环境包含； <code class="inline-code">NODE_ENV=production</code> 会剥掉它。</p>
+<p>响应按 <code class="inline-code">Accept</code> 做内容协商——默认 JSON，客户端要 HTML 或纯文本就给对应格式。所有插值进去的内容都做了 HTML 转义。</p>
+<p>记录什么：5xx 带栈记 <code class="inline-code">error</code>，4xx 记 <code class="inline-code">debug</code>。客户端发了个不合法的请求不是线上事故，把它记成 warning 正是仪表盘被噪音淹没的原因。你的处理函数不需要自己记录错误—— 中间件看到它的时候，它已经被记下来了。</p>
+<h2 id="路由组与认证" class="heading-anchor"><a href="#路由组与认证" class="header-link">#</a> 路由组与认证</h2>
+<p><code class="inline-code">CommonRoutes</code> 默认开放。<code class="inline-code">AuthenticatedRoutes</code> 拒绝没有用户的请求：</p>
+
+<div class="code-block-wrapper">
+  <div class="code-block-header">
+    <span class="code-lang-tag">typescript</span>
+    <button class="copy-btn" data-code-id="code-5qfkup5" title="复制代码">
+      <svg class="copy-icon" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+      <span class="copy-label">复制</span>
+    </button>
+  </div>
+  <pre class="code-block"><code id="code-5qfkup5" class="language-typescript"><span class="token keyword">export</span> <span class="token keyword">default</span> <span class="token keyword">class</span> UserRoutes <span class="token keyword">extends</span> AuthenticatedRoutes { <span class="token comment">/* ... */</span> }</code></pre>
+</div>
+<p>更细的控制覆写 <code class="inline-code">isValidUser()</code>——第 5 章。</p>
+<hr class="divider" />
+<p>深入参考：<a href="../packages/keelson-express/README_CN.md" class="doc-link">keelson-express 的 README</a>（控制器与路由）、<a href="../packages/bean-validator/README_CN.md" class="doc-link">bean-validator 的 README</a>（每个校验器与选项），以及 <a href="../docs/prompts/AI_PROMPTS_2_WEB_CN.md" class="doc-link">web 层提示词</a>（规则）。</p>
+<p>下一章：<a href="05-identity.html" class="doc-link">身份与访问控制</a>。</p>
+        </article>
+
+        <!-- Previous / Next Navigation -->
+        
+    <div class="chapter-pagination">
+      
+        <a href="03-wiring.html" class="pagination-btn prev-btn">
+          <span class="pagination-sub">← 上一章</span>
+          <span class="pagination-title">03. 装配与依赖注入</span>
+        </a>
+      
+
+      
+        <a href="05-identity.html" class="pagination-btn next-btn">
+          <span class="pagination-sub">下一章 →</span>
+          <span class="pagination-title">05. 身份与访问控制</span>
+        </a>
+      
+    </div>
+  
+
+        <!-- Document Footer -->
+        <footer class="site-footer">
+          <div class="footer-left">
+            <p>© 2026 Ticatec Keelson Framework. Released under the MIT License.</p>
+          </div>
+          <div class="footer-right">
+            <a href="../en/04-http-layer.html" class="footer-lang-link">
+              🌐 Read in English
+            </a>
+          </div>
+        </footer>
+      </div>
+
+      <!-- Right Table of Contents -->
+      
+      <aside class="right-toc-container">
+        <div class="right-toc-inner">
+          <div class="toc-header">本页目录</div>
+          <ul class="right-toc-list">
+            
+              <li class="toc-item level-2">
+                <a href="#路由" class="toc-link" data-anchor="路由">
+                  路由
+                </a>
+              </li>
+            
+              <li class="toc-item level-2">
+                <a href="#两种处理函数包装" class="toc-link" data-anchor="两种处理函数包装">
+                  两种处理函数包装
+                </a>
+              </li>
+            
+              <li class="toc-item level-2">
+                <a href="#控制器" class="toc-link" data-anchor="控制器">
+                  控制器
+                </a>
+              </li>
+            
+              <li class="toc-item level-3">
+                <a href="#传给-service-的是什么" class="toc-link" data-anchor="传给-service-的是什么">
+                  传给 service 的是什么
+                </a>
+              </li>
+            
+              <li class="toc-item level-3">
+                <a href="#del-需要你自己写" class="toc-link" data-anchor="del-需要你自己写">
+                  del() 需要你自己写
+                </a>
+              </li>
+            
+              <li class="toc-item level-3">
+                <a href="#不是-crud-的接口" class="toc-link" data-anchor="不是-crud-的接口">
+                  不是 CRUD 的接口
+                </a>
+              </li>
+            
+              <li class="toc-item level-2">
+                <a href="#校验" class="toc-link" data-anchor="校验">
+                  校验
+                </a>
+              </li>
+            
+              <li class="toc-item level-2">
+                <a href="#错误" class="toc-link" data-anchor="错误">
+                  错误
+                </a>
+              </li>
+            
+              <li class="toc-item level-2">
+                <a href="#路由组与认证" class="toc-link" data-anchor="路由组与认证">
+                  路由组与认证
+                </a>
+              </li>
+            
+          </ul>
+        </div>
+      </aside>
+    
+    </main>
+  </div>
+
+  <script src="../assets/app.js"></script>
+</body>
+</html>

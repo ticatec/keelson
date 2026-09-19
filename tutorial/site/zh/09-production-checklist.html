@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>09. 上线之前检查清单 | Keelson 官方教程</title>
+  <meta name="description" content="Keelson TypeScript Framework Official Tutorial - Enterprise TypeScript for Express">
+  <link rel="stylesheet" href="../assets/style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+</head>
+<body class="theme-auto">
+  <!-- Top Navigation Header -->
+  <header class="top-navbar">
+    <div class="navbar-left">
+      <button class="mobile-menu-toggle" id="menuToggle" aria-label="Toggle Navigation">
+        <svg viewBox="0 0 24 24" width="22" height="22" stroke="currentColor" stroke-width="2" fill="none"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+      </button>
+      <a href="index.html" class="brand-logo">
+        <span class="brand-icon">⚡</span>
+        <span class="brand-name">Keelson</span>
+        <span class="brand-badge">教程</span>
+      </a>
+    </div>
+
+    <div class="navbar-right">
+      <!-- Search Input -->
+      <div class="search-box">
+        <svg class="search-icon" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+        <input type="text" id="searchInput" placeholder="在章节中快速搜索..." />
+        <span class="search-kbd">⌘K</span>
+      </div>
+
+      <!-- Language Switch -->
+      <a href="../en/09-production-checklist.html" class="lang-switch-btn" title="切换为英文">
+        <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>
+        <span>English</span>
+      </a>
+
+      <!-- Theme Switch -->
+      <button class="theme-toggle-btn" id="themeToggle" aria-label="Toggle Theme">
+        <svg class="sun-icon" viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
+        <svg class="moon-icon" viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+      </button>
+
+      <!-- GitHub Link -->
+      <a href="https://github.com/ticatec/keelson" target="_blank" rel="noopener noreferrer" class="github-link" title="GitHub Repository">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z"/></svg>
+      </a>
+    </div>
+  </header>
+
+  <div class="layout-container">
+    <!-- Left Navigation Sidebar -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-header">
+        <div class="sidebar-title">教程目录</div>
+        <span class="chapter-count">10 篇文档</span>
+      </div>
+      <nav class="sidebar-nav">
+        <ul class="nav-list" id="navList">
+          
+      <li class="nav-item ">
+        <a href="index.html" class="nav-link" title="教程导读与各章索引">
+          <span class="chapter-badge">00</span>
+          <span class="chapter-text">
+            <span class="chapter-title">概览与教程目录</span>
+            <span class="chapter-desc">教程导读与各章索引</span>
+          </span>
+        </a>
+        
+      </li>
+    
+      <li class="nav-item ">
+        <a href="01-getting-started.html" class="nav-link" title="从空目录到一个能响应请求的服务">
+          <span class="chapter-badge">01</span>
+          <span class="chapter-text">
+            <span class="chapter-title">起步</span>
+            <span class="chapter-desc">从空目录到一个能响应请求的服务</span>
+          </span>
+        </a>
+        
+      </li>
+    
+      <li class="nav-item ">
+        <a href="02-layers-and-transactions.html" class="nav-link" title="为什么分四层，事务如何贯穿">
+          <span class="chapter-badge">02</span>
+          <span class="chapter-text">
+            <span class="chapter-title">分层与事务</span>
+            <span class="chapter-desc">为什么分四层，事务如何贯穿</span>
+          </span>
+        </a>
+        
+      </li>
+    
+      <li class="nav-item ">
+        <a href="03-wiring.html" class="nav-link" title="类与类互相发现，解耦初始化顺序">
+          <span class="chapter-badge">03</span>
+          <span class="chapter-text">
+            <span class="chapter-title">装配与依赖注入</span>
+            <span class="chapter-desc">类与类互相发现，解耦初始化顺序</span>
+          </span>
+        </a>
+        
+      </li>
+    
+      <li class="nav-item ">
+        <a href="04-http-layer.html" class="nav-link" title="路由、控制器、校验与错误映射">
+          <span class="chapter-badge">04</span>
+          <span class="chapter-text">
+            <span class="chapter-title">HTTP 层</span>
+            <span class="chapter-desc">路由、控制器、校验与错误映射</span>
+          </span>
+        </a>
+        
+      </li>
+    
+      <li class="nav-item ">
+        <a href="05-identity.html" class="nav-link" title="req.user 来源与鉴权机制">
+          <span class="chapter-badge">05</span>
+          <span class="chapter-text">
+            <span class="chapter-title">身份与访问控制</span>
+            <span class="chapter-desc">req.user 来源与鉴权机制</span>
+          </span>
+        </a>
+        
+      </li>
+    
+      <li class="nav-item ">
+        <a href="06-logging-and-health.html" class="nav-link" title="记录规范、敏感信息与 K8s 探针">
+          <span class="chapter-badge">06</span>
+          <span class="chapter-text">
+            <span class="chapter-title">日志与健康检查</span>
+            <span class="chapter-desc">记录规范、敏感信息与 K8s 探针</span>
+          </span>
+        </a>
+        
+      </li>
+    
+      <li class="nav-item ">
+        <a href="07-background-work.html" class="nav-link" title="周期任务调度与优雅关停保护">
+          <span class="chapter-badge">07</span>
+          <span class="chapter-text">
+            <span class="chapter-title">后台任务与优雅关停</span>
+            <span class="chapter-desc">周期任务调度与优雅关停保护</span>
+          </span>
+        </a>
+        
+      </li>
+    
+      <li class="nav-item ">
+        <a href="08-config-and-cache.html" class="nav-link" title="YAML、Nacos、Consul 与 Redis 集成">
+          <span class="chapter-badge">08</span>
+          <span class="chapter-text">
+            <span class="chapter-title">配置与缓存</span>
+            <span class="chapter-desc">YAML、Nacos、Consul 与 Redis 集成</span>
+          </span>
+        </a>
+        
+      </li>
+    
+      <li class="nav-item active">
+        <a href="09-production-checklist.html" class="nav-link" title="生产环境准备与关键排查项">
+          <span class="chapter-badge">09</span>
+          <span class="chapter-text">
+            <span class="chapter-title">上线之前检查清单</span>
+            <span class="chapter-desc">生产环境准备与关键排查项</span>
+          </span>
+        </a>
+        
+      <ul class="sidebar-subnav">
+        
+          <li class="sidebar-subnav-item level-2">
+            <a href="#环境变量" class="subnav-link" data-toc-target="环境变量">
+              环境变量
+            </a>
+          </li>
+        
+          <li class="sidebar-subnav-item level-2">
+            <a href="#网关之后" class="subnav-link" data-toc-target="网关之后">
+              网关之后
+            </a>
+          </li>
+        
+          <li class="sidebar-subnav-item level-2">
+            <a href="#数据库" class="subnav-link" data-toc-target="数据库">
+              数据库
+            </a>
+          </li>
+        
+          <li class="sidebar-subnav-item level-2">
+            <a href="#关停" class="subnav-link" data-toc-target="关停">
+              关停
+            </a>
+          </li>
+        
+          <li class="sidebar-subnav-item level-2">
+            <a href="#健康探针" class="subnav-link" data-toc-target="健康探针">
+              健康探针
+            </a>
+          </li>
+        
+          <li class="sidebar-subnav-item level-2">
+            <a href="#日志" class="subnav-link" data-toc-target="日志">
+              日志
+            </a>
+          </li>
+        
+          <li class="sidebar-subnav-item level-2">
+            <a href="#构建与依赖" class="subnav-link" data-toc-target="构建与依赖">
+              构建与依赖
+            </a>
+          </li>
+        
+          <li class="sidebar-subnav-item level-2">
+            <a href="#第一次部署之前" class="subnav-link" data-toc-target="第一次部署之前">
+              第一次部署之前
+            </a>
+          </li>
+        
+      </ul>
+      </li>
+    
+        </ul>
+      </nav>
+      <div class="sidebar-footer">
+        <a href="https://github.com/ticatec/keelson" target="_blank" rel="noopener">Keelson v1.0.0</a>
+        <span>·</span>
+        <a href="../index.html">返回首页</a>
+      </div>
+    </aside>
+
+    <!-- Overlay for mobile drawer -->
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+    <!-- Main Content Area -->
+    <main class="main-wrapper">
+      <div class="content-container">
+        <!-- Breadcrumbs -->
+        <nav class="breadcrumb-nav">
+          <a href="index.html" class="crumb-link">Keelson</a>
+          <span class="crumb-sep">/</span>
+          <span class="crumb-link">教程</span>
+          <span class="crumb-sep">/</span>
+          <span class="crumb-current">上线之前检查清单</span>
+        </nav>
+
+        <!-- Markdown Generated Content -->
+        <article class="markdown-body">
+          <h1 id="9-上线之前" class="heading-anchor"><a href="#9-上线之前" class="header-link">#</a> 9. 上线之前</h1>
+<p>一份检查清单。每一条都附带理由，因为说不出理由的条目，你迟早会跳过。</p>
+<h2 id="环境变量" class="heading-anchor"><a href="#环境变量" class="header-link">#</a> 环境变量</h2>
+<p><strong><code class="inline-code">NODE_ENV=production</code></strong> —— 这一个设置改变两处行为：错误响应不再带堆栈， <code class="inline-code">/health/ready</code> 不再带检查的 <code class="inline-code">details</code> 与错误字符串。这两个都是免认证的暴露面，否则它们会把主机名、端口、数据库名交出去。</p>
+<p><strong><code class="inline-code">LOG_LEVEL</code></strong> 设为 <code class="inline-code">info</code> 或 <code class="inline-code">warn</code>。debug 级别会把执行过的每条语句都记下来。</p>
+<p><strong><code class="inline-code">KEELSON_LOG_SQL_PARAMS</code> 不要设。</strong> 设成 <code class="inline-code">true</code> 会把绑定参数值——口令、token、个人数据——打进日志。它是为某个糟糕的下午准备的，不是常态。</p>
+<p><strong><code class="inline-code">Controller.debugEnabled</code> 为 false</strong>（默认值）。为 true 时会打印 <code class="inline-code">req.body</code> 与 <code class="inline-code">req.query</code>，也就是客户端发来的一切。</p>
+<h2 id="网关之后" class="heading-anchor"><a href="#网关之后" class="header-link">#</a> 网关之后</h2>
+<p>如果你用的是默认的 <code class="inline-code">HeaderUserResolver</code>，<code class="inline-code">user</code> 头就是调用者的身份，并且被完全信任。请核实两件事：</p>
+<ul class="doc-list">
+<li>服务除了经由网关之外不可达——没有第二条 ingress，没有调试端口，集群内部也访问不到</li>
+<li>网关在设置自己的 <code class="inline-code">user</code> 头之前，<strong>剥掉</strong>客户端带来的同名头</li>
+</ul>
+<p>任何一条不确定，就换一个验签的解析器（第 5 章）。这是这份清单上后果最严重的一条：弄错了，任何调用方都可以是任何用户。</p>
+<h2 id="数据库" class="heading-anchor"><a href="#数据库" class="header-link">#</a> 数据库</h2>
+<p><strong>连接池大小</strong>是想过之后定的。多数驱动默认是 10；合适的数字通常由数据库的 <code class="inline-code">max_connections</code> 除以 pod 数量决定，而不是由单个 pod 想要多少决定。</p>
+<p><strong><code class="inline-code">REQUIRES_NEW</code> 都审过。</strong> 每一个都会在外层事务占着第一个连接时，再从池里取第二个。放在循环里，这就是连接池死锁的造法。</p>
+<p><strong>长事务看过。</strong> 一个在 <code class="inline-code">@Transaction()</code> 里调 HTTP 接口的方法，会在整个调用期间占着连接。把网络调用挪到事务边界之外。</p>
+<p><strong>非数据库的操作挪出去了。</strong> 发邮件、投消息、写缓存都不会回滚。做法见第 2 章。</p>
+<h2 id="关停" class="heading-anchor"><a href="#关停" class="header-link">#</a> 关停</h2>
+<p><strong>处理了 <code class="inline-code">SIGTERM</code></strong> 并接到 <code class="inline-code">shutdown()</code> 上。没有它，pod 终止会打断在途请求和处理到一半的批次。</p>
+<p><strong><code class="inline-code">terminationGracePeriodSeconds</code></strong> 比&quot;最慢的请求 + 最慢的 <code class="inline-code">processItem</code>&quot;更长。短了，编排器会在你关停的中途 <code class="inline-code">SIGKILL</code>。</p>
+<p><strong>处理器是幂等的。</strong> 关停会等待在途条目，但 <code class="inline-code">SIGKILL</code>、OOM kill、节点宕机不会等。 <code class="inline-code">loadToProcessData()</code> 所依据的查询条件，必须在一次粗暴重启之后依然能选中那条数据。</p>
+<h2 id="健康探针" class="heading-anchor"><a href="#健康探针" class="header-link">#</a> 健康探针</h2>
+<p><strong>存活与就绪指向了正确的端点。</strong> 存活用 <code class="inline-code">/health/live</code>，就绪用 <code class="inline-code">/health/ready</code>。把存活指向就绪，意味着数据库抖一下就会让所有 pod 同时重启，把一次短暂故障变成雪崩。</p>
+<p><strong>依赖分了类。</strong> 关键的意思是&quot;请求会失败&quot;——通常是数据库。非关键的意思是 &quot;请求会变慢&quot;——比如缓存。关键检查 DOWN 会把 pod 移出负载均衡；非关键的只报 DEGRADED 并继续服务。</p>
+<p><strong>检查超时设得比探针自己的超时更短。</strong> 检查默认 3 秒。如果探针超时是 2 秒，探针会先于检查放弃，你什么也没学到。</p>
+<h2 id="日志" class="heading-anchor"><a href="#日志" class="header-link">#</a> 日志</h2>
+<p><strong>装了实现</strong>，或者明确决定就用 console 回退。回退是往 stdout 写纯文本；如果你的采集端期待 JSON，就装 <code class="inline-code">@ticatec/logger-pino</code> 并在任何东西打日志之前调 <code class="inline-code">initialize()</code>。</p>
+<p><strong>异常以异常的形式传入</strong>——<code class="inline-code">logger.error(err, &#039;message&#039;)</code>，绝不是 <code class="inline-code">logger.error({ err }, &#039;message&#039;)</code>。后者会丢掉 message 与 stack。</p>
+<p><strong>category 调过。</strong> <code class="inline-code">dao</code> 与 <code class="inline-code">db</code> 设成 <code class="inline-code">warn</code>，既挡住了逐条语句的日志，又让 <code class="inline-code">service</code> 保持有信息量。</p>
+<h2 id="构建与依赖" class="heading-anchor"><a href="#构建与依赖" class="header-link">#</a> 构建与依赖</h2>
+<p><strong>自己的 tsconfig 开了 <code class="inline-code">strict</code>。</strong> 每个 Keelson 包都是在 strict 下构建的；你消费到的类型，只能在你自己的设置允许的范围内发挥作用。</p>
+<p><strong><code class="inline-code">reflect-metadata</code> 只导入一次</strong>，在入口文件的最前面。</p>
+<p><strong>对等依赖锁在你测试过的范围内。</strong> Keelson 声明得很宽——<code class="inline-code">&gt;=1.0.0</code>——因为它不知道你的组合。你的 lockfile 应该知道。</p>
+<p><strong>一个进程一种模块格式。</strong> 同一个包的 CJS 与 ESM 两份同时被加载是能工作的—— 单例锚定在 <code class="inline-code">globalThis</code> 上正是为了这个——但代码会被加载两遍。如果启动内存偏高，去查一下你的打包结果。</p>
+<h2 id="第一次部署之前" class="heading-anchor"><a href="#第一次部署之前" class="header-link">#</a> 第一次部署之前</h2>
+<ul class="doc-list">
+<li>跑一遍 <code class="inline-code">pnpm verify</code>——构建、类型检查、测试，按这个顺序</li>
+<li>在本地用 <code class="inline-code">NODE_ENV=production</code> 启动，把开头五十行日志读一遍。</li>
+</ul>
+<p>漏装实现、category 配错、密钥泄漏，都在那里现形</p>
+<ul class="doc-list">
+<li><code class="inline-code">curl /health/ready</code>，确认响应体里没有 <code class="inline-code">details</code></li>
+<li>故意制造一个 500，确认响应里没有堆栈</li>
+<li>从网关外面发一个伪造 <code class="inline-code">user</code> 头的请求，确认它到不了你这里</li>
+</ul>
+<p>最后这条值得手动做一次，从集群外部。它检验的是第 5 章那个前提在你的部署里到底成不成立。</p>
+<hr class="divider" />
+<p>回到<a href="index.html" class="doc-link">教程目录</a>，或<a href="https://github.com/ticatec/keelson#readme" class="doc-link">项目 README</a>。</p>
+        </article>
+
+        <!-- Previous / Next Navigation -->
+        
+    <div class="chapter-pagination">
+      
+        <a href="08-config-and-cache.html" class="pagination-btn prev-btn">
+          <span class="pagination-sub">← 上一章</span>
+          <span class="pagination-title">08. 配置与缓存</span>
+        </a>
+      
+
+      <div class="pagination-placeholder"></div>
+    </div>
+  
+
+        <!-- Document Footer -->
+        <footer class="site-footer">
+          <div class="footer-left">
+            <p>© 2026 Ticatec Keelson Framework. Released under the MIT License.</p>
+          </div>
+          <div class="footer-right">
+            <a href="../en/09-production-checklist.html" class="footer-lang-link">
+              🌐 Read in English
+            </a>
+          </div>
+        </footer>
+      </div>
+
+      <!-- Right Table of Contents -->
+      
+      <aside class="right-toc-container">
+        <div class="right-toc-inner">
+          <div class="toc-header">本页目录</div>
+          <ul class="right-toc-list">
+            
+              <li class="toc-item level-2">
+                <a href="#环境变量" class="toc-link" data-anchor="环境变量">
+                  环境变量
+                </a>
+              </li>
+            
+              <li class="toc-item level-2">
+                <a href="#网关之后" class="toc-link" data-anchor="网关之后">
+                  网关之后
+                </a>
+              </li>
+            
+              <li class="toc-item level-2">
+                <a href="#数据库" class="toc-link" data-anchor="数据库">
+                  数据库
+                </a>
+              </li>
+            
+              <li class="toc-item level-2">
+                <a href="#关停" class="toc-link" data-anchor="关停">
+                  关停
+                </a>
+              </li>
+            
+              <li class="toc-item level-2">
+                <a href="#健康探针" class="toc-link" data-anchor="健康探针">
+                  健康探针
+                </a>
+              </li>
+            
+              <li class="toc-item level-2">
+                <a href="#日志" class="toc-link" data-anchor="日志">
+                  日志
+                </a>
+              </li>
+            
+              <li class="toc-item level-2">
+                <a href="#构建与依赖" class="toc-link" data-anchor="构建与依赖">
+                  构建与依赖
+                </a>
+              </li>
+            
+              <li class="toc-item level-2">
+                <a href="#第一次部署之前" class="toc-link" data-anchor="第一次部署之前">
+                  第一次部署之前
+                </a>
+              </li>
+            
+          </ul>
+        </div>
+      </aside>
+    
+    </main>
+  </div>
+
+  <script src="../assets/app.js"></script>
+</body>
+</html>

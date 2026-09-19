@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Overview &amp; Table of Contents | Keelson Official Tutorial</title>
+  <meta name="description" content="Keelson TypeScript Framework Official Tutorial - Enterprise TypeScript for Express">
+  <link rel="stylesheet" href="../assets/style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+</head>
+<body class="theme-auto">
+  <!-- Top Navigation Header -->
+  <header class="top-navbar">
+    <div class="navbar-left">
+      <button class="mobile-menu-toggle" id="menuToggle" aria-label="Toggle Navigation">
+        <svg viewBox="0 0 24 24" width="22" height="22" stroke="currentColor" stroke-width="2" fill="none"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+      </button>
+      <a href="index.html" class="brand-logo">
+        <span class="brand-icon">⚡</span>
+        <span class="brand-name">Keelson</span>
+        <span class="brand-badge">Tutorial</span>
+      </a>
+    </div>
+
+    <div class="navbar-right">
+      <!-- Search Input -->
+      <div class="search-box">
+        <svg class="search-icon" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+        <input type="text" id="searchInput" placeholder="Search chapters..." />
+        <span class="search-kbd">⌘K</span>
+      </div>
+
+      <!-- Language Switch -->
+      <a href="../zh/index.html" class="lang-switch-btn" title="Switch to Chinese">
+        <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>
+        <span>中文</span>
+      </a>
+
+      <!-- Theme Switch -->
+      <button class="theme-toggle-btn" id="themeToggle" aria-label="Toggle Theme">
+        <svg class="sun-icon" viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
+        <svg class="moon-icon" viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+      </button>
+
+      <!-- GitHub Link -->
+      <a href="https://github.com/ticatec/keelson" target="_blank" rel="noopener noreferrer" class="github-link" title="GitHub Repository">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z"/></svg>
+      </a>
+    </div>
+  </header>
+
+  <div class="layout-container">
+    <!-- Left Navigation Sidebar -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-header">
+        <div class="sidebar-title">Chapters</div>
+        <span class="chapter-count">10 Docs</span>
+      </div>
+      <nav class="sidebar-nav">
+        <ul class="nav-list" id="navList">
+          
+      <li class="nav-item active">
+        <a href="index.html" class="nav-link" title="Tutorial overview &amp; index">
+          <span class="chapter-badge">00</span>
+          <span class="chapter-text">
+            <span class="chapter-title">Overview &amp; Table of Contents</span>
+            <span class="chapter-desc">Tutorial overview &amp; index</span>
+          </span>
+        </a>
+        
+      <ul class="sidebar-subnav">
+        
+          <li class="sidebar-subnav-item level-2">
+            <a href="#how-this-relates-to-docsprompts-guides" class="subnav-link" data-toc-target="how-this-relates-to-docsprompts-guides">
+              How this relates to docs/prompts guides
+            </a>
+          </li>
+        
+          <li class="sidebar-subnav-item level-2">
+            <a href="#conventions-in-these-chapters" class="subnav-link" data-toc-target="conventions-in-these-chapters">
+              Conventions in these chapters
+            </a>
+          </li>
+        
+      </ul>
+      </li>
+    
+      <li class="nav-item ">
+        <a href="01-getting-started.html" class="nav-link" title="From empty directory to responsive service">
+          <span class="chapter-badge">01</span>
+          <span class="chapter-text">
+            <span class="chapter-title">Getting Started</span>
+            <span class="chapter-desc">From empty directory to responsive service</span>
+          </span>
+        </a>
+        
+      </li>
+    
+      <li class="nav-item ">
+        <a href="02-layers-and-transactions.html" class="nav-link" title="Why four layers and declarative transactions">
+          <span class="chapter-badge">02</span>
+          <span class="chapter-text">
+            <span class="chapter-title">Layers &amp; Transactions</span>
+            <span class="chapter-desc">Why four layers and declarative transactions</span>
+          </span>
+        </a>
+        
+      </li>
+    
+      <li class="nav-item ">
+        <a href="03-wiring.html" class="nav-link" title="Component discovery &amp; initialization">
+          <span class="chapter-badge">03</span>
+          <span class="chapter-text">
+            <span class="chapter-title">Wiring &amp; Dependency Injection</span>
+            <span class="chapter-desc">Component discovery &amp; initialization</span>
+          </span>
+        </a>
+        
+      </li>
+    
+      <li class="nav-item ">
+        <a href="04-http-layer.html" class="nav-link" title="Routes, controllers, validation &amp; errors">
+          <span class="chapter-badge">04</span>
+          <span class="chapter-text">
+            <span class="chapter-title">HTTP Layer</span>
+            <span class="chapter-desc">Routes, controllers, validation &amp; errors</span>
+          </span>
+        </a>
+        
+      </li>
+    
+      <li class="nav-item ">
+        <a href="05-identity.html" class="nav-link" title="req.user origin &amp; auth mechanism">
+          <span class="chapter-badge">05</span>
+          <span class="chapter-text">
+            <span class="chapter-title">Identity &amp; Access Control</span>
+            <span class="chapter-desc">req.user origin &amp; auth mechanism</span>
+          </span>
+        </a>
+        
+      </li>
+    
+      <li class="nav-item ">
+        <a href="06-logging-and-health.html" class="nav-link" title="Logging policies &amp; K8s probes">
+          <span class="chapter-badge">06</span>
+          <span class="chapter-text">
+            <span class="chapter-title">Logging &amp; Health Checks</span>
+            <span class="chapter-desc">Logging policies &amp; K8s probes</span>
+          </span>
+        </a>
+        
+      </li>
+    
+      <li class="nav-item ">
+        <a href="07-background-work.html" class="nav-link" title="Scheduled tasks &amp; graceful shutdown">
+          <span class="chapter-badge">07</span>
+          <span class="chapter-text">
+            <span class="chapter-title">Background Work &amp; Shutdown</span>
+            <span class="chapter-desc">Scheduled tasks &amp; graceful shutdown</span>
+          </span>
+        </a>
+        
+      </li>
+    
+      <li class="nav-item ">
+        <a href="08-config-and-cache.html" class="nav-link" title="Local YAML, Nacos, Consul &amp; Redis">
+          <span class="chapter-badge">08</span>
+          <span class="chapter-text">
+            <span class="chapter-title">Config &amp; Cache</span>
+            <span class="chapter-desc">Local YAML, Nacos, Consul &amp; Redis</span>
+          </span>
+        </a>
+        
+      </li>
+    
+      <li class="nav-item ">
+        <a href="09-production-checklist.html" class="nav-link" title="Production readiness checklist">
+          <span class="chapter-badge">09</span>
+          <span class="chapter-text">
+            <span class="chapter-title">Production Checklist</span>
+            <span class="chapter-desc">Production readiness checklist</span>
+          </span>
+        </a>
+        
+      </li>
+    
+        </ul>
+      </nav>
+      <div class="sidebar-footer">
+        <a href="https://github.com/ticatec/keelson" target="_blank" rel="noopener">Keelson v1.0.0</a>
+        <span>·</span>
+        <a href="../index.html">Home</a>
+      </div>
+    </aside>
+
+    <!-- Overlay for mobile drawer -->
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+    <!-- Main Content Area -->
+    <main class="main-wrapper">
+      <div class="content-container">
+        <!-- Breadcrumbs -->
+        <nav class="breadcrumb-nav">
+          <a href="index.html" class="crumb-link">Keelson</a>
+          <span class="crumb-sep">/</span>
+          <span class="crumb-link">Tutorial</span>
+          <span class="crumb-sep">/</span>
+          <span class="crumb-current">Overview &amp; Table of Contents</span>
+        </nav>
+
+        <!-- Markdown Generated Content -->
+        <article class="markdown-body">
+          <h1 id="keelson-tutorial" class="heading-anchor"><a href="#keelson-tutorial" class="header-link">#</a> Keelson Tutorial</h1>
+<p>Nine chapters, each one topic, each readable on its own. Start wherever your question is.</p>
+<div class="table-container"><table><thead><tr><th>#</th><th>Chapter</th><th>What it answers</th></tr></thead><tbody><tr><td>1</td><td><a href="01-getting-started.html" class="doc-link">Getting started</a></td><td>Empty directory to a service answering requests</td></tr><tr><td>2</td><td><a href="02-layers-and-transactions.html" class="doc-link">Layers and transactions</a></td><td>Why four tiers, and how one transaction spans them</td></tr><tr><td>3</td><td><a href="03-wiring.html" class="doc-link">Wiring</a></td><td>How classes find each other without an initialisation order</td></tr><tr><td>4</td><td><a href="04-http-layer.html" class="doc-link">The HTTP layer</a></td><td>Routes, controllers, validation, error mapping</td></tr><tr><td>5</td><td><a href="05-identity.html" class="doc-link">Identity and access control</a></td><td>Where <code class="inline-code">req.user</code> comes from, and how to authorise</td></tr><tr><td>6</td><td><a href="06-logging-and-health.html" class="doc-link">Logging and health</a></td><td>What gets logged, what never does, and what Kubernetes sees</td></tr><tr><td>7</td><td><a href="07-background-work.html" class="doc-link">Background work and shutdown</a></td><td>Periodic jobs, and stopping without dropping anything</td></tr><tr><td>8</td><td><a href="08-config-and-cache.html" class="doc-link">Configuration and cache</a></td><td>Local YAML, Nacos, Consul, Redis</td></tr><tr><td>9</td><td><a href="09-production-checklist.html" class="doc-link">Before you go live</a></td><td>The checklist, with the reason behind each line</td></tr></tbody></table></div>
+<h2 id="how-this-relates-to-docsprompts-guides" class="heading-anchor"><a href="#how-this-relates-to-docsprompts-guides" class="header-link">#</a> How this relates to docs/prompts guides</h2>
+<p><code class="inline-code">docs/prompts/</code> holds the <strong>reference guides</strong> — every method, every option, every edge case of a single layer. This tutorial is the other half: why the pieces are shaped the way they are, and how they fit together. Chapters covering core layers (DAO, Service, DI, Controllers, and Bean Validation) link to the guide that goes deeper.</p>
+<p>Read the tutorial to understand the framework. Keep the guides open while you write code.</p>
+<p>If you drive an AI assistant, <code class="inline-code">docs/prompts/AI_PROMPTS.md</code> has the layer rules as a block to paste, plus ready prompts per layer.</p>
+<h2 id="conventions-in-these-chapters" class="heading-anchor"><a href="#conventions-in-these-chapters" class="header-link">#</a> Conventions in these chapters</h2>
+<p>Every code sample compiles against the published types. Where a sample is deliberately incomplete, it says so.</p>
+<p>Examples use PostgreSQL placeholders (<code class="inline-code">$1</code>, <code class="inline-code">$2</code>). For MySQL and Dameng they are <code class="inline-code">?</code> — chapter 2 explains how to write SQL that does not care.</p>
+<p>Chapters assume you read <a href="https://github.com/ticatec/keelson#readme" class="doc-link">the project README</a> first for an overall architectural view.</p>
+        </article>
+
+        <!-- Previous / Next Navigation -->
+        
+    <div class="chapter-pagination">
+      <div class="pagination-placeholder"></div>
+
+      
+        <a href="01-getting-started.html" class="pagination-btn next-btn">
+          <span class="pagination-sub">Next →</span>
+          <span class="pagination-title">01. Getting Started</span>
+        </a>
+      
+    </div>
+  
+
+        <!-- Document Footer -->
+        <footer class="site-footer">
+          <div class="footer-left">
+            <p>© 2026 Ticatec Keelson Framework. Released under the MIT License.</p>
+          </div>
+          <div class="footer-right">
+            <a href="../zh/index.html" class="footer-lang-link">
+              🌐 中文阅读
+            </a>
+          </div>
+        </footer>
+      </div>
+
+      <!-- Right Table of Contents -->
+      
+      <aside class="right-toc-container">
+        <div class="right-toc-inner">
+          <div class="toc-header">On this page</div>
+          <ul class="right-toc-list">
+            
+              <li class="toc-item level-2">
+                <a href="#how-this-relates-to-docsprompts-guides" class="toc-link" data-anchor="how-this-relates-to-docsprompts-guides">
+                  How this relates to docs/prompts guides
+                </a>
+              </li>
+            
+              <li class="toc-item level-2">
+                <a href="#conventions-in-these-chapters" class="toc-link" data-anchor="conventions-in-these-chapters">
+                  Conventions in these chapters
+                </a>
+              </li>
+            
+          </ul>
+        </div>
+      </aside>
+    
+    </main>
+  </div>
+
+  <script src="../assets/app.js"></script>
+</body>
+</html>

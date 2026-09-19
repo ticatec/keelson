@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>09. Production Checklist | Keelson Official Tutorial</title>
+  <meta name="description" content="Keelson TypeScript Framework Official Tutorial - Enterprise TypeScript for Express">
+  <link rel="stylesheet" href="../assets/style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+</head>
+<body class="theme-auto">
+  <!-- Top Navigation Header -->
+  <header class="top-navbar">
+    <div class="navbar-left">
+      <button class="mobile-menu-toggle" id="menuToggle" aria-label="Toggle Navigation">
+        <svg viewBox="0 0 24 24" width="22" height="22" stroke="currentColor" stroke-width="2" fill="none"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+      </button>
+      <a href="index.html" class="brand-logo">
+        <span class="brand-icon">⚡</span>
+        <span class="brand-name">Keelson</span>
+        <span class="brand-badge">Tutorial</span>
+      </a>
+    </div>
+
+    <div class="navbar-right">
+      <!-- Search Input -->
+      <div class="search-box">
+        <svg class="search-icon" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+        <input type="text" id="searchInput" placeholder="Search chapters..." />
+        <span class="search-kbd">⌘K</span>
+      </div>
+
+      <!-- Language Switch -->
+      <a href="../zh/09-production-checklist.html" class="lang-switch-btn" title="Switch to Chinese">
+        <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>
+        <span>中文</span>
+      </a>
+
+      <!-- Theme Switch -->
+      <button class="theme-toggle-btn" id="themeToggle" aria-label="Toggle Theme">
+        <svg class="sun-icon" viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
+        <svg class="moon-icon" viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+      </button>
+
+      <!-- GitHub Link -->
+      <a href="https://github.com/ticatec/keelson" target="_blank" rel="noopener noreferrer" class="github-link" title="GitHub Repository">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z"/></svg>
+      </a>
+    </div>
+  </header>
+
+  <div class="layout-container">
+    <!-- Left Navigation Sidebar -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-header">
+        <div class="sidebar-title">Chapters</div>
+        <span class="chapter-count">10 Docs</span>
+      </div>
+      <nav class="sidebar-nav">
+        <ul class="nav-list" id="navList">
+          
+      <li class="nav-item ">
+        <a href="index.html" class="nav-link" title="Tutorial overview &amp; index">
+          <span class="chapter-badge">00</span>
+          <span class="chapter-text">
+            <span class="chapter-title">Overview &amp; Table of Contents</span>
+            <span class="chapter-desc">Tutorial overview &amp; index</span>
+          </span>
+        </a>
+        
+      </li>
+    
+      <li class="nav-item ">
+        <a href="01-getting-started.html" class="nav-link" title="From empty directory to responsive service">
+          <span class="chapter-badge">01</span>
+          <span class="chapter-text">
+            <span class="chapter-title">Getting Started</span>
+            <span class="chapter-desc">From empty directory to responsive service</span>
+          </span>
+        </a>
+        
+      </li>
+    
+      <li class="nav-item ">
+        <a href="02-layers-and-transactions.html" class="nav-link" title="Why four layers and declarative transactions">
+          <span class="chapter-badge">02</span>
+          <span class="chapter-text">
+            <span class="chapter-title">Layers &amp; Transactions</span>
+            <span class="chapter-desc">Why four layers and declarative transactions</span>
+          </span>
+        </a>
+        
+      </li>
+    
+      <li class="nav-item ">
+        <a href="03-wiring.html" class="nav-link" title="Component discovery &amp; initialization">
+          <span class="chapter-badge">03</span>
+          <span class="chapter-text">
+            <span class="chapter-title">Wiring &amp; Dependency Injection</span>
+            <span class="chapter-desc">Component discovery &amp; initialization</span>
+          </span>
+        </a>
+        
+      </li>
+    
+      <li class="nav-item ">
+        <a href="04-http-layer.html" class="nav-link" title="Routes, controllers, validation &amp; errors">
+          <span class="chapter-badge">04</span>
+          <span class="chapter-text">
+            <span class="chapter-title">HTTP Layer</span>
+            <span class="chapter-desc">Routes, controllers, validation &amp; errors</span>
+          </span>
+        </a>
+        
+      </li>
+    
+      <li class="nav-item ">
+        <a href="05-identity.html" class="nav-link" title="req.user origin &amp; auth mechanism">
+          <span class="chapter-badge">05</span>
+          <span class="chapter-text">
+            <span class="chapter-title">Identity &amp; Access Control</span>
+            <span class="chapter-desc">req.user origin &amp; auth mechanism</span>
+          </span>
+        </a>
+        
+      </li>
+    
+      <li class="nav-item ">
+        <a href="06-logging-and-health.html" class="nav-link" title="Logging policies &amp; K8s probes">
+          <span class="chapter-badge">06</span>
+          <span class="chapter-text">
+            <span class="chapter-title">Logging &amp; Health Checks</span>
+            <span class="chapter-desc">Logging policies &amp; K8s probes</span>
+          </span>
+        </a>
+        
+      </li>
+    
+      <li class="nav-item ">
+        <a href="07-background-work.html" class="nav-link" title="Scheduled tasks &amp; graceful shutdown">
+          <span class="chapter-badge">07</span>
+          <span class="chapter-text">
+            <span class="chapter-title">Background Work &amp; Shutdown</span>
+            <span class="chapter-desc">Scheduled tasks &amp; graceful shutdown</span>
+          </span>
+        </a>
+        
+      </li>
+    
+      <li class="nav-item ">
+        <a href="08-config-and-cache.html" class="nav-link" title="Local YAML, Nacos, Consul &amp; Redis">
+          <span class="chapter-badge">08</span>
+          <span class="chapter-text">
+            <span class="chapter-title">Config &amp; Cache</span>
+            <span class="chapter-desc">Local YAML, Nacos, Consul &amp; Redis</span>
+          </span>
+        </a>
+        
+      </li>
+    
+      <li class="nav-item active">
+        <a href="09-production-checklist.html" class="nav-link" title="Production readiness checklist">
+          <span class="chapter-badge">09</span>
+          <span class="chapter-text">
+            <span class="chapter-title">Production Checklist</span>
+            <span class="chapter-desc">Production readiness checklist</span>
+          </span>
+        </a>
+        
+      <ul class="sidebar-subnav">
+        
+          <li class="sidebar-subnav-item level-2">
+            <a href="#environment" class="subnav-link" data-toc-target="environment">
+              Environment
+            </a>
+          </li>
+        
+          <li class="sidebar-subnav-item level-2">
+            <a href="#behind-a-gateway" class="subnav-link" data-toc-target="behind-a-gateway">
+              Behind a gateway
+            </a>
+          </li>
+        
+          <li class="sidebar-subnav-item level-2">
+            <a href="#database" class="subnav-link" data-toc-target="database">
+              Database
+            </a>
+          </li>
+        
+          <li class="sidebar-subnav-item level-2">
+            <a href="#shutdown" class="subnav-link" data-toc-target="shutdown">
+              Shutdown
+            </a>
+          </li>
+        
+          <li class="sidebar-subnav-item level-2">
+            <a href="#health-probes" class="subnav-link" data-toc-target="health-probes">
+              Health probes
+            </a>
+          </li>
+        
+          <li class="sidebar-subnav-item level-2">
+            <a href="#logging" class="subnav-link" data-toc-target="logging">
+              Logging
+            </a>
+          </li>
+        
+          <li class="sidebar-subnav-item level-2">
+            <a href="#build-and-dependencies" class="subnav-link" data-toc-target="build-and-dependencies">
+              Build and dependencies
+            </a>
+          </li>
+        
+          <li class="sidebar-subnav-item level-2">
+            <a href="#before-the-first-deploy" class="subnav-link" data-toc-target="before-the-first-deploy">
+              Before the first deploy
+            </a>
+          </li>
+        
+      </ul>
+      </li>
+    
+        </ul>
+      </nav>
+      <div class="sidebar-footer">
+        <a href="https://github.com/ticatec/keelson" target="_blank" rel="noopener">Keelson v1.0.0</a>
+        <span>·</span>
+        <a href="../index.html">Home</a>
+      </div>
+    </aside>
+
+    <!-- Overlay for mobile drawer -->
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+    <!-- Main Content Area -->
+    <main class="main-wrapper">
+      <div class="content-container">
+        <!-- Breadcrumbs -->
+        <nav class="breadcrumb-nav">
+          <a href="index.html" class="crumb-link">Keelson</a>
+          <span class="crumb-sep">/</span>
+          <span class="crumb-link">Tutorial</span>
+          <span class="crumb-sep">/</span>
+          <span class="crumb-current">Production Checklist</span>
+        </nav>
+
+        <!-- Markdown Generated Content -->
+        <article class="markdown-body">
+          <h1 id="9-before-you-go-live" class="heading-anchor"><a href="#9-before-you-go-live" class="header-link">#</a> 9. Before you go live</h1>
+<p>A checklist. Each line has a reason, because a checklist whose items you cannot justify is one you will skip.</p>
+<h2 id="environment" class="heading-anchor"><a href="#environment" class="header-link">#</a> Environment</h2>
+<p><strong><code class="inline-code">NODE_ENV=production</code></strong> — this one setting changes two behaviours. Error responses stop carrying stack traces, and <code class="inline-code">/health/ready</code> stops carrying check <code class="inline-code">details</code> and error strings. Both are unauthenticated surfaces that will otherwise hand out hostnames, ports and database names.</p>
+<p><strong><code class="inline-code">LOG_LEVEL</code></strong> at <code class="inline-code">info</code> or <code class="inline-code">warn</code>. Debug logging includes every statement executed.</p>
+<p><strong><code class="inline-code">KEELSON_LOG_SQL_PARAMS</code> unset.</strong> Set to <code class="inline-code">true</code> it prints bind parameter values — passwords, tokens, personal data — into the log. It exists for a bad afternoon, not for steady state.</p>
+<p><strong><code class="inline-code">Controller.debugEnabled</code> false</strong> (the default). True prints <code class="inline-code">req.body</code> and <code class="inline-code">req.query</code>, which is everything a client sent.</p>
+<h2 id="behind-a-gateway" class="heading-anchor"><a href="#behind-a-gateway" class="header-link">#</a> Behind a gateway</h2>
+<p>If you use the default <code class="inline-code">HeaderUserResolver</code>, the <code class="inline-code">user</code> header is the caller&#039;s identity and it is trusted completely. Verify two things:</p>
+<ul class="doc-list">
+<li>the service is not reachable except through the gateway — not by a second ingress, not by</li>
+</ul>
+<p>a debug port, not from inside the cluster</p>
+<ul class="doc-list">
+<li>the gateway <strong>strips</strong> any client-supplied <code class="inline-code">user</code> header before setting its own</li>
+</ul>
+<p>If either is uncertain, install a resolver that verifies a signature (chapter 5). This is the single highest-consequence line on this list: get it wrong and any caller is any user.</p>
+<h2 id="database" class="heading-anchor"><a href="#database" class="header-link">#</a> Database</h2>
+<p><strong>Pool size</strong> deliberately chosen. The default in most drivers is 10; the right number is usually bounded by the database&#039;s <code class="inline-code">max_connections</code> divided by the number of pods, not by what a single pod would like.</p>
+<p><strong><code class="inline-code">REQUIRES_NEW</code> audited.</strong> Each one takes a second connection from the pool while the outer transaction holds the first. In a loop, that is how a pool deadlocks.</p>
+<p><strong>Long transactions looked at.</strong> A <code class="inline-code">@Transaction()</code> that calls an HTTP API holds a connection open for the duration of the call. Move the network call outside the boundary.</p>
+<p><strong>Non-database work moved out.</strong> Emails, message publishes and cache writes do not roll back. Chapter 2 has the pattern.</p>
+<h2 id="shutdown" class="heading-anchor"><a href="#shutdown" class="header-link">#</a> Shutdown</h2>
+<p><strong><code class="inline-code">SIGTERM</code> handled</strong> and wired to <code class="inline-code">shutdown()</code>. Without it, a pod termination kills in-flight requests and half-processed batches.</p>
+<p><strong><code class="inline-code">terminationGracePeriodSeconds</code></strong> longer than your slowest request plus your slowest <code class="inline-code">processItem</code>. Shorter, and the orchestrator <code class="inline-code">SIGKILL</code>s you mid-shutdown.</p>
+<p><strong>Processors idempotent.</strong> Shutdown waits for in-flight items, but a <code class="inline-code">SIGKILL</code>, an OOM kill or a node failure does not. Whatever <code class="inline-code">loadToProcessData()</code> selects on must still select the item after an abrupt restart.</p>
+<h2 id="health-probes" class="heading-anchor"><a href="#health-probes" class="header-link">#</a> Health probes</h2>
+<p><strong>Liveness and readiness pointed at the right endpoints.</strong> <code class="inline-code">/health/live</code> for liveness, <code class="inline-code">/health/ready</code> for readiness. Pointing liveness at readiness means a database blip restarts every pod at once, which turns a brief outage into a thundering herd.</p>
+<p><strong>Dependencies classified.</strong> Critical means &quot;requests will fail&quot; — the database, usually. Non-critical means &quot;requests will be slower&quot; — the cache. A critical check that is DOWN takes the pod out of rotation; a non-critical one reports DEGRADED and keeps serving.</p>
+<p><strong>Timeouts set below the probe&#039;s own timeout.</strong> A check defaults to 3 seconds. If your probe timeout is 2, the probe gives up before the check does and you learn nothing.</p>
+<h2 id="logging" class="heading-anchor"><a href="#logging" class="header-link">#</a> Logging</h2>
+<p><strong>A provider installed</strong>, or a deliberate decision to stay on the console fallback. The fallback writes plain text to stdout; if your collector expects JSON, install <code class="inline-code">@ticatec/logger-pino</code> and call <code class="inline-code">initialize()</code> before anything logs.</p>
+<p><strong>Errors passed as errors</strong> — <code class="inline-code">logger.error(err, &#039;message&#039;)</code>, never <code class="inline-code">logger.error({ err }, &#039;message&#039;)</code>. The second form loses the message and the stack.</p>
+<p><strong>Categories tuned.</strong> <code class="inline-code">dao</code> and <code class="inline-code">db</code> at <code class="inline-code">warn</code> keeps per-statement logging out of production while leaving <code class="inline-code">service</code> informative.</p>
+<h2 id="build-and-dependencies" class="heading-anchor"><a href="#build-and-dependencies" class="header-link">#</a> Build and dependencies</h2>
+<p><strong><code class="inline-code">strict</code> on</strong> in your own tsconfig. Every Keelson package is built with it; the types you consume are only as useful as your own settings let them be.</p>
+<p><strong><code class="inline-code">reflect-metadata</code> imported once</strong>, first, in the entry file.</p>
+<p><strong>Peer dependencies pinned to ranges you have tested.</strong> Keelson declares them loosely — <code class="inline-code">&gt;=1.0.0</code> — because it does not know your combination. Your lockfile should.</p>
+<p><strong>One module format per process.</strong> Mixing CommonJS and ESM copies of the same package works — the singletons are anchored on <code class="inline-code">globalThis</code> for exactly that reason — but it doubles the code loaded. Check your bundle if startup memory looks high.</p>
+<h2 id="before-the-first-deploy" class="heading-anchor"><a href="#before-the-first-deploy" class="header-link">#</a> Before the first deploy</h2>
+<ul class="doc-list">
+<li>Run <code class="inline-code">pnpm verify</code> — build, typecheck, tests, in that order</li>
+<li>Start the service with <code class="inline-code">NODE_ENV=production</code> locally and read the first fifty log lines.</li>
+</ul>
+<p>That is where a missing provider, a wrong category or a leaked secret shows up.</p>
+<ul class="doc-list">
+<li><code class="inline-code">curl /health/ready</code> and confirm the body carries no <code class="inline-code">details</code></li>
+<li>Cause a 500 on purpose and confirm the response carries no stack</li>
+<li>Send a request with a forged <code class="inline-code">user</code> header from outside the gateway and confirm it does</li>
+</ul>
+<p>not reach you</p>
+<p>That last one is worth doing by hand, once, from outside the cluster. It is the test that tells you whether the assumption underneath chapter 5 actually holds in your deployment.</p>
+<hr class="divider" />
+<p>Back to the <a href="index.html" class="doc-link">tutorial index</a>, or the <a href="https://github.com/ticatec/keelson#readme" class="doc-link">project README</a>.</p>
+        </article>
+
+        <!-- Previous / Next Navigation -->
+        
+    <div class="chapter-pagination">
+      
+        <a href="08-config-and-cache.html" class="pagination-btn prev-btn">
+          <span class="pagination-sub">← Previous</span>
+          <span class="pagination-title">08. Config &amp; Cache</span>
+        </a>
+      
+
+      <div class="pagination-placeholder"></div>
+    </div>
+  
+
+        <!-- Document Footer -->
+        <footer class="site-footer">
+          <div class="footer-left">
+            <p>© 2026 Ticatec Keelson Framework. Released under the MIT License.</p>
+          </div>
+          <div class="footer-right">
+            <a href="../zh/09-production-checklist.html" class="footer-lang-link">
+              🌐 中文阅读
+            </a>
+          </div>
+        </footer>
+      </div>
+
+      <!-- Right Table of Contents -->
+      
+      <aside class="right-toc-container">
+        <div class="right-toc-inner">
+          <div class="toc-header">On this page</div>
+          <ul class="right-toc-list">
+            
+              <li class="toc-item level-2">
+                <a href="#environment" class="toc-link" data-anchor="environment">
+                  Environment
+                </a>
+              </li>
+            
+              <li class="toc-item level-2">
+                <a href="#behind-a-gateway" class="toc-link" data-anchor="behind-a-gateway">
+                  Behind a gateway
+                </a>
+              </li>
+            
+              <li class="toc-item level-2">
+                <a href="#database" class="toc-link" data-anchor="database">
+                  Database
+                </a>
+              </li>
+            
+              <li class="toc-item level-2">
+                <a href="#shutdown" class="toc-link" data-anchor="shutdown">
+                  Shutdown
+                </a>
+              </li>
+            
+              <li class="toc-item level-2">
+                <a href="#health-probes" class="toc-link" data-anchor="health-probes">
+                  Health probes
+                </a>
+              </li>
+            
+              <li class="toc-item level-2">
+                <a href="#logging" class="toc-link" data-anchor="logging">
+                  Logging
+                </a>
+              </li>
+            
+              <li class="toc-item level-2">
+                <a href="#build-and-dependencies" class="toc-link" data-anchor="build-and-dependencies">
+                  Build and dependencies
+                </a>
+              </li>
+            
+              <li class="toc-item level-2">
+                <a href="#before-the-first-deploy" class="toc-link" data-anchor="before-the-first-deploy">
+                  Before the first deploy
+                </a>
+              </li>
+            
+          </ul>
+        </div>
+      </aside>
+    
+    </main>
+  </div>
+
+  <script src="../assets/app.js"></script>
+</body>
+</html>

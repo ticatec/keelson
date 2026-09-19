@@ -1,0 +1,595 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>04. HTTP Layer | Keelson Official Tutorial</title>
+  <meta name="description" content="Keelson TypeScript Framework Official Tutorial - Enterprise TypeScript for Express">
+  <link rel="stylesheet" href="../assets/style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+</head>
+<body class="theme-auto">
+  <!-- Top Navigation Header -->
+  <header class="top-navbar">
+    <div class="navbar-left">
+      <button class="mobile-menu-toggle" id="menuToggle" aria-label="Toggle Navigation">
+        <svg viewBox="0 0 24 24" width="22" height="22" stroke="currentColor" stroke-width="2" fill="none"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+      </button>
+      <a href="index.html" class="brand-logo">
+        <span class="brand-icon">⚡</span>
+        <span class="brand-name">Keelson</span>
+        <span class="brand-badge">Tutorial</span>
+      </a>
+    </div>
+
+    <div class="navbar-right">
+      <!-- Search Input -->
+      <div class="search-box">
+        <svg class="search-icon" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+        <input type="text" id="searchInput" placeholder="Search chapters..." />
+        <span class="search-kbd">⌘K</span>
+      </div>
+
+      <!-- Language Switch -->
+      <a href="../zh/04-http-layer.html" class="lang-switch-btn" title="Switch to Chinese">
+        <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>
+        <span>中文</span>
+      </a>
+
+      <!-- Theme Switch -->
+      <button class="theme-toggle-btn" id="themeToggle" aria-label="Toggle Theme">
+        <svg class="sun-icon" viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
+        <svg class="moon-icon" viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+      </button>
+
+      <!-- GitHub Link -->
+      <a href="https://github.com/ticatec/keelson" target="_blank" rel="noopener noreferrer" class="github-link" title="GitHub Repository">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z"/></svg>
+      </a>
+    </div>
+  </header>
+
+  <div class="layout-container">
+    <!-- Left Navigation Sidebar -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-header">
+        <div class="sidebar-title">Chapters</div>
+        <span class="chapter-count">10 Docs</span>
+      </div>
+      <nav class="sidebar-nav">
+        <ul class="nav-list" id="navList">
+          
+      <li class="nav-item ">
+        <a href="index.html" class="nav-link" title="Tutorial overview &amp; index">
+          <span class="chapter-badge">00</span>
+          <span class="chapter-text">
+            <span class="chapter-title">Overview &amp; Table of Contents</span>
+            <span class="chapter-desc">Tutorial overview &amp; index</span>
+          </span>
+        </a>
+        
+      </li>
+    
+      <li class="nav-item ">
+        <a href="01-getting-started.html" class="nav-link" title="From empty directory to responsive service">
+          <span class="chapter-badge">01</span>
+          <span class="chapter-text">
+            <span class="chapter-title">Getting Started</span>
+            <span class="chapter-desc">From empty directory to responsive service</span>
+          </span>
+        </a>
+        
+      </li>
+    
+      <li class="nav-item ">
+        <a href="02-layers-and-transactions.html" class="nav-link" title="Why four layers and declarative transactions">
+          <span class="chapter-badge">02</span>
+          <span class="chapter-text">
+            <span class="chapter-title">Layers &amp; Transactions</span>
+            <span class="chapter-desc">Why four layers and declarative transactions</span>
+          </span>
+        </a>
+        
+      </li>
+    
+      <li class="nav-item ">
+        <a href="03-wiring.html" class="nav-link" title="Component discovery &amp; initialization">
+          <span class="chapter-badge">03</span>
+          <span class="chapter-text">
+            <span class="chapter-title">Wiring &amp; Dependency Injection</span>
+            <span class="chapter-desc">Component discovery &amp; initialization</span>
+          </span>
+        </a>
+        
+      </li>
+    
+      <li class="nav-item active">
+        <a href="04-http-layer.html" class="nav-link" title="Routes, controllers, validation &amp; errors">
+          <span class="chapter-badge">04</span>
+          <span class="chapter-text">
+            <span class="chapter-title">HTTP Layer</span>
+            <span class="chapter-desc">Routes, controllers, validation &amp; errors</span>
+          </span>
+        </a>
+        
+      <ul class="sidebar-subnav">
+        
+          <li class="sidebar-subnav-item level-2">
+            <a href="#routes" class="subnav-link" data-toc-target="routes">
+              Routes
+            </a>
+          </li>
+        
+          <li class="sidebar-subnav-item level-2">
+            <a href="#two-handler-wrappers" class="subnav-link" data-toc-target="two-handler-wrappers">
+              Two handler wrappers
+            </a>
+          </li>
+        
+          <li class="sidebar-subnav-item level-2">
+            <a href="#controllers" class="subnav-link" data-toc-target="controllers">
+              Controllers
+            </a>
+          </li>
+        
+          <li class="sidebar-subnav-item level-3">
+            <a href="#what-gets-passed-to-the-service" class="subnav-link" data-toc-target="what-gets-passed-to-the-service">
+              What gets passed to the service
+            </a>
+          </li>
+        
+          <li class="sidebar-subnav-item level-3">
+            <a href="#del-needs-you" class="subnav-link" data-toc-target="del-needs-you">
+              del() needs you
+            </a>
+          </li>
+        
+          <li class="sidebar-subnav-item level-3">
+            <a href="#an-endpoint-that-is-not-crud" class="subnav-link" data-toc-target="an-endpoint-that-is-not-crud">
+              An endpoint that is not CRUD
+            </a>
+          </li>
+        
+          <li class="sidebar-subnav-item level-2">
+            <a href="#validation" class="subnav-link" data-toc-target="validation">
+              Validation
+            </a>
+          </li>
+        
+          <li class="sidebar-subnav-item level-2">
+            <a href="#errors" class="subnav-link" data-toc-target="errors">
+              Errors
+            </a>
+          </li>
+        
+          <li class="sidebar-subnav-item level-2">
+            <a href="#route-groups-and-authentication" class="subnav-link" data-toc-target="route-groups-and-authentication">
+              Route groups and authentication
+            </a>
+          </li>
+        
+      </ul>
+      </li>
+    
+      <li class="nav-item ">
+        <a href="05-identity.html" class="nav-link" title="req.user origin &amp; auth mechanism">
+          <span class="chapter-badge">05</span>
+          <span class="chapter-text">
+            <span class="chapter-title">Identity &amp; Access Control</span>
+            <span class="chapter-desc">req.user origin &amp; auth mechanism</span>
+          </span>
+        </a>
+        
+      </li>
+    
+      <li class="nav-item ">
+        <a href="06-logging-and-health.html" class="nav-link" title="Logging policies &amp; K8s probes">
+          <span class="chapter-badge">06</span>
+          <span class="chapter-text">
+            <span class="chapter-title">Logging &amp; Health Checks</span>
+            <span class="chapter-desc">Logging policies &amp; K8s probes</span>
+          </span>
+        </a>
+        
+      </li>
+    
+      <li class="nav-item ">
+        <a href="07-background-work.html" class="nav-link" title="Scheduled tasks &amp; graceful shutdown">
+          <span class="chapter-badge">07</span>
+          <span class="chapter-text">
+            <span class="chapter-title">Background Work &amp; Shutdown</span>
+            <span class="chapter-desc">Scheduled tasks &amp; graceful shutdown</span>
+          </span>
+        </a>
+        
+      </li>
+    
+      <li class="nav-item ">
+        <a href="08-config-and-cache.html" class="nav-link" title="Local YAML, Nacos, Consul &amp; Redis">
+          <span class="chapter-badge">08</span>
+          <span class="chapter-text">
+            <span class="chapter-title">Config &amp; Cache</span>
+            <span class="chapter-desc">Local YAML, Nacos, Consul &amp; Redis</span>
+          </span>
+        </a>
+        
+      </li>
+    
+      <li class="nav-item ">
+        <a href="09-production-checklist.html" class="nav-link" title="Production readiness checklist">
+          <span class="chapter-badge">09</span>
+          <span class="chapter-text">
+            <span class="chapter-title">Production Checklist</span>
+            <span class="chapter-desc">Production readiness checklist</span>
+          </span>
+        </a>
+        
+      </li>
+    
+        </ul>
+      </nav>
+      <div class="sidebar-footer">
+        <a href="https://github.com/ticatec/keelson" target="_blank" rel="noopener">Keelson v1.0.0</a>
+        <span>·</span>
+        <a href="../index.html">Home</a>
+      </div>
+    </aside>
+
+    <!-- Overlay for mobile drawer -->
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+    <!-- Main Content Area -->
+    <main class="main-wrapper">
+      <div class="content-container">
+        <!-- Breadcrumbs -->
+        <nav class="breadcrumb-nav">
+          <a href="index.html" class="crumb-link">Keelson</a>
+          <span class="crumb-sep">/</span>
+          <span class="crumb-link">Tutorial</span>
+          <span class="crumb-sep">/</span>
+          <span class="crumb-current">HTTP Layer</span>
+        </nav>
+
+        <!-- Markdown Generated Content -->
+        <article class="markdown-body">
+          <h1 id="4-the-http-layer" class="heading-anchor"><a href="#4-the-http-layer" class="header-link">#</a> 4. The HTTP layer</h1>
+<p>Everything between the socket and your Service: how a route is declared, how a controller maps a request onto a service call, how the body is validated, and how a thrown error becomes a status code.</p>
+<h2 id="routes" class="heading-anchor"><a href="#routes" class="header-link">#</a> Routes</h2>
+<p>A route group is a class. It owns a path prefix and the handlers under it.</p>
+
+<div class="code-block-wrapper">
+  <div class="code-block-header">
+    <span class="code-lang-tag">typescript</span>
+    <button class="copy-btn" data-code-id="code-ggyykl9" title="复制代码">
+      <svg class="copy-icon" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+      <span class="copy-label">复制</span>
+    </button>
+  </div>
+  <pre class="code-block"><code id="code-ggyykl9" class="language-typescript"><span class="token keyword">import</span> { CommonRoutes, routerHelper } <span class="token keyword">from</span> <span class="token string">&#039;@ticatec/keelson-express&#039;</span>;
+
+<span class="token keyword">export</span> <span class="token keyword">default</span> <span class="token keyword">class</span> UserRoutes <span class="token keyword">extends</span> CommonRoutes {
+    <span class="token keyword">protected</span> <span class="token function">bindRoutes</span>() {
+        this.<span class="token keyword">get</span>(<span class="token string">&#039;/&#039;</span>, routerHelper.<span class="token function">invokeRestfulAction</span>(req =&gt; this.<span class="token function">list</span>(req)));
+        this.<span class="token keyword">get</span>(<span class="token string">&#039;/:id&#039;</span>, routerHelper.<span class="token function">invokeRestfulAction</span>(req =&gt; this.<span class="token function">find</span>(req)));
+        this.<span class="token function">post</span>(<span class="token string">&#039;/&#039;</span>, routerHelper.<span class="token function">invokeRestfulAction</span>(req =&gt; this.<span class="token function">create</span>(req)));
+    }
+    <span class="token comment">// ...</span>
+}</code></pre>
+</div>
+<p>Mounted from the server:</p>
+
+<div class="code-block-wrapper">
+  <div class="code-block-header">
+    <span class="code-lang-tag">typescript</span>
+    <button class="copy-btn" data-code-id="code-y9pdh6z" title="复制代码">
+      <svg class="copy-icon" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+      <span class="copy-label">复制</span>
+    </button>
+  </div>
+  <pre class="code-block"><code id="code-y9pdh6z" class="language-typescript"><span class="token keyword">protected</span> <span class="token keyword">async</span> <span class="token function">setupRoutes</span>(): <span class="token builtin">Promise</span>&lt;<span class="token keyword">void</span>&gt; {
+    <span class="token keyword">await</span> this.<span class="token function">bindRoutes</span>(<span class="token string">&#039;/users&#039;</span>, () =&gt; <span class="token keyword">import</span>(<span class="token string">&#039;./routes/UserRoutes.js&#039;</span>));
+}</code></pre>
+</div>
+<p>The final path is <code class="inline-code">contextRoot</code> + the mount path + the route path, so with <code class="inline-code">contextRoot: &#039;/api&#039;</code> the second handler answers <code class="inline-code">GET /api/users/:id</code>. The module&#039;s <strong>default export</strong> must be the class, and it is imported dynamically — the route file is not loaded until the server mounts it.</p>
+<h2 id="two-handler-wrappers" class="heading-anchor"><a href="#two-handler-wrappers" class="header-link">#</a> Two handler wrappers</h2>
+<p><code class="inline-code">invokeRestfulAction(fn)</code> is for handlers that return a value:</p>
+
+<div class="code-block-wrapper">
+  <div class="code-block-header">
+    <span class="code-lang-tag">typescript</span>
+    <button class="copy-btn" data-code-id="code-mmalb1q" title="复制代码">
+      <svg class="copy-icon" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+      <span class="copy-label">复制</span>
+    </button>
+  </div>
+  <pre class="code-block"><code id="code-mmalb1q" class="language-typescript">routerHelper.<span class="token function">invokeRestfulAction</span>(<span class="token keyword">async</span> (req) =&gt; {
+    <span class="token keyword">return</span> <span class="token keyword">await</span> this.service.<span class="token function">find</span>(<span class="token function">String</span>(req.params.id));
+})</code></pre>
+</div>
+<p>The return value is sent as JSON. <code class="inline-code">null</code> or <code class="inline-code">undefined</code> becomes <code class="inline-code">204 No Content</code>. A thrown error goes to the error middleware. You never touch <code class="inline-code">res</code>, which means you cannot forget to send a response.</p>
+<p><code class="inline-code">invokeController(fn)</code> is for handlers that must control the response themselves — a file download, a stream, a non-JSON content type:</p>
+
+<div class="code-block-wrapper">
+  <div class="code-block-header">
+    <span class="code-lang-tag">typescript</span>
+    <button class="copy-btn" data-code-id="code-aoha636" title="复制代码">
+      <svg class="copy-icon" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+      <span class="copy-label">复制</span>
+    </button>
+  </div>
+  <pre class="code-block"><code id="code-aoha636" class="language-typescript">routerHelper.<span class="token function">invokeController</span>(<span class="token keyword">async</span> (req, res) =&gt; {
+    <span class="token keyword">const</span> file = <span class="token keyword">await</span> this.service.<span class="token keyword">export</span>(<span class="token function">String</span>(req.params.id));
+    res.<span class="token function">setHeader</span>(<span class="token string">&#039;Content-Type&#039;</span>, <span class="token string">&#039;text/csv&#039;</span>);
+    res.<span class="token function">send</span>(file);
+})</code></pre>
+</div>
+<p>Errors are still caught for you. The difference is only that you own the response.</p>
+<p>Anything else is an ordinary Express handler — <code class="inline-code">this.get(&#039;/x&#039;, (req, res) =&gt; {...})</code> works, you just lose the error handling.</p>
+<h2 id="controllers" class="heading-anchor"><a href="#controllers" class="header-link">#</a> Controllers</h2>
+<p>For the common CRUD shape, <code class="inline-code">CommonController&lt;T&gt;</code> wraps a service and gives you handlers:</p>
+
+<div class="code-block-wrapper">
+  <div class="code-block-header">
+    <span class="code-lang-tag">typescript</span>
+    <button class="copy-btn" data-code-id="code-q6k495t" title="复制代码">
+      <svg class="copy-icon" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+      <span class="copy-label">复制</span>
+    </button>
+  </div>
+  <pre class="code-block"><code id="code-q6k495t" class="language-typescript"><span class="token keyword">import</span> { CommonSearchController } <span class="token keyword">from</span> <span class="token string">&#039;@ticatec/keelson-express&#039;</span>;
+<span class="token keyword">import</span> { beanFactory } <span class="token keyword">from</span> <span class="token string">&#039;@ticatec/keelson-core&#039;</span>;
+
+<span class="token keyword">export</span> <span class="token keyword">class</span> UserController <span class="token keyword">extends</span> CommonSearchController&lt;UserService&gt; {
+    <span class="token function">constructor</span>() {
+        <span class="token function">super</span>(beanFactory.createBean&lt;UserService&gt;(<span class="token string">&#039;UserService&#039;</span>)!);
+    }
+}
+
+<span class="token keyword">export</span> <span class="token keyword">default</span> <span class="token keyword">class</span> UserRoutes <span class="token keyword">extends</span> AuthenticatedRoutes {
+    <span class="token keyword">private</span> controller = <span class="token keyword">new</span> <span class="token function">UserController</span>();
+
+    <span class="token keyword">protected</span> <span class="token function">bindRoutes</span>() {
+        this.<span class="token function">post</span>(<span class="token string">&#039;/&#039;</span>, routerHelper.<span class="token function">invokeRestfulAction</span>(this.controller.<span class="token function">createNew</span>()));
+        this.<span class="token function">put</span>(<span class="token string">&#039;/&#039;</span>, routerHelper.<span class="token function">invokeRestfulAction</span>(this.controller.<span class="token function">update</span>()));
+        this.<span class="token keyword">get</span>(<span class="token string">&#039;/&#039;</span>, routerHelper.<span class="token function">invokeRestfulAction</span>(this.controller.<span class="token function">search</span>()));
+    }
+}</code></pre>
+</div>
+<p><code class="inline-code">CommonController</code> gives you <code class="inline-code">createNew()</code>, <code class="inline-code">update()</code> and <code class="inline-code">del()</code>. <code class="inline-code">CommonSearchController</code> adds <code class="inline-code">search()</code>, which passes <code class="inline-code">req.query</code> to the service as criteria. Each returns a handler, so you still choose the paths and the verbs.</p>
+<p>The controller calls the service method of the same name — <code class="inline-code">createNew()</code> calls <code class="inline-code">service.createNew(...)</code> — and throws <code class="inline-code">ActionNotFoundError</code> (404) if the service does not have it. That is how a controller can be generic without an interface: the check is at call time, and it fails as a clean 404 rather than <code class="inline-code">undefined is not a function</code>.</p>
+<h3 id="what-gets-passed-to-the-service" class="heading-anchor"><a href="#what-gets-passed-to-the-service" class="header-link">#</a> What gets passed to the service</h3>
+<p>By default, the logged user and the request body:</p>
+
+<div class="code-block-wrapper">
+  <div class="code-block-header">
+    <span class="code-lang-tag">typescript</span>
+    <button class="copy-btn" data-code-id="code-ozpkzdt" title="复制代码">
+      <svg class="copy-icon" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+      <span class="copy-label">复制</span>
+    </button>
+  </div>
+  <pre class="code-block"><code id="code-ozpkzdt" class="language-typescript"><span class="token keyword">protected</span> <span class="token function">getCreateNewArguments</span>(req: Request): <span class="token builtin">Array</span>&lt;any&gt; {
+    <span class="token keyword">return</span> [this.<span class="token function">getLoggedUser</span>(req), req.body];
+}</code></pre>
+</div>
+<p>Override it when your service wants something else — a tenant from the path, a header:</p>
+
+<div class="code-block-wrapper">
+  <div class="code-block-header">
+    <span class="code-lang-tag">typescript</span>
+    <button class="copy-btn" data-code-id="code-k46e1yj" title="复制代码">
+      <svg class="copy-icon" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+      <span class="copy-label">复制</span>
+    </button>
+  </div>
+  <pre class="code-block"><code id="code-k46e1yj" class="language-typescript"><span class="token keyword">export</span> <span class="token keyword">class</span> UserController <span class="token keyword">extends</span> CommonSearchController&lt;UserService&gt; {
+    <span class="token keyword">protected</span> override <span class="token function">getCreateNewArguments</span>(req: Request): <span class="token builtin">Array</span>&lt;any&gt; {
+        <span class="token keyword">return</span> [this.<span class="token function">getLoggedUser</span>(req), <span class="token function">String</span>(req.params.tenantId), req.body];
+    }
+}</code></pre>
+</div>
+<p><code class="inline-code">getLoggedUser(req)</code> returns the impersonated user when impersonation is active, and the real one otherwise — chapter 5.</p>
+<p>To reshape the body before validation, override <code class="inline-code">buildNewEntry(req)</code> / <code class="inline-code">buildUpdatedEntry(req)</code>.</p>
+<h3 id="del-needs-you" class="heading-anchor"><a href="#del-needs-you" class="header-link">#</a> <code class="inline-code">del()</code> needs you</h3>
+<p><code class="inline-code">_del()</code> throws <code class="inline-code">ActionNotFoundError</code> unless you override it. Deleting is rarely a plain &quot;call the service with the id&quot; — there is usually a soft-delete flag, a cascade, or a rule about who may — so the framework declines to guess.</p>
+<h3 id="an-endpoint-that-is-not-crud" class="heading-anchor"><a href="#an-endpoint-that-is-not-crud" class="header-link">#</a> An endpoint that is not CRUD</h3>
+<p><code class="inline-code">BaseController&lt;T&gt;</code> is the layer beneath <code class="inline-code">CommonController</code>: it holds the injected service and the logger, and nothing else. Extend it when the endpoint has its own shape — an export, an approval step, a bulk action — and write the method yourself.</p>
+<p>Inside it, two protected helpers give you the same late-bound dispatch the CRUD methods use:</p>
+
+<div class="code-block-wrapper">
+  <div class="code-block-header">
+    <span class="code-lang-tag">typescript</span>
+    <button class="copy-btn" data-code-id="code-p81tu1i" title="复制代码">
+      <svg class="copy-icon" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+      <span class="copy-label">复制</span>
+    </button>
+  </div>
+  <pre class="code-block"><code id="code-p81tu1i" class="language-typescript"><span class="token keyword">import</span> { BaseController } <span class="token keyword">from</span> <span class="token string">&#039;@ticatec/keelson-express&#039;</span>;
+<span class="token keyword">import</span> <span class="token keyword">type</span> { RestfulFunction } <span class="token keyword">from</span> <span class="token string">&#039;@ticatec/keelson-express&#039;</span>;
+
+<span class="token keyword">export</span> <span class="token keyword">class</span> ReportController <span class="token keyword">extends</span> BaseController&lt;ReportService&gt; {
+
+    <span class="token function">constructor</span>(service: ReportService) {
+        <span class="token function">super</span>(service);          <span class="token comment">// BaseController&#039;s constructor is protected — declare a public one</span>
+    }
+
+    <span class="token function">exportCsv</span>(): RestfulFunction {
+        <span class="token keyword">return</span> <span class="token keyword">async</span> (req) =&gt; this.service.<span class="token function">exportCsv</span>(
+            this.<span class="token function">getLoggedUser</span>(req), <span class="token function">String</span>(req.query.month)
+        );
+    }
+}</code></pre>
+</div>
+<p>You have a typed service here, so call it directly. The late-bound pair — <code class="inline-code">checkInterface(name)</code>, which throws <code class="inline-code">ActionNotFoundError</code> when the method is missing, and <code class="inline-code">invokeServiceInterface(name, args)</code>, which calls it — lives one level up on <code class="inline-code">CommonController</code>, and is what lets the CRUD methods stay generic over a service they have no interface for. Extend <code class="inline-code">CommonController</code> if you want them.</p>
+<p>A <code class="inline-code">RestfulFunction</code> takes the request and returns a value — it is not an Express handler, so it still goes through <code class="inline-code">routerHelper.invokeRestfulAction(...)</code> when you bind it.</p>
+<h2 id="validation" class="heading-anchor"><a href="#validation" class="header-link">#</a> Validation</h2>
+<p>Declare rules; the controller runs them before calling the service.</p>
+
+<div class="code-block-wrapper">
+  <div class="code-block-header">
+    <span class="code-lang-tag">typescript</span>
+    <button class="copy-btn" data-code-id="code-xvy26ty" title="复制代码">
+      <svg class="copy-icon" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+      <span class="copy-label">复制</span>
+    </button>
+  </div>
+  <pre class="code-block"><code id="code-xvy26ty" class="language-typescript"><span class="token keyword">import</span> { StringValidator, NumberValidator, ValidationRules } <span class="token keyword">from</span> <span class="token string">&#039;@ticatec/bean-validator&#039;</span>;
+
+<span class="token keyword">protected</span> <span class="token function">getCreateRules</span>(): ValidationRules {
+    <span class="token keyword">return</span> [
+        <span class="token keyword">new</span> <span class="token function">StringValidator</span>(<span class="token string">&#039;name&#039;</span>, { required: <span class="token keyword">true</span>, maxLen: <span class="token number">64</span> }),
+        <span class="token keyword">new</span> <span class="token function">StringValidator</span>(<span class="token string">&#039;email&#039;</span>, {
+            required: <span class="token keyword">true</span>,
+            maxLen: <span class="token number">128</span>,
+            format: { regex: /^[^@\s]+@[^@\s]+\.[^@\s]+$/, message: <span class="token string">&#039;Not a valid email address&#039;</span> }
+        }),
+        <span class="token keyword">new</span> <span class="token function">NumberValidator</span>(<span class="token string">&#039;age&#039;</span>, { minValue: <span class="token number">0</span>, maxValue: <span class="token number">150</span> })
+    ];
+}</code></pre>
+</div>
+<p><code class="inline-code">getCreateRules()</code> and <code class="inline-code">getUpdateRules()</code> both fall back to <code class="inline-code">getRules()</code>, so when create and update share a shape you override <code class="inline-code">getRules()</code> once. They differ more often than you expect — update usually requires an <code class="inline-code">id</code> that create must not have — which is why they are separate hooks.</p>
+<p>A failure throws <code class="inline-code">IllegalParameterError</code>, which the error middleware renders as <code class="inline-code">400</code> with the validator&#039;s message. Validators also sanitise: <code class="inline-code">trim</code> is on by default for strings, and <code class="inline-code">toLowerCase</code> / <code class="inline-code">toUpperCase</code> are available.</p>
+<p>Validation only covers what the rules mention. A field with no rule passes through untouched, so a service that reads <code class="inline-code">body.isAdmin</code> will happily read whatever the client sent. Either declare every field you intend to accept, or build the entity explicitly in <code class="inline-code">buildNewEntry()</code>.</p>
+<h2 id="errors" class="heading-anchor"><a href="#errors" class="header-link">#</a> Errors</h2>
+<p>Throw from anywhere in the call tree; the middleware maps the type to a status:</p>
+<div class="table-container"><table><thead><tr><th>Throw</th><th>Status</th></tr></thead><tbody><tr><td><code class="inline-code">IllegalParameterError(message)</code></td><td>400</td></tr><tr><td><code class="inline-code">UnauthenticatedError()</code></td><td>401</td></tr><tr><td><code class="inline-code">InsufficientPermissionError()</code></td><td>403</td></tr><tr><td><code class="inline-code">ActionNotFoundError()</code></td><td>404</td></tr><tr><td><code class="inline-code">ConflictError(message)</code></td><td>409</td></tr><tr><td><code class="inline-code">TooManyRequestsError()</code></td><td>429</td></tr><tr><td><code class="inline-code">TimeoutError()</code></td><td>408</td></tr><tr><td><code class="inline-code">AppError(message?)</code></td><td>500</td></tr><tr><td><code class="inline-code">ProxyError()</code></td><td>502</td></tr><tr><td><code class="inline-code">ServiceUnavailableError()</code></td><td>503</td></tr></tbody></table></div>
+<p>Only the ones that carry a caller-facing explanation take a message. <code class="inline-code">ActionNotFoundError</code> and <code class="inline-code">UnauthenticatedError</code> have fixed messages — telling an unauthenticated caller <em>why</em> authentication failed is how you build an account-enumeration oracle.</p>
+<p>Every constructor also takes <code class="inline-code">ErrorOptions</code>, so the original error survives:</p>
+
+<div class="code-block-wrapper">
+  <div class="code-block-header">
+    <span class="code-lang-tag">typescript</span>
+    <button class="copy-btn" data-code-id="code-jcu2534" title="复制代码">
+      <svg class="copy-icon" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+      <span class="copy-label">复制</span>
+    </button>
+  </div>
+  <pre class="code-block"><code id="code-jcu2534" class="language-typescript"><span class="token keyword">throw</span> <span class="token keyword">new</span> <span class="token function">IllegalParameterError</span>(<span class="token string">&#039;Invalid date range&#039;</span>, { cause: parseError });</code></pre>
+</div>
+<p>An error that is not an <code class="inline-code">HttpError</code> becomes a 500 with a generic body. The stack is included only outside production; <code class="inline-code">NODE_ENV=production</code> strips it.</p>
+<p>The response is content-negotiated from <code class="inline-code">Accept</code> — JSON by default, HTML or plain text if that is what the client asked for. All interpolated values are HTML-escaped.</p>
+<p>What gets logged: 5xx at <code class="inline-code">error</code> with the stack, 4xx at <code class="inline-code">debug</code>. A client sending a bad request is not an incident, and logging it at warning level is how a dashboard fills with noise. Your handlers should not log errors themselves — by the time the middleware sees it, it is already recorded.</p>
+<h2 id="route-groups-and-authentication" class="heading-anchor"><a href="#route-groups-and-authentication" class="header-link">#</a> Route groups and authentication</h2>
+<p><code class="inline-code">CommonRoutes</code> is open by default. <code class="inline-code">AuthenticatedRoutes</code> rejects a request with no user:</p>
+
+<div class="code-block-wrapper">
+  <div class="code-block-header">
+    <span class="code-lang-tag">typescript</span>
+    <button class="copy-btn" data-code-id="code-5w0e5yg" title="复制代码">
+      <svg class="copy-icon" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+      <span class="copy-label">复制</span>
+    </button>
+  </div>
+  <pre class="code-block"><code id="code-5w0e5yg" class="language-typescript"><span class="token keyword">export</span> <span class="token keyword">default</span> <span class="token keyword">class</span> UserRoutes <span class="token keyword">extends</span> AuthenticatedRoutes { <span class="token comment">/* ... */</span> }</code></pre>
+</div>
+<p>For anything finer, override <code class="inline-code">isValidUser()</code> — chapter 5.</p>
+<hr class="divider" />
+<p>Deeper reference: <a href="../packages/keelson-express/README.md" class="doc-link">keelson-express&#039;s README</a> for controllers and routes, <a href="../packages/bean-validator/README.md" class="doc-link">bean-validator&#039;s README</a> for every validator and option, and <a href="../docs/prompts/AI_PROMPTS_2_WEB.md" class="doc-link">the web-layer prompts</a> for the rules.</p>
+<p>Next: <a href="05-identity.html" class="doc-link">Identity and access control</a>.</p>
+        </article>
+
+        <!-- Previous / Next Navigation -->
+        
+    <div class="chapter-pagination">
+      
+        <a href="03-wiring.html" class="pagination-btn prev-btn">
+          <span class="pagination-sub">← Previous</span>
+          <span class="pagination-title">03. Wiring &amp; Dependency Injection</span>
+        </a>
+      
+
+      
+        <a href="05-identity.html" class="pagination-btn next-btn">
+          <span class="pagination-sub">Next →</span>
+          <span class="pagination-title">05. Identity &amp; Access Control</span>
+        </a>
+      
+    </div>
+  
+
+        <!-- Document Footer -->
+        <footer class="site-footer">
+          <div class="footer-left">
+            <p>© 2026 Ticatec Keelson Framework. Released under the MIT License.</p>
+          </div>
+          <div class="footer-right">
+            <a href="../zh/04-http-layer.html" class="footer-lang-link">
+              🌐 中文阅读
+            </a>
+          </div>
+        </footer>
+      </div>
+
+      <!-- Right Table of Contents -->
+      
+      <aside class="right-toc-container">
+        <div class="right-toc-inner">
+          <div class="toc-header">On this page</div>
+          <ul class="right-toc-list">
+            
+              <li class="toc-item level-2">
+                <a href="#routes" class="toc-link" data-anchor="routes">
+                  Routes
+                </a>
+              </li>
+            
+              <li class="toc-item level-2">
+                <a href="#two-handler-wrappers" class="toc-link" data-anchor="two-handler-wrappers">
+                  Two handler wrappers
+                </a>
+              </li>
+            
+              <li class="toc-item level-2">
+                <a href="#controllers" class="toc-link" data-anchor="controllers">
+                  Controllers
+                </a>
+              </li>
+            
+              <li class="toc-item level-3">
+                <a href="#what-gets-passed-to-the-service" class="toc-link" data-anchor="what-gets-passed-to-the-service">
+                  What gets passed to the service
+                </a>
+              </li>
+            
+              <li class="toc-item level-3">
+                <a href="#del-needs-you" class="toc-link" data-anchor="del-needs-you">
+                  del() needs you
+                </a>
+              </li>
+            
+              <li class="toc-item level-3">
+                <a href="#an-endpoint-that-is-not-crud" class="toc-link" data-anchor="an-endpoint-that-is-not-crud">
+                  An endpoint that is not CRUD
+                </a>
+              </li>
+            
+              <li class="toc-item level-2">
+                <a href="#validation" class="toc-link" data-anchor="validation">
+                  Validation
+                </a>
+              </li>
+            
+              <li class="toc-item level-2">
+                <a href="#errors" class="toc-link" data-anchor="errors">
+                  Errors
+                </a>
+              </li>
+            
+              <li class="toc-item level-2">
+                <a href="#route-groups-and-authentication" class="toc-link" data-anchor="route-groups-and-authentication">
+                  Route groups and authentication
+                </a>
+              </li>
+            
+          </ul>
+        </div>
+      </aside>
+    
+    </main>
+  </div>
+
+  <script src="../assets/app.js"></script>
+</body>
+</html>

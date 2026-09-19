@@ -1,0 +1,532 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>06. Logging &amp; Health Checks | Keelson Official Tutorial</title>
+  <meta name="description" content="Keelson TypeScript Framework Official Tutorial - Enterprise TypeScript for Express">
+  <link rel="stylesheet" href="../assets/style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+</head>
+<body class="theme-auto">
+  <!-- Top Navigation Header -->
+  <header class="top-navbar">
+    <div class="navbar-left">
+      <button class="mobile-menu-toggle" id="menuToggle" aria-label="Toggle Navigation">
+        <svg viewBox="0 0 24 24" width="22" height="22" stroke="currentColor" stroke-width="2" fill="none"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+      </button>
+      <a href="index.html" class="brand-logo">
+        <span class="brand-icon">⚡</span>
+        <span class="brand-name">Keelson</span>
+        <span class="brand-badge">Tutorial</span>
+      </a>
+    </div>
+
+    <div class="navbar-right">
+      <!-- Search Input -->
+      <div class="search-box">
+        <svg class="search-icon" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+        <input type="text" id="searchInput" placeholder="Search chapters..." />
+        <span class="search-kbd">⌘K</span>
+      </div>
+
+      <!-- Language Switch -->
+      <a href="../zh/06-logging-and-health.html" class="lang-switch-btn" title="Switch to Chinese">
+        <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>
+        <span>中文</span>
+      </a>
+
+      <!-- Theme Switch -->
+      <button class="theme-toggle-btn" id="themeToggle" aria-label="Toggle Theme">
+        <svg class="sun-icon" viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
+        <svg class="moon-icon" viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+      </button>
+
+      <!-- GitHub Link -->
+      <a href="https://github.com/ticatec/keelson" target="_blank" rel="noopener noreferrer" class="github-link" title="GitHub Repository">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z"/></svg>
+      </a>
+    </div>
+  </header>
+
+  <div class="layout-container">
+    <!-- Left Navigation Sidebar -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-header">
+        <div class="sidebar-title">Chapters</div>
+        <span class="chapter-count">10 Docs</span>
+      </div>
+      <nav class="sidebar-nav">
+        <ul class="nav-list" id="navList">
+          
+      <li class="nav-item ">
+        <a href="index.html" class="nav-link" title="Tutorial overview &amp; index">
+          <span class="chapter-badge">00</span>
+          <span class="chapter-text">
+            <span class="chapter-title">Overview &amp; Table of Contents</span>
+            <span class="chapter-desc">Tutorial overview &amp; index</span>
+          </span>
+        </a>
+        
+      </li>
+    
+      <li class="nav-item ">
+        <a href="01-getting-started.html" class="nav-link" title="From empty directory to responsive service">
+          <span class="chapter-badge">01</span>
+          <span class="chapter-text">
+            <span class="chapter-title">Getting Started</span>
+            <span class="chapter-desc">From empty directory to responsive service</span>
+          </span>
+        </a>
+        
+      </li>
+    
+      <li class="nav-item ">
+        <a href="02-layers-and-transactions.html" class="nav-link" title="Why four layers and declarative transactions">
+          <span class="chapter-badge">02</span>
+          <span class="chapter-text">
+            <span class="chapter-title">Layers &amp; Transactions</span>
+            <span class="chapter-desc">Why four layers and declarative transactions</span>
+          </span>
+        </a>
+        
+      </li>
+    
+      <li class="nav-item ">
+        <a href="03-wiring.html" class="nav-link" title="Component discovery &amp; initialization">
+          <span class="chapter-badge">03</span>
+          <span class="chapter-text">
+            <span class="chapter-title">Wiring &amp; Dependency Injection</span>
+            <span class="chapter-desc">Component discovery &amp; initialization</span>
+          </span>
+        </a>
+        
+      </li>
+    
+      <li class="nav-item ">
+        <a href="04-http-layer.html" class="nav-link" title="Routes, controllers, validation &amp; errors">
+          <span class="chapter-badge">04</span>
+          <span class="chapter-text">
+            <span class="chapter-title">HTTP Layer</span>
+            <span class="chapter-desc">Routes, controllers, validation &amp; errors</span>
+          </span>
+        </a>
+        
+      </li>
+    
+      <li class="nav-item ">
+        <a href="05-identity.html" class="nav-link" title="req.user origin &amp; auth mechanism">
+          <span class="chapter-badge">05</span>
+          <span class="chapter-text">
+            <span class="chapter-title">Identity &amp; Access Control</span>
+            <span class="chapter-desc">req.user origin &amp; auth mechanism</span>
+          </span>
+        </a>
+        
+      </li>
+    
+      <li class="nav-item active">
+        <a href="06-logging-and-health.html" class="nav-link" title="Logging policies &amp; K8s probes">
+          <span class="chapter-badge">06</span>
+          <span class="chapter-text">
+            <span class="chapter-title">Logging &amp; Health Checks</span>
+            <span class="chapter-desc">Logging policies &amp; K8s probes</span>
+          </span>
+        </a>
+        
+      <ul class="sidebar-subnav">
+        
+          <li class="sidebar-subnav-item level-2">
+            <a href="#logging-is-a-contract-not-a-library" class="subnav-link" data-toc-target="logging-is-a-contract-not-a-library">
+              Logging is a contract, not a library
+            </a>
+          </li>
+        
+          <li class="sidebar-subnav-item level-2">
+            <a href="#structured-logging-with-pino" class="subnav-link" data-toc-target="structured-logging-with-pino">
+              Structured logging with pino
+            </a>
+          </li>
+        
+          <li class="sidebar-subnav-item level-2">
+            <a href="#the-two-arguments" class="subnav-link" data-toc-target="the-two-arguments">
+              The two arguments
+            </a>
+          </li>
+        
+          <li class="sidebar-subnav-item level-2">
+            <a href="#what-the-framework-will-not-log" class="subnav-link" data-toc-target="what-the-framework-will-not-log">
+              What the framework will not log
+            </a>
+          </li>
+        
+          <li class="sidebar-subnav-item level-2">
+            <a href="#health-checks" class="subnav-link" data-toc-target="health-checks">
+              Health checks
+            </a>
+          </li>
+        
+          <li class="sidebar-subnav-item level-2">
+            <a href="#what-a-probe-reveals" class="subnav-link" data-toc-target="what-a-probe-reveals">
+              What a probe reveals
+            </a>
+          </li>
+        
+          <li class="sidebar-subnav-item level-2">
+            <a href="#where-to-look-when-something-is-wrong" class="subnav-link" data-toc-target="where-to-look-when-something-is-wrong">
+              Where to look when something is wrong
+            </a>
+          </li>
+        
+      </ul>
+      </li>
+    
+      <li class="nav-item ">
+        <a href="07-background-work.html" class="nav-link" title="Scheduled tasks &amp; graceful shutdown">
+          <span class="chapter-badge">07</span>
+          <span class="chapter-text">
+            <span class="chapter-title">Background Work &amp; Shutdown</span>
+            <span class="chapter-desc">Scheduled tasks &amp; graceful shutdown</span>
+          </span>
+        </a>
+        
+      </li>
+    
+      <li class="nav-item ">
+        <a href="08-config-and-cache.html" class="nav-link" title="Local YAML, Nacos, Consul &amp; Redis">
+          <span class="chapter-badge">08</span>
+          <span class="chapter-text">
+            <span class="chapter-title">Config &amp; Cache</span>
+            <span class="chapter-desc">Local YAML, Nacos, Consul &amp; Redis</span>
+          </span>
+        </a>
+        
+      </li>
+    
+      <li class="nav-item ">
+        <a href="09-production-checklist.html" class="nav-link" title="Production readiness checklist">
+          <span class="chapter-badge">09</span>
+          <span class="chapter-text">
+            <span class="chapter-title">Production Checklist</span>
+            <span class="chapter-desc">Production readiness checklist</span>
+          </span>
+        </a>
+        
+      </li>
+    
+        </ul>
+      </nav>
+      <div class="sidebar-footer">
+        <a href="https://github.com/ticatec/keelson" target="_blank" rel="noopener">Keelson v1.0.0</a>
+        <span>·</span>
+        <a href="../index.html">Home</a>
+      </div>
+    </aside>
+
+    <!-- Overlay for mobile drawer -->
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+    <!-- Main Content Area -->
+    <main class="main-wrapper">
+      <div class="content-container">
+        <!-- Breadcrumbs -->
+        <nav class="breadcrumb-nav">
+          <a href="index.html" class="crumb-link">Keelson</a>
+          <span class="crumb-sep">/</span>
+          <span class="crumb-link">Tutorial</span>
+          <span class="crumb-sep">/</span>
+          <span class="crumb-current">Logging &amp; Health Checks</span>
+        </nav>
+
+        <!-- Markdown Generated Content -->
+        <article class="markdown-body">
+          <h1 id="6-logging-and-health" class="heading-anchor"><a href="#6-logging-and-health" class="header-link">#</a> 6. Logging and health</h1>
+<p>What the framework writes to the log, what it refuses to write, how to point it at pino, and what Kubernetes sees when it probes the pod.</p>
+<h2 id="logging-is-a-contract-not-a-library" class="heading-anchor"><a href="#logging-is-a-contract-not-a-library" class="header-link">#</a> Logging is a contract, not a library</h2>
+<p>No Keelson package imports a logging library. They all call the same contract:</p>
+
+<div class="code-block-wrapper">
+  <div class="code-block-header">
+    <span class="code-lang-tag">typescript</span>
+    <button class="copy-btn" data-code-id="code-7r07muy" title="复制代码">
+      <svg class="copy-icon" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+      <span class="copy-label">复制</span>
+    </button>
+  </div>
+  <pre class="code-block"><code id="code-7r07muy" class="language-typescript"><span class="token keyword">import</span> { getLogger } <span class="token keyword">from</span> <span class="token string">&#039;@ticatec/logger-api&#039;</span>;
+
+<span class="token keyword">const</span> logger = <span class="token function">getLogger</span>(<span class="token string">&#039;UserService&#039;</span>, <span class="token string">&#039;service&#039;</span>);
+logger.<span class="token function">info</span>({ orderId }, <span class="token string">&#039;Order placed&#039;</span>);</code></pre>
+</div>
+<p><code class="inline-code">getLogger(name, category)</code> — the name is usually the class, the category groups classes so you can set a level for all of them at once. Inside the framework&#039;s base classes you already have <code class="inline-code">this.logger</code>, scoped to your concrete class name.</p>
+<p>With nothing installed, output goes to the console, filtered by <code class="inline-code">LOG_LEVEL</code>:</p>
+
+<div class="code-block-wrapper">
+  <div class="code-block-header">
+    <span class="code-lang-tag">bash</span>
+    <button class="copy-btn" data-code-id="code-42kc94z" title="复制代码">
+      <svg class="copy-icon" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+      <span class="copy-label">复制</span>
+    </button>
+  </div>
+  <pre class="code-block"><code id="code-42kc94z" class="language-bash">LOG_LEVEL=debug <span class="token keyword">node</span> dist/main.js</code></pre>
+</div>
+<p>That is a real fallback, not a stub — fine for development and for a container whose logs are collected as plain text.</p>
+<h2 id="structured-logging-with-pino" class="heading-anchor"><a href="#structured-logging-with-pino" class="header-link">#</a> Structured logging with pino</h2>
+<p>Install the adapter and initialise it once, before anything logs:</p>
+
+<div class="code-block-wrapper">
+  <div class="code-block-header">
+    <span class="code-lang-tag">bash</span>
+    <button class="copy-btn" data-code-id="code-p1umdph" title="复制代码">
+      <svg class="copy-icon" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+      <span class="copy-label">复制</span>
+    </button>
+  </div>
+  <pre class="code-block"><code id="code-p1umdph" class="language-bash"><span class="token keyword">pnpm</span> add @ticatec/logger<span class="token property">-pino</span></code></pre>
+</div>
+
+<div class="code-block-wrapper">
+  <div class="code-block-header">
+    <span class="code-lang-tag">typescript</span>
+    <button class="copy-btn" data-code-id="code-5q9wtn9" title="复制代码">
+      <svg class="copy-icon" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+      <span class="copy-label">复制</span>
+    </button>
+  </div>
+  <pre class="code-block"><code id="code-5q9wtn9" class="language-typescript"><span class="token comment">// src/main.ts, before importing anything that logs</span>
+<span class="token keyword">import</span> <span class="token string">&#039;reflect-metadata&#039;</span>;
+<span class="token keyword">import</span> { initialize } <span class="token keyword">from</span> <span class="token string">&#039;@ticatec/logger-pino&#039;</span>;
+
+<span class="token function">initialize</span>({
+    appenders: [
+        { name: <span class="token string">&#039;stdout&#039;</span>, <span class="token keyword">type</span>: <span class="token string">&#039;console&#039;</span>, level: <span class="token string">&#039;info&#039;</span> },
+        { name: <span class="token string">&#039;errfile&#039;</span>, <span class="token keyword">type</span>: <span class="token string">&#039;file&#039;</span>, level: <span class="token string">&#039;error&#039;</span>, options: { filename: <span class="token string">&#039;/var/log/app/error.log&#039;</span> } }
+    ],
+    loggers: {
+        root: { level: <span class="token string">&#039;info&#039;</span>, appenders: [<span class="token string">&#039;stdout&#039;</span>, <span class="token string">&#039;errfile&#039;</span>] },
+        dao: { level: <span class="token string">&#039;warn&#039;</span>, appenders: [<span class="token string">&#039;stdout&#039;</span>] },
+        service: { level: <span class="token string">&#039;debug&#039;</span>, appenders: [<span class="token string">&#039;stdout&#039;</span>] }
+    }
+});</code></pre>
+</div>
+<p><code class="inline-code">root</code> is the fallback for any category with no entry of its own. <code class="inline-code">dao</code>, <code class="inline-code">service</code>, <code class="inline-code">repository</code>, <code class="inline-code">controller</code> and <code class="inline-code">db</code> are the categories the framework uses, so the config above quiets SQL logging while leaving services verbose.</p>
+<p><code class="inline-code">initialize()</code> can only be called once — a second call throws rather than silently reconfiguring the process. It also accepts a pino instance directly if you have one already configured.</p>
+<h2 id="the-two-arguments" class="heading-anchor"><a href="#the-two-arguments" class="header-link">#</a> The two arguments</h2>
+
+<div class="code-block-wrapper">
+  <div class="code-block-header">
+    <span class="code-lang-tag">typescript</span>
+    <button class="copy-btn" data-code-id="code-dvq2usf" title="复制代码">
+      <svg class="copy-icon" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+      <span class="copy-label">复制</span>
+    </button>
+  </div>
+  <pre class="code-block"><code id="code-dvq2usf" class="language-typescript">logger.<span class="token function">info</span>({ orderId, amount }, <span class="token string">&#039;Order placed&#039;</span>);   <span class="token comment">// context first, message second</span></code></pre>
+</div>
+<p>Both shapes are in the contract, and <code class="inline-code">logger.info(&#039;message&#039;)</code> works. Prefer the object form: structured fields are what makes a log searchable, and a message with values interpolated into it is a string nobody can query.</p>
+<p>One rule that is easy to get wrong — pass an <code class="inline-code">Error</code> <strong>as</strong> the context, not inside one:</p>
+
+<div class="code-block-wrapper">
+  <div class="code-block-header">
+    <span class="code-lang-tag">typescript</span>
+    <button class="copy-btn" data-code-id="code-egr8n18" title="复制代码">
+      <svg class="copy-icon" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+      <span class="copy-label">复制</span>
+    </button>
+  </div>
+  <pre class="code-block"><code id="code-egr8n18" class="language-typescript">logger.<span class="token function">error</span>(err, <span class="token string">&#039;Failed to place order&#039;</span>);       <span class="token comment">// message and stack survive</span>
+logger.<span class="token function">error</span>({ err }, <span class="token string">&#039;Failed to place order&#039;</span>);   <span class="token comment">// both are lost</span></code></pre>
+</div>
+<p><code class="inline-code">message</code> and <code class="inline-code">stack</code> are not enumerable properties, so once <code class="inline-code">{ err }</code> is serialised all that remains is <code class="inline-code">{&quot;err&quot;:{&quot;code&quot;:&quot;ENOSPC&quot;}}</code> — the one line worth reading is gone.</p>
+<h2 id="what-the-framework-will-not-log" class="heading-anchor"><a href="#what-the-framework-will-not-log" class="header-link">#</a> What the framework will not log</h2>
+<p>Three categories are kept out by default, because a log is a file that outlives the incident and gets copied to places nobody enumerated.</p>
+<p><strong>Credentials.</strong> Connection configuration is logged as a summary — host, port, database, pool size, and <code class="inline-code">authenticated: true</code> — never the password or the connection string.</p>
+<p><strong>SQL bind parameters.</strong> Statements are logged with their text and their parameter <em>count</em>:</p>
+
+<div class="code-block-wrapper">
+  <div class="code-block-header">
+    <span class="code-lang-tag">text</span>
+    <button class="copy-btn" data-code-id="code-sgdjbji" title="复制代码">
+      <svg class="copy-icon" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+      <span class="copy-label">复制</span>
+    </button>
+  </div>
+  <pre class="code-block"><code id="code-sgdjbji" class="language-text">DEBUG [SQL] Executing SQL update {&quot;sql&quot;:&quot;UPDATE users SET pwd = ? WHERE id = ?&quot;,&quot;paramCount&quot;:2}</code></pre>
+</div>
+<p>When you genuinely need the values to trace a problem:</p>
+
+<div class="code-block-wrapper">
+  <div class="code-block-header">
+    <span class="code-lang-tag">bash</span>
+    <button class="copy-btn" data-code-id="code-mie7l4j" title="复制代码">
+      <svg class="copy-icon" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+      <span class="copy-label">复制</span>
+    </button>
+  </div>
+  <pre class="code-block"><code id="code-mie7l4j" class="language-bash">KEELSON_LOG_SQL_PARAMS=true <span class="token keyword">node</span> dist/main.js</code></pre>
+</div>
+<p>It affects every layer — the DAO helpers and the driver both. Turn it off again.</p>
+<p><strong>Request and response bodies.</strong> Off unless you ask:</p>
+
+<div class="code-block-wrapper">
+  <div class="code-block-header">
+    <span class="code-lang-tag">typescript</span>
+    <button class="copy-btn" data-code-id="code-j61ofqs" title="复制代码">
+      <svg class="copy-icon" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+      <span class="copy-label">复制</span>
+    </button>
+  </div>
+  <pre class="code-block"><code id="code-j61ofqs" class="language-typescript"><span class="token keyword">import</span> { Controller } <span class="token keyword">from</span> <span class="token string">&#039;@ticatec/keelson-express&#039;</span>;
+Controller.debugEnabled = <span class="token keyword">true</span>;</code></pre>
+</div>
+<p>That prints <code class="inline-code">req.body</code> and <code class="inline-code">req.query</code> at debug — everything a client sent, passwords and tokens included. Development only.</p>
+<p>The user identity is also absent, as chapter 5 explained.</p>
+<h2 id="health-checks" class="heading-anchor"><a href="#health-checks" class="header-link">#</a> Health checks</h2>
+<p>Three endpoints are mounted before your routes, without authentication:</p>
+<div class="table-container"><table><thead><tr><th>Endpoint</th><th>Meaning</th></tr></thead><tbody><tr><td><code class="inline-code">GET /health/live</code></td><td>The process is up. Always 200 while it can answer.</td></tr><tr><td><code class="inline-code">GET /health/ready</code></td><td>200 when every critical check passes, 503 otherwise.</td></tr><tr><td><code class="inline-code">GET /health</code></td><td>Same as <code class="inline-code">/health/ready</code>.</td></tr></tbody></table></div>
+<p>The distinction matters to Kubernetes. A failing <strong>liveness</strong> probe restarts the pod; a failing <strong>readiness</strong> probe only takes it out of the load balancer. A database outage should take you out of rotation, not restart you in a loop — so the database belongs in readiness, which is where <code class="inline-code">registerHealthCheck</code> puts it.</p>
+
+<div class="code-block-wrapper">
+  <div class="code-block-header">
+    <span class="code-lang-tag">typescript</span>
+    <button class="copy-btn" data-code-id="code-u8wkokm" title="复制代码">
+      <svg class="copy-icon" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+      <span class="copy-label">复制</span>
+    </button>
+  </div>
+  <pre class="code-block"><code id="code-u8wkokm" class="language-typescript"><span class="token keyword">protected</span> <span class="token keyword">async</span> <span class="token function">beforeStart</span>(): <span class="token builtin">Promise</span>&lt;<span class="token keyword">void</span>&gt; {
+    DBManager.<span class="token function">init</span>(<span class="token function">initializePg</span>(AppConf.<span class="token function">getInstance</span>()!.<span class="token keyword">get</span>(<span class="token string">&#039;database&#039;</span>)));
+
+    this.<span class="token function">registerHealthCheck</span>(<span class="token string">&#039;database&#039;</span>, <span class="token keyword">async</span> () =&gt; {
+        <span class="token keyword">const</span> conn = <span class="token keyword">await</span> DBManager.<span class="token function">getInstance</span>().<span class="token function">connect</span>();
+        <span class="token keyword">try</span> {
+            <span class="token keyword">await</span> conn.<span class="token function">executeUpdate</span>(<span class="token string">&#039;SELECT 1&#039;</span>, []);
+            <span class="token keyword">return</span> { status: <span class="token string">&#039;UP&#039;</span> };
+        } <span class="token keyword">finally</span> {
+            <span class="token keyword">await</span> conn.<span class="token function">close</span>();
+        }
+    });
+
+    this.<span class="token function">registerHealthCheck</span>(<span class="token string">&#039;cache&#039;</span>, <span class="token keyword">async</span> () =&gt; {
+        <span class="token keyword">return</span> { status: <span class="token keyword">await</span> <span class="token function">redisReachable</span>() ? <span class="token string">&#039;UP&#039;</span> : <span class="token string">&#039;DOWN&#039;</span> };
+    }, <span class="token keyword">false</span>);     <span class="token comment">// not critical</span>
+}</code></pre>
+</div>
+<p>A <strong>critical</strong> check that is DOWN makes the whole response DOWN and the status 503. A <strong>non-critical</strong> one that is DOWN makes the response DEGRADED with a 200 — the service still works, just worse. Cache is the textbook non-critical dependency: a cold cache is slow, not broken.</p>
+<p>Each check gets 3 seconds by default; pass a fourth argument to change it. A check that exceeds its timeout counts as DOWN rather than hanging the probe, which matters because a hung probe looks identical to a hung process.</p>
+<p>A built-in <code class="inline-code">system</code> indicator is registered for you, reporting uptime and memory, and reporting DEGRADED above 2 GB RSS.</p>
+<h2 id="what-a-probe-reveals" class="heading-anchor"><a href="#what-a-probe-reveals" class="header-link">#</a> What a probe reveals</h2>
+<p>Outside production the response carries each check&#039;s <code class="inline-code">details</code> and error strings. With <code class="inline-code">NODE_ENV=production</code> set, <code class="inline-code">details</code> are omitted and errors become a flat <code class="inline-code">&quot;Health check failed&quot;</code>.</p>
+<p>That is not decoration. <code class="inline-code">/health/ready</code> is unauthenticated by necessity, and an error string from a driver will happily include a hostname, a port, a database name, sometimes a user. Set <code class="inline-code">NODE_ENV=production</code> in production — it is also what strips stack traces from error responses.</p>
+<h2 id="where-to-look-when-something-is-wrong" class="heading-anchor"><a href="#where-to-look-when-something-is-wrong" class="header-link">#</a> Where to look when something is wrong</h2>
+
+<div class="code-block-wrapper">
+  <div class="code-block-header">
+    <span class="code-lang-tag">bash</span>
+    <button class="copy-btn" data-code-id="code-baylofg" title="复制代码">
+      <svg class="copy-icon" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+      <span class="copy-label">复制</span>
+    </button>
+  </div>
+  <pre class="code-block"><code id="code-baylofg" class="language-bash">LOG_LEVEL=debug                    <span class="token comment"># everything, including route registration</span>
+KEELSON_LOG_SQL_PARAMS=true        <span class="token comment"># plus bind parameter values</span></code></pre>
+</div>
+<p>and in the application, <code class="inline-code">Controller.debugEnabled = true</code> for request bodies. All three are development switches. A production service runs with none of them.</p>
+<hr class="divider" />
+<p>Next: <a href="07-background-work.html" class="doc-link">Background work and shutdown</a>.</p>
+        </article>
+
+        <!-- Previous / Next Navigation -->
+        
+    <div class="chapter-pagination">
+      
+        <a href="05-identity.html" class="pagination-btn prev-btn">
+          <span class="pagination-sub">← Previous</span>
+          <span class="pagination-title">05. Identity &amp; Access Control</span>
+        </a>
+      
+
+      
+        <a href="07-background-work.html" class="pagination-btn next-btn">
+          <span class="pagination-sub">Next →</span>
+          <span class="pagination-title">07. Background Work &amp; Shutdown</span>
+        </a>
+      
+    </div>
+  
+
+        <!-- Document Footer -->
+        <footer class="site-footer">
+          <div class="footer-left">
+            <p>© 2026 Ticatec Keelson Framework. Released under the MIT License.</p>
+          </div>
+          <div class="footer-right">
+            <a href="../zh/06-logging-and-health.html" class="footer-lang-link">
+              🌐 中文阅读
+            </a>
+          </div>
+        </footer>
+      </div>
+
+      <!-- Right Table of Contents -->
+      
+      <aside class="right-toc-container">
+        <div class="right-toc-inner">
+          <div class="toc-header">On this page</div>
+          <ul class="right-toc-list">
+            
+              <li class="toc-item level-2">
+                <a href="#logging-is-a-contract-not-a-library" class="toc-link" data-anchor="logging-is-a-contract-not-a-library">
+                  Logging is a contract, not a library
+                </a>
+              </li>
+            
+              <li class="toc-item level-2">
+                <a href="#structured-logging-with-pino" class="toc-link" data-anchor="structured-logging-with-pino">
+                  Structured logging with pino
+                </a>
+              </li>
+            
+              <li class="toc-item level-2">
+                <a href="#the-two-arguments" class="toc-link" data-anchor="the-two-arguments">
+                  The two arguments
+                </a>
+              </li>
+            
+              <li class="toc-item level-2">
+                <a href="#what-the-framework-will-not-log" class="toc-link" data-anchor="what-the-framework-will-not-log">
+                  What the framework will not log
+                </a>
+              </li>
+            
+              <li class="toc-item level-2">
+                <a href="#health-checks" class="toc-link" data-anchor="health-checks">
+                  Health checks
+                </a>
+              </li>
+            
+              <li class="toc-item level-2">
+                <a href="#what-a-probe-reveals" class="toc-link" data-anchor="what-a-probe-reveals">
+                  What a probe reveals
+                </a>
+              </li>
+            
+              <li class="toc-item level-2">
+                <a href="#where-to-look-when-something-is-wrong" class="toc-link" data-anchor="where-to-look-when-something-is-wrong">
+                  Where to look when something is wrong
+                </a>
+              </li>
+            
+          </ul>
+        </div>
+      </aside>
+    
+    </main>
+  </div>
+
+  <script src="../assets/app.js"></script>
+</body>
+</html>
