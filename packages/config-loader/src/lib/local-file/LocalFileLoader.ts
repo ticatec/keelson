@@ -11,11 +11,24 @@ export default class LocalFileLoader extends BaseLoader {
     private readonly root: string;
 
     /**
-     * Create a new LocalFileLoader instance with config directory set to process.cwd() + '/config'
+     * 创建一个本地文件加载器。
+     *
+     * 根目录按以下顺序确定：
+     * 1. 构造参数 `rootPath`
+     * 2. 环境变量 `CONFIG_DIR`
+     * 3. `process.cwd()/config`
+     *
+     * 此前只有第 3 条，写死在构造函数里。而 Kubernetes 把 ConfigMap 挂到
+     * /etc/app/config、monorepo 多包共用一份配置等场景下，配置目录都不在 ./config。
+     *
+     * @param rootPath - 配置目录，相对路径按 process.cwd() 解析
      */
-    constructor() {
+    constructor(rootPath?: string) {
         super();
-        this.root = path.resolve(process.cwd(), 'config');
+        const configured = rootPath ?? process.env['CONFIG_DIR'];
+        this.root = configured && configured.trim()
+            ? path.resolve(process.cwd(), configured.trim())
+            : path.resolve(process.cwd(), 'config');
         logger.debug({ root: this.root }, 'Resolved local configuration directory');
     }
 

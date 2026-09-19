@@ -55,11 +55,14 @@ import dotenv from 'dotenv';
 async function main() {
     dotenv.config();
     
+    const substitute = (content: string) => content.replace(/#{service-name}/g, 'my-service');
+
     const config = await loadConfig(
         'local', // 或 'consul', 'nacos'
         'app.yaml',
         'logger.yaml',
-        (content: string) => content.replace(/#{service-name}/g, 'my-service')
+        substitute,   // 作用于 logger.yaml
+        substitute    // 作用于 app.yaml
     );
     
     console.log('应用配置:', config.appConf);
@@ -194,8 +197,17 @@ const postProcessor = (content: string): string => {
         .replace(/#{environment}/g, process.env.NODE_ENV || 'development');
 };
 
-const config = await loadConfig('local', 'app.yaml', 'logger.yaml', postProcessor);
+// 第 4 个参数作用于**日志**配置文件，第 5 个作用于**应用**配置文件。
+// 两个文件用同一套替换时，两处都传。
+const config = await loadConfig('local', 'app.yaml', 'logger.yaml', postProcessor, postProcessor);
+
+// 只处理日志配置文件，应用配置原样解析
+const loggerOnly = await loadConfig('local', 'app.yaml', 'logger.yaml', postProcessor);
 ```
+
+> 1.1.0 之前没有第 5 个参数：替换函数只作用于 `logger.yaml`，而本文档自己的示例却让人
+> 以为它作用于应用配置。如果你之前用的是四参数形式，补上第 5 个参数才能得到示例所描述的
+> 那个行为。
 
 ## 日志
 
@@ -461,7 +473,7 @@ const config = await loader.load('application.yaml');
 #### 模式 1: 自定义加载器工厂
 
 ```typescript
-import { BaseLoader } from '@ticatec/config-loader';
+import { BaseLoader, LocalFileLoader, getLoader } from '@ticatec/config-loader';
 import EtcdLoader from './loaders/EtcdLoader';
 import EurekaLoader from './loaders/EurekaLoader';
 
@@ -471,18 +483,21 @@ export const getAdvancedLoader = async (type: string): Promise<BaseLoader> => {
             return new EtcdLoader();
         case 'eureka':
             return new EurekaLoader();
-        case 'nacos':
-            const NacosLoader = (await import('@ticatec/config-loader/dist/lib/nacos/NacosConfigLoader')).default;
-            return new NacosLoader();
-        case 'consul':
-            const ConsulLoader = (await import('@ticatec/config-loader/dist/lib/consul/ConsulLoader')).default;
-            return new ConsulLoader();
-        default:
-            const LocalFileLoader = (await import('@ticatec/config-loader/dist/lib/local-file/LocalFileLoader')).default;
+        case 'local':
             return new LocalFileLoader();
+        default:
+            // getLoader 内部是动态 import，因此 Consul / Nacos 的可选 peer
+            // 只在真正用到那个配置源时才需要安装。
+            return await getLoader(type);
     }
 };
 ```
+
+> 内置 loader 一律经包入口获取：`LocalFileLoader` 直接导出，`ConsulLoader` /
+> `NacosConfigLoader` 通过 `getLoader('consul' | 'nacos')`。本包不提供深层导入路径——
+> `exports` 映射刻意只发布入口，因此 `@ticatec/config-loader/dist/...` 这类路径会直接
+> 报 `ERR_PACKAGE_PATH_NOT_EXPORTED`（而且也根本没有 `dist/` 目录，构建产物在
+> `lib/cjs` 与 `lib/esm`）。
 
 #### 模式 2: 多源配置
 

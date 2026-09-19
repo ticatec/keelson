@@ -95,6 +95,24 @@ export default class NacosConfigLoader extends BaseLoader {
      * @returns Promise that resolves to the configuration content as string
      * @protected
      */
+    /**
+     * 关闭 Nacos 客户端。
+     *
+     * NacosConfigClient 背后是 cluster-client，会起心跳、长轮询与子进程；不主动关闭
+     * 的话 Node 进程退不掉。
+     */
+    async close(): Promise<void> {
+        const client = this.client as unknown as { close?: () => unknown };
+        if (typeof client?.close === 'function') {
+            try {
+                await client.close();
+                logger.debug({}, 'Nacos client closed');
+            } catch (err) {
+                logger.warn({ err }, 'Failed to close the Nacos client');
+            }
+        }
+    }
+
     protected async loadFile(fileName: string): Promise<string> {
         const content = await this.client.getConfig(fileName, this.group);
         if (content == null) {

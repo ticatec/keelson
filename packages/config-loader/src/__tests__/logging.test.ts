@@ -6,6 +6,14 @@ import * as path from 'node:path';
 import { getLoader, loadConfig } from '../lib/BaseLoader';
 import LocalFileLoader from '../lib/local-file/LocalFileLoader';
 
+// 必须 mock：不 mock 的话 `new NacosConfigLoader()` 会真的构造一个
+// NacosConfigClient，其底层 cluster-client 会立刻起心跳、长轮询与子进程，指向
+// 127.0.0.1:8848。测试跑完 Jest 环境已销毁，这些后台任务还在动态 require，于是
+// 报 "import a file after the Jest environment has been torn down"，且 Jest 永远
+// 退不出来（实测需要超时强杀）。单元测试不该依赖外部服务，也不该留下副作用。
+jest.mock('nacos');
+jest.mock('consul');
+
 type Rec = { level: string; ctx: unknown; msg?: string };
 const records: Rec[] = [];
 const capture = (level: string) => (a: unknown, b?: string) => {
@@ -32,6 +40,10 @@ beforeAll(() => {
     fs.writeFileSync(path.join(tmp, 'config', 'logger.yaml'), 'level: info\n');
     cwd = process.cwd();
     process.chdir(tmp);
+    // macOS 的 os.tmpdir() 返回 /var/...，而它是 /private/var/... 的符号链接；
+    // process.chdir 之后 process.cwd() 给出的是解析后的真实路径。LocalFileLoader
+    // 用的正是 process.cwd()，所以断言必须拿规范化后的路径来比。
+    tmp = fs.realpathSync(tmp);
 });
 afterAll(() => {
     process.chdir(cwd);

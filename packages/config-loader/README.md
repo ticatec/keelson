@@ -56,11 +56,14 @@ import dotenv from 'dotenv';
 async function main() {
     dotenv.config();
     
+    const substitute = (content: string) => content.replace(/#{service-name}/g, 'my-service');
+
     const config = await loadConfig(
         'local', // or 'consul', 'nacos'
         'app.yaml',
         'logger.yaml',
-        (content: string) => content.replace(/#{service-name}/g, 'my-service')
+        substitute,   // applied to logger.yaml
+        substitute    // applied to app.yaml
     );
     
     console.log('App Config:', config.appConf);
@@ -195,8 +198,18 @@ const postProcessor = (content: string): string => {
         .replace(/#{environment}/g, process.env.NODE_ENV || 'development');
 };
 
-const config = await loadConfig('local', 'app.yaml', 'logger.yaml', postProcessor);
+// The 4th argument transforms the LOGGER file, the 5th the APPLICATION file.
+// Pass both when the same substitution applies to each.
+const config = await loadConfig('local', 'app.yaml', 'logger.yaml', postProcessor, postProcessor);
+
+// Logger file only - the application config is parsed as-is
+const loggerOnly = await loadConfig('local', 'app.yaml', 'logger.yaml', postProcessor);
 ```
+
+> Before 1.1.0 there was no 5th parameter: the transform reached `logger.yaml`
+> only, while this README's own example implied it applied to the application
+> config. If you relied on the old four-argument form, add the 5th argument to get
+> the behaviour the example described.
 
 ## Logging
 
@@ -467,7 +480,7 @@ const config = await loader.load('application.yaml');
 #### Pattern 1: Factory with Custom Loaders
 
 ```typescript
-import { BaseLoader } from '@ticatec/config-loader';
+import { BaseLoader, LocalFileLoader, getLoader } from '@ticatec/config-loader';
 import EtcdLoader from './loaders/EtcdLoader';
 import EurekaLoader from './loaders/EurekaLoader';
 
@@ -477,18 +490,23 @@ export const getAdvancedLoader = async (type: string): Promise<BaseLoader> => {
             return new EtcdLoader();
         case 'eureka':
             return new EurekaLoader();
-        case 'nacos':
-            const NacosLoader = (await import('@ticatec/config-loader/dist/lib/nacos/NacosConfigLoader')).default;
-            return new NacosLoader();
-        case 'consul':
-            const ConsulLoader = (await import('@ticatec/config-loader/dist/lib/consul/ConsulLoader')).default;
-            return new ConsulLoader();
-        default:
-            const LocalFileLoader = (await import('@ticatec/config-loader/dist/lib/local-file/LocalFileLoader')).default;
+        case 'local':
             return new LocalFileLoader();
+        default:
+            // getLoader imports the Consul / Nacos loader dynamically, so their
+            // optional peers are only required when that source is actually used.
+            return await getLoader(type);
     }
 };
 ```
+
+> The built-in loaders are reached through the package entry point:
+> `LocalFileLoader` is exported directly, and `ConsulLoader` / `NacosConfigLoader`
+> through `getLoader('consul' | 'nacos')`. There are no deep import paths - the
+> `exports` map intentionally publishes only the entry point, so a path such as
+> `@ticatec/config-loader/dist/...` would fail with `ERR_PACKAGE_PATH_NOT_EXPORTED`
+> (and there is no `dist/` directory either - the builds land in `lib/cjs` and
+> `lib/esm`).
 
 #### Pattern 2: Multi-Source Configuration
 

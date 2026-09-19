@@ -9,6 +9,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **`close()` on every loader.** `NacosConfigClient` keeps heartbeats and a cluster
+  process running, so a process that had read its configuration could not exit.
+  `BaseLoader.close()` is a no-op by default, `NacosConfigLoader` overrides it, and
+  `loadConfig()` calls it in a `finally` - configuration is read once at startup, so
+  the connection should not outlive the read.
+- **A configurable local configuration directory.** `LocalFileLoader` hardcoded
+  `process.cwd()/config`. It now takes an optional root, falling back to
+  `CONFIG_DIR` and then to the old default - Kubernetes mounts a ConfigMap wherever
+  it likes, and a monorepo may share one directory across packages. Path-traversal
+  protection applies to whichever root is in effect.
+- **`LocalFileLoader` is exported from the package entry point.** It needs no
+  optional peer, so there is no reason to make callers go through `getLoader`.
+  `ConsulLoader` and `NacosConfigLoader` stay behind `getLoader`'s dynamic import,
+  so their optional peers are only required when that source is actually used.
+- **Read failures carry context.** A failure inside `loadFile` (missing file,
+  permissions, an unreachable KV store) propagated raw, so the caller saw a bare
+  `ENOENT` with no indication of which file or which source. It is now wrapped as
+  `Failed to read configuration '<file>' via <Loader>: <reason>`, with the original
+  error attached as `cause`.
 - **Logging through `@ticatec/logger-api`.** Configuration loading was entirely
   silent: which source was chosen, which files were read, how includes resolved,
   and whether a source came back empty were all invisible. Records now cover the
@@ -30,13 +49,35 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `loggerConf` - so its first records fall back to the console, filtered by
   `LOG_LEVEL`. The logger proxy picks up the real provider once one is registered.
 
-- 11 new tests (63 -> 74), including one asserting that neither a config value nor
-  `CONSUL_TOKEN` can reach the log.
+- 28 new tests (63 -> 91), including one asserting that neither a config value nor
+  `CONSUL_TOKEN` can reach the log, and a regression test for each item above.
 - `lint` script and an `.eslintrc.json`. Without them the monorepo's `pnpm verify`
   never linted this package.
 - `CHANGELOG.md`.
 
 ### Fixed
+
+- **A unit test started a real Nacos client and hung the test run.** The logging
+  suite constructed `NacosConfigLoader` without mocking `nacos`, so
+  `NacosConfigClient` started heartbeats, long-polling and a cluster child process
+  against `127.0.0.1:8848`. After the run those kept calling `require`, producing
+  `You are trying to import a file after the Jest environment has been torn down`,
+  and Jest never exited - the run had to be killed. `nacos` and `consul` are now
+  mocked there, and `close()` (below) gives the loader a way to release the client.
+- **A path assertion in the same suite failed on macOS.** `os.tmpdir()` returns
+  `/var/...`, a symlink to `/private/var/...`, and `process.cwd()` reports the
+  resolved path - which is what `LocalFileLoader` uses. The test now canonicalises
+  the temporary directory with `fs.realpathSync`.
+- **The documented deep-import paths could not work.** Both READMEs showed
+  `await import('@ticatec/config-loader/dist/lib/nacos/NacosConfigLoader')`. There
+  is no `dist/` directory (the builds are `lib/cjs` and `lib/esm`), and the
+  `exports` map publishes only the entry point, so any such path fails with
+  `ERR_PACKAGE_PATH_NOT_EXPORTED`. The examples now use the supported API, and the
+  note explains why there are no deep paths.
+- **`loadConfig`'s post-processor only ever reached the logger file** while the
+  README's own Quick Start implied it transformed the application config. A fifth
+  parameter, `appPostLoader`, now covers the application file; the four-argument
+  form behaves exactly as before.
 
 - **`typecheck` was checking a configuration the build never used.** The script was
   a bare `tsc --noEmit`, which picks up `tsconfig.json` - and that file targeted

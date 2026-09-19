@@ -27,6 +27,17 @@ export default abstract class BaseLoader {
     protected abstract loadFile(fileName: string): Promise<string>;
 
     /**
+     * 释放加载器持有的资源。
+     *
+     * 多数实现无事可做，因此基类给出一个空实现。Nacos 的客户端会在后台维持心跳与
+     * 集群进程，不主动关闭的话，即使调用方准备退出，Node 进程也会一直挂着——优雅
+     * 停机、热重载、容器重启时都会遇到。
+     */
+    async close(): Promise<void> {
+        // 默认无资源需要释放
+    }
+
+    /**
      * Load and parse configuration file with optional post-processing
      * @param fileName - The name of the configuration file to load
      * @param postLoader - Optional function to process the file content before parsing
@@ -34,7 +45,19 @@ export default abstract class BaseLoader {
      * @protected
      */
     protected async loadConfig(fileName: string, postLoader?: PostLoader): Promise<any> {
-        let text = await this.loadFile(fileName);
+        let text: string;
+        try {
+            text = await this.loadFile(fileName);
+        } catch (err) {
+            // 底层异常（文件不存在、权限不足、网络抖动、KV 不可达）此前原样上抛，
+            // 调用方拿到一句 ENOENT 却不知道是哪个配置源的哪个文件。
+            const reason = err instanceof Error ? err.message : String(err);
+            // 用 ErrorOptions 的 cause 传递原始异常，保留 errno / code 等细节。
+            throw new Error(
+                `Failed to read configuration '${fileName}' via ${this.constructor.name}: ${reason}`,
+                { cause: err }
+            );
+        }
         if (text == null) {
             return null;
         }
@@ -218,15 +241,30 @@ const getLoader = async (type: string = 'local'): Promise<BaseLoader> => {
  * @param configMode - The configuration mode ('nacos', 'consul', or 'local')
  * @param configFile - The path to the application configuration file
  * @param logFile - The path to the logger configuration file
- * @param loggerPostLoader - Function to process logger configuration content
+ * @param loggerPostLoader - Function to process the **logger** configuration content
+ * @param appPostLoader - Function to process the **application** configuration content.
+ *   Until now only the logger file could be post-processed, while the README's own
+ *   example suggested the transform applied to the application config - it did not.
  * @returns Promise that resolves to an object containing appConf and loggerConf
  */
-const loadConfig = async (configMode: string, configFile: string, logFile: string, loggerPostLoader?: PostLoader): Promise<any> => {
+const loadConfig = async (
+    configMode: string,
+    configFile: string,
+    logFile: string,
+    loggerPostLoader?: PostLoader,
+    appPostLoader?: PostLoader
+): Promise<any> => {
     logger.debug({ mode: configMode, configFile, logFile }, 'Loading application and logger configuration');
     const loader = await getLoader(configMode);
-    const loggerConf = await loader.load(logFile, loggerPostLoader ?? null);
-    const appConf = await loader.load(configFile);
-    return { appConf, loggerConf };
+    try {
+        const loggerConf = await loader.load(logFile, loggerPostLoader ?? null);
+        const appConf = await loader.load(configFile, appPostLoader ?? null);
+        return { appConf, loggerConf };
+    } finally {
+        // 配置只在启动时读一次，读完就该把后台连接放掉，否则 Nacos 的心跳线程会
+        // 让进程无法退出。
+        await loader.close();
+    }
 }
 
 export {
