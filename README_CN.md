@@ -232,14 +232,14 @@ keelson-core 的 `DBConnection` / `DBFactory` 契约实现。选一个装上，�
 
 Keelson 用到它们，但它们都不依赖 Keelson，在任何 Node 项目里单独用都成立。
 
-| 包 | 版本 | 职责 |
-| --- | --- | --- |
+| 包 | 版本    | 职责 |
+| --- |-------| --- |
 | [logger-api](packages/logger-api) | 1.0.0 | 零依赖的日志契约——库面向它输出，应用注入具体实现 |
 | [logger-pino](packages/logger-pino) | 1.0.0 | `logger-api` 的 pino 实现，支持 appender 与按分类设级别 |
 | [bean-validator](packages/bean-validator) | 1.1.0 | 请求体与 DTO 的声明式校验 |
-| [node-exception](packages/node-exception) | 2.1.0 | HTTP 错误类型与渲染它们的 Express 错误中间件 |
-| [config-loader](packages/config-loader) | 1.1.0 | 本地 YAML/JSON、Nacos、Consul 三种配置源，同一套接口 |
-| [redis-client](packages/redis-client) | 1.2.0 | ioredis 封装，支持具名实例与缓存辅助方法 |
+| [node-exception](packages/node-exception) | 3.0.0 | HTTP 错误类型与渲染它们的 Express 错误中间件 |
+| [config-loader](packages/config-loader) | 2.0.0 | 本地 YAML/JSON、Nacos、Consul 三种配置源，同一套接口 |
+| [redis-client](packages/redis-client) | 2.0.0 | ioredis 封装，支持具名实例与缓存辅助方法 |
 
 ## 贯穿所有包的约定
 

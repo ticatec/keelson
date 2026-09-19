@@ -245,13 +245,13 @@ Keelson uses these; none of them depends on Keelson. They are worth using in any
 project on their own.
 
 | Package | Version | What it does |
-| --- | --- | --- |
-| [logger-api](packages/logger-api) | 1.0.0 | A logging contract with no dependencies — libraries log against it, the application injects the implementation |
-| [logger-pino](packages/logger-pino) | 1.0.0 | pino adapter for `logger-api`, with appenders and per-category levels |
-| [bean-validator](packages/bean-validator) | 1.1.0 | Declarative validation for request bodies and DTOs |
-| [node-exception](packages/node-exception) | 2.1.0 | HTTP error types and the Express error middleware that renders them |
-| [config-loader](packages/config-loader) | 1.1.0 | Configuration from local YAML/JSON, Nacos or Consul, behind one interface |
-| [redis-client](packages/redis-client) | 1.2.0 | ioredis wrapper with named instances and cache helpers |
+| --- |--------| --- |
+| [logger-api](packages/logger-api) | 1.0.0  | A logging contract with no dependencies — libraries log against it, the application injects the implementation |
+| [logger-pino](packages/logger-pino) | 1.0.0  | pino adapter for `logger-api`, with appenders and per-category levels |
+| [bean-validator](packages/bean-validator) | 1.1.0  | Declarative validation for request bodies and DTOs |
+| [node-exception](packages/node-exception) | 3.0.0  | HTTP error types and the Express error middleware that renders them |
+| [config-loader](packages/config-loader) | 2.0.0  | Configuration from local YAML/JSON, Nacos or Consul, behind one interface |
+| [redis-client](packages/redis-client) | 2.0.0  | ioredis wrapper with named instances and cache helpers |
 
 ## Conventions that hold across every package
 
