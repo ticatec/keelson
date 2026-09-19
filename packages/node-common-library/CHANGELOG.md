@@ -2,6 +2,46 @@
 
 All notable changes to `@ticatec/node-common-library` are documented in this file.
 
+## [Unreleased]
+
+### Changed
+
+- **`strict` is on.** The build configs (`tsconfig.cjs.json` / `tsconfig.esm.json`)
+  did not extend `tsconfig.json` - they were standalone - so nothing in the base
+  config ever applied to what shipped: not `strict`, not `skipLibCheck`, not
+  `declarationMap` or `sourceMap`, and `lib` was written outside `compilerOptions`
+  where TypeScript ignores it. Editors and `ts-jest` read the base config while the
+  build read a different one, so what you saw while editing was not what was
+  compiled. Both configs now extend the base, and `strict` is enabled there.
+
+  Decorators are unaffected: `experimentalDecorators` and `emitDecoratorMetadata`
+  govern decorator syntax and metadata emission, `strict` governs type checking.
+  `@Transaction` is a method decorator and injects no fields, so
+  `strictPropertyInitialization` has nothing to complain about - it produced zero
+  errors here.
+
+  The four errors it did surface in this package were both real:
+
+  - `Beans._types` was declared `= {}`, inferred as `{}`, then indexed by string.
+    It is now `Record<string, { loader: BeanLoader }>` - which also means
+    `v.loader` is finally typed rather than `any`.
+  - `DBConnection.fetchData` declared `params?: Array<any>` while `sanitizeParams()`
+    returns `Array<any> | null` and has always been passed straight into it. The
+    signature now says `Array<any> | null`. `null` and `undefined` behave the same
+    under `params?.length` or `params ?? []`, which is why this never broke - but a
+    driver writing `params === undefined` would have missed the case.
+
+- **`isolatedModules` is on**, which surfaced 12 interfaces and type aliases being
+  re-exported in the value list (`PaginationList`, `Field`, `BaseDAO`,
+  `BaseCRUDDAO`, `BatchRecord`, `InsertResult`, `PostConstructionFun`, ...). They
+  now go through `export type`; the value and type exports in `index.ts` are
+  separated. Re-exporting a type as a value breaks transpile-only toolchains
+  (esbuild, swc).
+- `jest.config.cjs` pins `module: 'commonjs'` for ts-jest. Until `isolatedModules`
+  was enabled ts-jest silently downgraded the hybrid `NodeNext` module kind; once
+  it stopped doing that, test files compiled to ESM and Jest's CommonJS runtime
+  refused them.
+
 ## [4.1.0] - 2026-09-19
 
 ### Security

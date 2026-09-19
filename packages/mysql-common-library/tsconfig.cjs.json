@@ -1,17 +1,11 @@
 {
+  "extends": "./tsconfig.json",
   "compilerOptions": {
     "module": "commonjs",
-    "esModuleInterop": true,
-    "experimentalDecorators": true,
-    "emitDecoratorMetadata": true,
-    "target": "es2022",
     "moduleResolution": "node",
-    "declaration": true,
     "outDir": "./lib/cjs",
-    "rootDir": "src",
-    "baseUrl": "."
+    "rootDir": "src"
   },
-  "lib": ["es2022"],
   "include": [
     "src/**/*"
   ],

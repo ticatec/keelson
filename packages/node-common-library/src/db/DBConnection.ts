@@ -7,7 +7,7 @@ import CommonSearchCriteria from "./CommonSearchCriteria.js";
 
 type PostConstructionFun = (obj: any) => void;
 
-export {PostConstructionFun};
+export type {PostConstructionFun};
 
 /**
  * Result structure of an update record operation.
@@ -364,7 +364,14 @@ export default abstract class DBConnection {
      * @abstract
      * @returns Promise resolving to raw database result.
      */
-    protected abstract fetchData(sql: string, params?: Array<any>): Promise<any>;
+    /**
+     * @param params - 绑定参数。允许为 `null`：`sanitizeParams()` 在没有参数时返回的
+     *   正是 `null`，而这里一直在把它传进来。此前签名写的是 `Array<any> | undefined`，
+     *   与实际传入的值并不一致——`null` 与 `undefined` 在 `params?.length` 或
+     *   `params ?? []` 下表现相同，所以一直没暴露，但驱动里只要有人写
+     *   `params === undefined` 就会漏判。
+     */
+    protected abstract fetchData(sql: string, params?: Array<any> | null): Promise<any>;
 
     /**
      * Retrieves field definitions from a query result.

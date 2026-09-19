@@ -7,7 +7,11 @@ export type BeanLoader = () => Promise<any>;
 export default class Beans {
 
     private static instance: Beans;
-    private _types = {};
+    /**
+     * 已注册的 Bean 类型。此前写成 `= {}`，被推断为 `{}`，于是用字符串索引它在
+     * strict 下报错，而在 strict 之外 `v.loader` 的类型一路是 any，写错成员名也没人管。
+     */
+    private _types: Record<string, { loader: BeanLoader }> = {};
     protected logger: Logger = getLogger('Beans');
 
     private constructor() {
