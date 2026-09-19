@@ -64,6 +64,38 @@
   层内部用 this.getRepositoryInstance<T>(name) 或 this.getDAOInstance<T>(name) 解析，
   写成 private getter，不要写成字段。
 
+JSDOC —— 必须写，不是可选：
+
+  service / repository / dao 接口上的每个方法都要写 JSDoc：做什么、每个 @param、
+  @returns，以及它可能抛出的每种异常的 @throws。
+  web controller 的每个公开方法都要写 JSDoc。
+  实现类里的每个 protected 方法都要写 JSDoc——那些是扩展点，子类作者没法从方法体里
+  读出你的意图。
+
+  私有方法、以及只用来解析 bean 的 getter 不需要。
+
+  接口是别人用来了解"这个模块能做什么"的那个文件。如果它的 JSDoc 回答不了
+  "这个方法会抛什么、什么时候抛"，这个接口就还没写完。
+
+抛异常 —— 每个 throw 之前先写日志：
+
+  每个 `throw` 之前，写一条记录**为什么**的日志，带上导致这个判断的输入：
+
+      if (order.status !== 'ACTIVE') {
+          this.logger.warn({ orderId: order.id, status: order.status },
+              'Rejecting cancel: order is not active');
+          throw new ConflictError('订单不处于可用状态');
+      }
+
+  级别：运维可能关心的 4xx（冲突、权限不足）用 warn；例行的（找不到、入参不合法）
+  用 debug；5xx 用 error。
+
+  记录的是原因与它的输入，**不是异常对象本身**——框架的错误中间件已经记过异常了
+  （5xx 带栈，4xx 记 debug），再记一遍会让一件事在日志里出现两条。
+
+  不记敏感信息这条依然成立：id、状态、状态迁移可以；口令、token、完整请求体、
+  用户标识不行。
+
 日志：
 
   用每个基类都提供的 this.logger。绝不用 console.*。
@@ -100,3 +132,7 @@ TypeScript：
    控制器里有没有 `getDBConnection`。
 3. **Web 层以下有没有验证？** service 里出现 `if (!data.name) throw`，说明助手没有相信
    第 2 条规则。把它删掉，改成控制器上的规则。
+4. **每个 `throw` 上面都有日志吗？** 在文件里搜 `throw new`，逐个看它上面那行。
+   这是助手最常漏掉的一条，因为漏了之后代码本身看不出任何毛病。
+5. **每个接口方法都写了 `@throws` 吗？** 一个会抛 `ConflictError` 却没说的接口方法，
+   就是一个等着发生的调用方 bug。

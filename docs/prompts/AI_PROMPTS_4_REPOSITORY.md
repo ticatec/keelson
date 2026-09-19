@@ -17,17 +17,37 @@ Checks the repository makes, because it is the layer that knows how to fetch the
 The shape is a `require*` method that returns the entity or throws:
 
 ```typescript
+/**
+ * Loads an order and asserts it is usable by this tenant.
+ * @param id - The order id.
+ * @param tenantCode - The caller's tenant.
+ * @returns The order.
+ * @throws {ActionNotFoundError} No such order, or it belongs to another tenant.
+ * @throws {ConflictError} The order exists but is not ACTIVE.
+ */
 async requireActive(id: string, tenantCode: string): Promise<Order> {
     const order = await this.findById(id);
+
     if (order == null || order.tenantCode !== tenantCode) {
+        this.logger.debug({ orderId: id, tenantCode },
+            'Order not found for this tenant');
         throw new ActionNotFoundError();
     }
+
     if (order.status !== 'ACTIVE') {
+        this.logger.warn({ orderId: id, status: order.status },
+            'Order is not in ACTIVE state');
         throw new ConflictError('Order is not active');
     }
+
     return order;
 }
 ```
+
+Three things in that method are the conventions rather than the logic: the JSDoc names
+every error it can raise, each throw is preceded by a log of the reason, and the
+tenant-mismatch case is `debug` rather than `warn` because a caller probing ids should not
+be able to fill an operator's dashboard.
 
 The service then reads as the business rule it is, with no null-handling noise:
 
@@ -87,6 +107,12 @@ Rules:
 - no SQL here; every query is a DAO call
 - no business rules; those are the service's
 - no @Transaction(); the boundary is the service's
+
+Documentation and logging:
+- JSDoc on every method, with a @throws line for each error the require* methods raise
+- every `throw` preceded by a this.logger call recording why, with the id and the state
+  that led to it — debug for not-found, warn for a wrong status. Do not log the error
+  object; the framework's middleware does that.
 ```
 
 ## Prompt 4.2 — An entity assembled from several DAOs

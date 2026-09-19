@@ -71,6 +71,12 @@ Service 接口（已定义，不要重写）：
 
 使用 @ticatec/bean-validator 的 StringValidator、NumberValidator、DateValidator、
 EnumValidator。除了 getCreateRules/getUpdateRules，别处一律不要写验证。
+
+文档：
+- 控制器的每个公开方法、以及你覆写的每个 protected 方法都写 JSDoc——
+  getCreateRules、getUpdateRules、getCreateNewArguments 这些都是扩展点，
+  要说清楚各自返回什么、与默认实现有何不同
+- 路由类上写一段类级 JSDoc，列出它绑定的路径
 ```
 
 ## 提示词 2.2 —— 自定义 service 入参
@@ -102,6 +108,8 @@ getLoggedUser(req) 在代理身份生效时返回被代理的用户，用它，�
 - 按控制器同样的方式解析 service
 - 用 routerHelper.invokeRestfulAction 包装处理函数
 - 成功时不返回任何内容，让框架回 204
+- 处理函数写 JSDoc：做什么、@param、以及它自己会抛出的异常的 @throws
+- 如果处理函数自己抛异常（校验器表达不了的规则），先记一条为什么
 
 请说明这套验证规则放在哪里、怎么被调用——因为它不是 CommonController 的方法。
 ```

@@ -22,6 +22,13 @@ Never open one, never pass one as an argument, never commit.
 affected-row count. Turning a zero-row update into `ActionNotFoundError` is the repository's
 job, because only it knows whether zero rows is an error.
 
+**JSDoc on every method.** A DAO method's signature does not show which table it touches or
+what the returned shape is; the JSDoc does. This is the layer where a reader most often has
+to guess, and the layer where guessing wrong is a production query.
+
+This is also the layer with the fewest throws — most DAO methods have none, and the
+throw-site logging rule simply does not come up. Where one does throw, the rule applies.
+
 ## The helpers
 
 | Method | Returns |
@@ -88,6 +95,11 @@ Rules:
   method or obtain the connection with this.getDBConnection() and use its listQuery
   overload. State which you chose and why.
 - no business rules, no validation, no error translation — return what the database said
+
+Documentation:
+- JSDoc on every method: what it queries, @param for each, @returns describing the shape
+- a DAO rarely throws by itself; where one does (an unsupported argument, an empty batch
+  that is a caller error rather than a no-op), log the reason before throwing
 ```
 
 ## Prompt 5.2 — Paginated search

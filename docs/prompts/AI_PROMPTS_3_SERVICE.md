@@ -10,20 +10,53 @@ class.
 ```typescript
 // src/service/OrderService.ts — the contract
 export default interface OrderService {
+
+    /**
+     * Creates an order in the caller's tenant and returns its id.
+     * @param user - The acting user; the order is created in this user's tenant.
+     * @param data - The order to create. Field shapes are validated at the web layer.
+     * @returns The id of the new order.
+     * @throws {ConflictError} The order code already exists in this tenant.
+     */
     createNew(user: AppUser, data: Order): Promise<string>;
+
+    /**
+     * Cancels an active order.
+     * @param user - The acting user; must hold the ORDER_ADMIN role.
+     * @param id - The order id.
+     * @param reason - Free text recorded on the cancellation.
+     * @throws {ActionNotFoundError} No such order, or it belongs to another tenant.
+     * @throws {ConflictError} The order is not in ACTIVE state.
+     * @throws {InsufficientPermissionError} The caller lacks the ORDER_ADMIN role.
+     */
     cancel(user: AppUser, id: string, reason: string): Promise<void>;
 }
 
 // src/service/impl/OrderServiceImpl.ts — the implementation
 export default class OrderServiceImpl extends CommonService implements OrderService {
+
     private get repo(): OrderRepository {
         return this.getRepositoryInstance<OrderRepository>('OrderRepository');
     }
 
     @Transaction()
-    async createNew(user: AppUser, data: Order): Promise<string> { /* ... */ }
+    async cancel(user: AppUser, id: string, reason: string): Promise<void> {
+        const order = await this.repo.requireActive(id, user.tenantCode);
+
+        if (!user.roles.includes('ORDER_ADMIN')) {
+            this.logger.warn({ orderId: id, roles: user.roles },
+                'Rejecting cancel: caller lacks ORDER_ADMIN');
+            throw new InsufficientPermissionError();
+        }
+
+        await this.repo.cancel(order.id, reason);
+    }
 }
 ```
+
+Every interface method documents its `@throws`, every throw site logs why first, and the
+implementation carries no JSDoc duplicating the interface — the contract is documented in
+one place.
 
 Registered under the **interface** name, pointing at the **implementation**:
 
@@ -90,6 +123,15 @@ Produce two files.
        caller must hold the ORDER_ADMIN role — otherwise InsufficientPermissionError
    - the existence, tenant and status checks are calls into the repository, not queries
      written here
+
+Documentation and logging:
+- every method on the INTERFACE gets JSDoc with @param, @returns and a @throws line for
+  each error type it can raise
+- the implementation class does not repeat that JSDoc; any protected method it adds does
+  get its own
+- every `throw` in the implementation is preceded by a this.logger call recording why,
+  with the ids and states that led to the decision — warn for a 4xx an operator cares
+  about, debug for routine ones. Do not log the error object; the framework does that.
 
 No validation of field shapes — that is the web layer's job. No SQL. Do not catch and
 re-throw; let errors propagate so the transaction rolls back.

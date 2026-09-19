@@ -122,6 +122,9 @@
 在 beforeStart() 里用 setUserResolver() 安装。
 
 不要在解析器内部拒绝请求，也不要在验证失败时返回一个填了一半的用户对象。
+
+你覆写的每个 protected 方法——userHeader、decode 以及其他——都写 JSDoc，
+说明它相对默认实现改变了什么。
 ```
 
 ## 提示词 1.5 —— 非请求头来源的解析器
@@ -156,6 +159,9 @@ HeaderUserResolver），只实现一个 resolve(req) 方法，返回用户或 un
 
 代理身份生效时，isValidUser 拿到的是 actAs 用户。不要把针对单条记录的权限检查写在
 这里——那属于 service。
+
+两个类的 isValidUser 都写 JSDoc，说明它执行的是哪条规则。admin 那个类抛
+InsufficientPermissionError 的地方，先记一条原因与角色集合。
 ```
 
 ## 提示词 1.7 —— 健康检查与后台处理器

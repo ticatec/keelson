@@ -9,20 +9,52 @@
 ```typescript
 // src/service/OrderService.ts —— 契约
 export default interface OrderService {
+
+    /**
+     * 在调用者所属租户内创建订单，返回其 id。
+     * @param user - 操作用户；订单创建在该用户的租户下。
+     * @param data - 待创建的订单。字段形状已在 Web 层校验。
+     * @returns 新订单的 id。
+     * @throws {ConflictError} 该订单编码在本租户内已存在。
+     */
     createNew(user: AppUser, data: Order): Promise<string>;
+
+    /**
+     * 取消一个处于 ACTIVE 状态的订单。
+     * @param user - 操作用户；必须持有 ORDER_ADMIN 角色。
+     * @param id - 订单 id。
+     * @param reason - 取消原因，自由文本，会记录在取消记录上。
+     * @throws {ActionNotFoundError} 订单不存在，或属于其他租户。
+     * @throws {ConflictError} 订单不处于 ACTIVE 状态。
+     * @throws {InsufficientPermissionError} 调用者没有 ORDER_ADMIN 角色。
+     */
     cancel(user: AppUser, id: string, reason: string): Promise<void>;
 }
 
 // src/service/impl/OrderServiceImpl.ts —— 实现
 export default class OrderServiceImpl extends CommonService implements OrderService {
+
     private get repo(): OrderRepository {
         return this.getRepositoryInstance<OrderRepository>('OrderRepository');
     }
 
     @Transaction()
-    async createNew(user: AppUser, data: Order): Promise<string> { /* ... */ }
+    async cancel(user: AppUser, id: string, reason: string): Promise<void> {
+        const order = await this.repo.requireActive(id, user.tenantCode);
+
+        if (!user.roles.includes('ORDER_ADMIN')) {
+            this.logger.warn({ orderId: id, roles: user.roles },
+                'Rejecting cancel: caller lacks ORDER_ADMIN');
+            throw new InsufficientPermissionError();
+        }
+
+        await this.repo.cancel(order.id, reason);
+    }
 }
 ```
+
+接口上每个方法都写明 `@throws`，每个抛异常的地方先记一条"为什么"，而实现类不重复接口
+上的 JSDoc——契约只在一个地方有文档。
 
 以**接口名**注册，指向**实现**：
 
@@ -85,6 +117,14 @@ beanFactory.createBean<OrderService>('OrderService')!
      * cancel：订单必须存在、属于调用者的租户、处于 ACTIVE 状态，且调用者必须持有
        ORDER_ADMIN 角色——否则抛 InsufficientPermissionError
    - 存在性、租户归属、状态这三类检查是对 repository 的调用，不是在这里写的查询
+
+文档与日志：
+- **接口**上的每个方法都写 JSDoc，含 @param、@returns，以及它可能抛出的每种异常的
+  @throws
+- 实现类不重复接口的 JSDoc；它自己新增的 protected 方法要写
+- 实现类里每个 `throw` 之前都有一条 this.logger，记录为什么，带上导致这个判断的
+  id 与状态——运维关心的 4xx 用 warn，例行的用 debug。不要记录异常对象本身，
+  框架已经记了。
 
 不做字段形状的验证——那是 Web 层的事。不写 SQL。不要捕获后重新抛出，
 让异常自然传播以便事务回滚。

@@ -16,17 +16,36 @@ service 与 DAO 之间的桥梁。它装配领域实体、做简单的实体检�
 形状是一个"返回实体或抛异常"的 `require*` 方法：
 
 ```typescript
+/**
+ * 取出订单并断言它对这个租户可用。
+ * @param id - 订单 id。
+ * @param tenantCode - 调用者所属租户。
+ * @returns 订单。
+ * @throws {ActionNotFoundError} 订单不存在，或属于其他租户。
+ * @throws {ConflictError} 订单存在但不处于 ACTIVE 状态。
+ */
 async requireActive(id: string, tenantCode: string): Promise<Order> {
     const order = await this.findById(id);
+
     if (order == null || order.tenantCode !== tenantCode) {
+        this.logger.debug({ orderId: id, tenantCode },
+            'Order not found for this tenant');
         throw new ActionNotFoundError();
     }
+
     if (order.status !== 'ACTIVE') {
+        this.logger.warn({ orderId: id, status: order.status },
+            'Order is not in ACTIVE state');
         throw new ConflictError('订单不处于可用状态');
     }
+
     return order;
 }
 ```
+
+这个方法里有三处是约定而不是逻辑：JSDoc 写明了它能抛出的每种异常；每个抛异常的地方
+上面都有一条记录原因的日志；租户不匹配那一条用的是 `debug` 而不是 `warn`——
+不能让一个在试探 id 的调用者把运维的仪表盘刷满。
 
 于是 service 读起来就是它本该是的那条业务规则，没有判空的噪音：
 
@@ -84,6 +103,11 @@ repository 是唯一知道一个实体是怎么被取出来的那一层，所以
 - 这里不写 SQL；每次查询都是一次 DAO 调用
 - 不写业务规则；那是 service 的
 - 不加 @Transaction()；边界是 service 的
+
+文档与日志：
+- 每个方法都写 JSDoc，require* 方法能抛的每种异常都写一行 @throws
+- 每个 `throw` 之前都有一条 this.logger 记录为什么，带上 id 与导致它的状态——
+  找不到用 debug，状态不对用 warn。不要记录异常对象本身，框架中间件已经记了。
 ```
 
 ## 提示词 4.2 —— 由多个 DAO 装配出的实体

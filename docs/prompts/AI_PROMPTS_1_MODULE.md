@@ -131,6 +131,9 @@ Install it with setUserResolver() in beforeStart().
 
 Do not reject requests inside the resolver, and do not return a partially populated user
 when verification fails.
+
+JSDoc on every protected method you override — userHeader, decode and any other — saying
+what it changes relative to the default.
 ```
 
 ## Prompt 1.5 — A resolver for a non-header source
@@ -167,6 +170,9 @@ Generate the route classes:
 
 isValidUser receives the actAs user when impersonation is active. Do not put per-record
 permission checks here — those go in the service.
+
+JSDoc on isValidUser in both classes stating the rule it enforces. Where the admin class
+throws InsufficientPermissionError, log the reason and the role set first.
 ```
 
 ## Prompt 1.7 — Health checks and processors

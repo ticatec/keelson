@@ -73,6 +73,12 @@ Produce two files:
 
 Use @ticatec/bean-validator: StringValidator, NumberValidator, DateValidator,
 EnumValidator. Put no validation anywhere except getCreateRules/getUpdateRules.
+
+Documentation:
+- JSDoc on every public method of the controller, and on every protected method you
+  override — getCreateRules, getUpdateRules, getCreateNewArguments and the rest are
+  extension points, so say what each one returns and why it differs from the default
+- a class-level JSDoc block on the routes class listing the paths it binds
 ```
 
 ## Prompt 2.2 — Custom service arguments
@@ -106,6 +112,8 @@ Requirements:
 - Resolve the service the same way the controller does
 - Wrap the handler with routerHelper.invokeRestfulAction
 - Return nothing on success, so the framework answers 204
+- JSDoc on the handler: what it does, @param, @throws for anything it raises itself
+- if the handler throws directly (a rule the validators cannot express), log why first
 
 Show where the validation rules live and how they are invoked, given that this is not a
 CommonController method.

@@ -68,6 +68,40 @@ WIRING:
   BaseServer.beforeStart(). Inside a layer, resolve with this.getRepositoryInstance<T>(name)
   or this.getDAOInstance<T>(name), declared as a private getter, never a field.
 
+JSDOC — required, not optional:
+
+  Every method on a service, repository or DAO interface carries JSDoc: what it does,
+  every @param, @returns, and @throws for each error type it can raise.
+  Every public method on a web controller carries JSDoc.
+  Every protected method on an implementation class carries JSDoc — those are the
+  extension points, and a subclass author cannot read your intent from the body.
+
+  Private methods and getters that only resolve a bean do not need it.
+
+  The interface is the file someone reads to learn what a module can do. If its JSDoc
+  does not answer "what does this throw and when", the interface is not finished.
+
+THROWING — every throw site logs first:
+
+  Before every `throw`, write a logger call that records WHY, with the inputs that led
+  to the decision:
+
+      if (order.status !== 'ACTIVE') {
+          this.logger.warn({ orderId: order.id, status: order.status },
+              'Rejecting cancel: order is not active');
+          throw new ConflictError('Order is not active');
+      }
+
+  Level: warn for a 4xx the operator might care about (conflict, permission denied);
+  debug for routine ones (not found, bad input); error for a 5xx.
+
+  Log the reason and its inputs, NOT the error object — the framework's error middleware
+  already records the error itself (5xx with its stack, 4xx at debug), so repeating it
+  produces two entries for one event.
+
+  The no-secrets rule still applies: an id, a status and a state transition are fine; a
+  password, a token, a full request body or a user identifier are not.
+
 LOGGING:
 
   Use this.logger, which every base class provides. Never console.*.
@@ -108,3 +142,8 @@ Three checks catch most of what an assistant gets wrong here:
    service, or `getDBConnection` inside a controller.
 3. **Is there validation below the web layer?** A `if (!data.name) throw` inside a service
    means the assistant did not believe rule 2. Move it into the controller's rules.
+4. **Does every `throw` have a log above it?** Grep the file for `throw new` and check the
+   line before each one. This is the rule assistants drop most often, because nothing about
+   the code looks wrong without it.
+5. **Does every interface method have `@throws`?** An interface method that can raise
+   `ConflictError` and does not say so is a caller's bug waiting to happen.
