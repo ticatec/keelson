@@ -214,8 +214,8 @@ await notifier.sendConfirmation(id);               // only reached if the commit
 
 ---
 
-Deeper reference: [the service prompts](../docs/prompts/AI_PROMPTS_3_SERVICE.md) and
-[the DAO prompts](../docs/prompts/AI_PROMPTS_5_DAO.md) for the layer rules, and
+Deeper reference: [the service prompts](../ai-prompts/AI_PROMPTS_3_SERVICE.md) and
+[the DAO prompts](../ai-prompts/AI_PROMPTS_5_DAO.md) for the layer rules, and
 [keelson-core's README](../packages/keelson-core/README.md) for every query helper.
 
 Next: [Wiring](03-wiring.md) — how these classes find each other.

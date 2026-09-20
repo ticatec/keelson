@@ -20,15 +20,15 @@
 | 8 | [配置与缓存](08-config-and-cache_CN.md) | 本地 YAML、Nacos、Consul、Redis |
 | 9 | [上线之前](09-production-checklist_CN.md) | 检查清单，以及每一条背后的理由 |
 
-## 它与 docs/prompts 指南的关系
+## 它与 ai-prompts 指南的关系
 
-`docs/prompts/` 是**参考手册**——单个层的每个方法、每个选项、每种边界情况。
+`ai-prompts/` 是**参考手册**——单个层的每个方法、每个选项、每种边界情况。
 本教程是另一半：这些部件为什么长成这样，以及它们怎么拼在一起。涉及核心层（DAO、
 Service、依赖注入、控制器与数据校验）的章节末尾均链接了对应的深入指南。
 
 想理解框架，读教程；动手写代码时，把指南开在旁边。
 
-如果你用 AI 助手写代码，`docs/prompts/AI_PROMPTS_CN.md` 里有可直接粘贴的分层规则块，
+如果你用 AI 助手写代码，`ai-prompts/README_CN.md` 里有可直接粘贴的分层规则块，
 以及按层组织的现成提示词。
 
 ## 各章的约定

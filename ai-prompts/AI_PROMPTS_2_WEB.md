@@ -1,6 +1,6 @@
 # 2. Web layer — routes and controllers
 
-[中文](AI_PROMPTS_2_WEB_CN.md) | English · [Index](AI_PROMPTS.md)
+[中文](AI_PROMPTS_2_WEB_CN.md) | English · [Index](README.md)
 
 The layer that turns an HTTP request into a service call. Its second job, and the one that
 is easiest to let slip, is that **all** boundary validation happens here.

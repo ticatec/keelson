@@ -1,6 +1,6 @@
 # 1. Module setup and access control
 
-[中文](AI_PROMPTS_1_MODULE_CN.md) | English · [Index](AI_PROMPTS.md)
+[中文](AI_PROMPTS_1_MODULE_CN.md) | English · [Index](README.md)
 
 Standing up a Keelson module: the server class, its lifecycle, the database, bean
 registration, and deciding who is allowed in.

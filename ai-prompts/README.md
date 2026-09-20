@@ -1,6 +1,6 @@
 # AI Prompts for Keelson
 
-[中文](AI_PROMPTS_CN.md) | English
+[中文](README_CN.md) | English
 
 Prompts for driving an AI assistant to write Keelson code that matches the framework's
 conventions instead of inventing its own. Paste the rules block below once at the start of a

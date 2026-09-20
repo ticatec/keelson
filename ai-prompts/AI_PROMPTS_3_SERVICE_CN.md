@@ -1,6 +1,6 @@
 # 3. Service 层 —— 接口与实现
 
-中文 | [English](AI_PROMPTS_3_SERVICE.md) · [目录](AI_PROMPTS_CN.md)
+中文 | [English](AI_PROMPTS_3_SERVICE.md) · [目录](README_CN.md)
 
 业务逻辑与事务边界。以接口声明，由类实现。
 

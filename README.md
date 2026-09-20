@@ -315,13 +315,13 @@ For the exhaustive detail of a single layer:
 
 | Reference | Covers |
 | --- | --- |
-| [AI Prompts](docs/prompts/AI_PROMPTS.md) | The layer rules as a block to paste into an AI session, plus prompts per layer — the authoritative statement of the conventions |
-| [Search Criteria](docs/prompts/SEARCH_CRITERIA.md) | The dynamic query builder — condition helpers, utilities, extension points, generated SQL |
+| [AI Prompts](ai-prompts/README.md) | The layer rules as a block to paste into an AI session, plus prompts per layer — the authoritative statement of the conventions |
+| [Search Criteria](ai-prompts/SEARCH_CRITERIA.md) | The dynamic query builder — condition helpers, utilities, extension points, generated SQL |
 | [bean-validator README](packages/bean-validator/README.md) | Every validator, its options and defaults, custom checks, localised messages |
 | [keelson-express README](packages/keelson-express/README.md) | Controllers, routes, the server lifecycle, identity |
 | [keelson-core README](packages/keelson-core/README.md) | DAO helpers, transactions, the bean factory |
 
-The two documents under `docs/prompts/` have Chinese counterparts with a `_CN` suffix; each
+The documents under `ai-prompts/` have Chinese counterparts with a `_CN` suffix; each
 package README has a `README_CN.md` beside it.
 
 ## Renamed packages

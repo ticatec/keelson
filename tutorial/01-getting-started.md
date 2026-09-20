@@ -5,6 +5,33 @@
 By the end of this chapter you have a service that connects to PostgreSQL, answers a
 request, and reports its health. About sixty lines of your own code.
 
+## What is Keelson?
+
+A **keelson** is the internal beam bolted over a ship's keel, running the entire length of the hull. It ties the frames together and carries the longitudinal load. You never see it from the outside, and nothing holds without it.
+
+In the Node.js and Express ecosystem, Keelson is an enterprise TypeScript framework designed specifically for **relational database business applications**. It is tailored for standard line-of-business services: endpoints that read and write database tables inside transactional boundaries, extract tenant and user identities from request context, and where the core focus belongs on business rules rather than plumbing boilerplate.
+
+### Core Philosophy
+
+Keelson is opinionated about the foundational skeleton of an application, while deliberately thin and unobtrusive everywhere else:
+
+- **Not an ORM: You write SQL**: Decades of experience prove that SQL is the most expressive, performant, and transparent language for relational databases. In Keelson, you write clean, parameterised SQL directly. Complex dynamic filters are powered by type-safe Search Criteria helpers without leaky abstractions.
+- **Context-driven Declarative Transactions**: A transaction is declared once on a service method. Powered by Node.js `AsyncLocalStorage`, the active database connection flows down the execution tree automatically. Every repository and DAO picks up the same connection without anyone passing it as a function argument.
+- **Lightweight, Explicit Dependency Injection (BeanFactory)**: Avoids heavyweight runtime decorator metadata scanning and magic discovery. Dependencies are registered by name and resolved as lazy singletons on first access, eliminating initialization order headaches and hidden circular dependency traps.
+
+### Strict Four-Tier Architecture
+
+Keelson cleanly structures business logic across four distinct tiers, each calling only the next layer down:
+
+| Layer | Responsibility & Conventions | Key Constraints |
+| :--- | :--- | :--- |
+| **Web layer** (`routes` + `controller`) | HTTP routing and **all boundary input validation** | Declared via `@ticatec/bean-validator`; downstream never re-validates input shape |
+| **Service layer** | Domain business logic and the **sole transaction boundary** | Write operations use `@Transaction()`, reads use `@Transaction(Propagation.NONE)` |
+| **Repository layer** | Domain entity assembly, basic status checks & caching | Bridges business and data; owns Redis cache; never leaks cache logic up or down |
+| **DAO layer** | Raw single-table SQL queries | Zero business rules; automatically retrieves DB connection from transaction context |
+
+---
+
 ## Install
 
 ```bash

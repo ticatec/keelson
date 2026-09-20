@@ -1,6 +1,6 @@
 # 2. Web 层 —— 路由与控制器
 
-中文 | [English](AI_PROMPTS_2_WEB.md) · [目录](AI_PROMPTS_CN.md)
+中文 | [English](AI_PROMPTS_2_WEB.md) · [目录](README_CN.md)
 
 把一个 HTTP 请求变成一次 service 调用的那一层。它的第二个职责——也是最容易滑掉的
 那个——是**所有**边界验证都在这里完成。

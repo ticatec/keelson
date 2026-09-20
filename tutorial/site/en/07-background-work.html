@@ -251,12 +251,12 @@
 <div class="code-block-wrapper">
   <div class="code-block-header">
     <span class="code-lang-tag">typescript</span>
-    <button class="copy-btn" data-code-id="code-sgqsrfr" title="复制代码">
+    <button class="copy-btn" data-code-id="code-zybdyri" title="复制代码">
       <svg class="copy-icon" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
       <span class="copy-label">复制</span>
     </button>
   </div>
-  <pre class="code-block"><code id="code-sgqsrfr" class="language-typescript"><span class="token keyword">import</span> { CommonProcessor } <span class="token keyword">from</span> <span class="token string">&#039;@ticatec/keelson-express&#039;</span>;
+  <pre class="code-block"><code id="code-zybdyri" class="language-typescript"><span class="token keyword">import</span> { CommonProcessor } <span class="token keyword">from</span> <span class="token string">&#039;@ticatec/keelson-express&#039;</span>;
 <span class="token keyword">import</span> { beanFactory } <span class="token keyword">from</span> <span class="token string">&#039;@ticatec/keelson-core&#039;</span>;
 
 <span class="token keyword">interface</span> PendingMail { id: string; to: string; body: string; }
@@ -290,12 +290,12 @@
 <div class="code-block-wrapper">
   <div class="code-block-header">
     <span class="code-lang-tag">typescript</span>
-    <button class="copy-btn" data-code-id="code-gwh9y0r" title="复制代码">
+    <button class="copy-btn" data-code-id="code-mz0mwtk" title="复制代码">
       <svg class="copy-icon" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
       <span class="copy-label">复制</span>
     </button>
   </div>
-  <pre class="code-block"><code id="code-gwh9y0r" class="language-typescript"><span class="token keyword">import</span> { ProcessorManager } <span class="token keyword">from</span> <span class="token string">&#039;@ticatec/keelson-express&#039;</span>;
+  <pre class="code-block"><code id="code-mz0mwtk" class="language-typescript"><span class="token keyword">import</span> { ProcessorManager } <span class="token keyword">from</span> <span class="token string">&#039;@ticatec/keelson-express&#039;</span>;
 
 <span class="token keyword">protected</span> <span class="token keyword">async</span> <span class="token function">beforeStart</span>(): <span class="token builtin">Promise</span>&lt;<span class="token keyword">void</span>&gt; {
     DBManager.<span class="token function">init</span>(<span class="token function">initializePg</span>(AppConf.<span class="token function">getInstance</span>()!.<span class="token keyword">get</span>(<span class="token string">&#039;database&#039;</span>)));
@@ -317,12 +317,12 @@
 <div class="code-block-wrapper">
   <div class="code-block-header">
     <span class="code-lang-tag">typescript</span>
-    <button class="copy-btn" data-code-id="code-27zio07" title="复制代码">
+    <button class="copy-btn" data-code-id="code-5tkx8qg" title="复制代码">
       <svg class="copy-icon" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
       <span class="copy-label">复制</span>
     </button>
   </div>
-  <pre class="code-block"><code id="code-27zio07" class="language-typescript"><span class="token keyword">const</span> server = <span class="token keyword">new</span> <span class="token function">MyServer</span>();
+  <pre class="code-block"><code id="code-5tkx8qg" class="language-typescript"><span class="token keyword">const</span> server = <span class="token keyword">new</span> <span class="token function">MyServer</span>();
 BaseServer.<span class="token function">startup</span>(server);
 
 <span class="token keyword">for</span> (<span class="token keyword">const</span> signal of [<span class="token string">&#039;SIGTERM&#039;</span>, <span class="token string">&#039;SIGINT&#039;</span>] as <span class="token keyword">const</span>) {

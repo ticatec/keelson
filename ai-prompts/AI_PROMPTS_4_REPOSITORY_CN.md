@@ -1,6 +1,6 @@
 # 4. Repository 层
 
-中文 | [English](AI_PROMPTS_4_REPOSITORY.md) · [目录](AI_PROMPTS_CN.md)
+中文 | [English](AI_PROMPTS_4_REPOSITORY.md) · [目录](README_CN.md)
 
 service 与 DAO 之间的桥梁。它装配领域实体、做简单的实体检查，并且管着缓存。
 

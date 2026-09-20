@@ -1,6 +1,6 @@
 # 5. DAO 层
 
-中文 | [English](AI_PROMPTS_5_DAO.md) · [目录](AI_PROMPTS_CN.md)
+中文 | [English](AI_PROMPTS_5_DAO.md) · [目录](README_CN.md)
 
 SQL，仅此而已。
 

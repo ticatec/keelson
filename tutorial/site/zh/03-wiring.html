@@ -268,12 +268,12 @@
 <div class="code-block-wrapper">
   <div class="code-block-header">
     <span class="code-lang-tag">typescript</span>
-    <button class="copy-btn" data-code-id="code-fsqohab" title="复制代码">
+    <button class="copy-btn" data-code-id="code-zwkk45e" title="复制代码">
       <svg class="copy-icon" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
       <span class="copy-label">复制</span>
     </button>
   </div>
-  <pre class="code-block"><code id="code-fsqohab" class="language-typescript"><span class="token keyword">import</span> { beanFactory } <span class="token keyword">from</span> <span class="token string">&#039;@ticatec/keelson-core&#039;</span>;
+  <pre class="code-block"><code id="code-zwkk45e" class="language-typescript"><span class="token keyword">import</span> { beanFactory } <span class="token keyword">from</span> <span class="token string">&#039;@ticatec/keelson-core&#039;</span>;
 
 beanFactory.<span class="token function">register</span>(<span class="token string">&#039;UserDAO&#039;</span>, UserDAO);
 beanFactory.<span class="token function">register</span>(<span class="token string">&#039;UserRepository&#039;</span>, UserRepository);
@@ -285,12 +285,12 @@ beanFactory.<span class="token function">register</span>(<span class="token stri
 <div class="code-block-wrapper">
   <div class="code-block-header">
     <span class="code-lang-tag">typescript</span>
-    <button class="copy-btn" data-code-id="code-wrqi3jf" title="复制代码">
+    <button class="copy-btn" data-code-id="code-jar1ald" title="复制代码">
       <svg class="copy-icon" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
       <span class="copy-label">复制</span>
     </button>
   </div>
-  <pre class="code-block"><code id="code-wrqi3jf" class="language-typescript"><span class="token keyword">const</span> service = beanFactory.createBean&lt;UserService&gt;(<span class="token string">&#039;UserService&#039;</span>);</code></pre>
+  <pre class="code-block"><code id="code-jar1ald" class="language-typescript"><span class="token keyword">const</span> service = beanFactory.createBean&lt;UserService&gt;(<span class="token string">&#039;UserService&#039;</span>);</code></pre>
 </div>
 <p>拿到的是一个 <code class="inline-code">Proxy</code>。真正的 <code class="inline-code">UserService</code> 在你第一次访问属性或调用方法时才构造，之后一直缓存。用同一个名字再调 <code class="inline-code">createBean</code>，拿到的是同一个代理，背后是同一个实例。</p>
 <p>这就是顺序问题消失的原因。<code class="inline-code">UserService</code> 的构造函数可以引用 <code class="inline-code">UserRepository</code>，后者引用 <code class="inline-code">UserDAO</code>，而它们谁都不会被构造，直到真的有请求打进来——那时候一切早已注册完毕。</p>
@@ -300,12 +300,12 @@ beanFactory.<span class="token function">register</span>(<span class="token stri
 <div class="code-block-wrapper">
   <div class="code-block-header">
     <span class="code-lang-tag">typescript</span>
-    <button class="copy-btn" data-code-id="code-mgrl79n" title="复制代码">
+    <button class="copy-btn" data-code-id="code-h5hc7al" title="复制代码">
       <svg class="copy-icon" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
       <span class="copy-label">复制</span>
     </button>
   </div>
-  <pre class="code-block"><code id="code-mgrl79n" class="language-typescript"><span class="token keyword">export</span> <span class="token keyword">class</span> UserService <span class="token keyword">extends</span> <span class="token builtin">CommonService</span> {
+  <pre class="code-block"><code id="code-h5hc7al" class="language-typescript"><span class="token keyword">export</span> <span class="token keyword">class</span> UserService <span class="token keyword">extends</span> <span class="token builtin">CommonService</span> {
     <span class="token keyword">private</span> <span class="token keyword">get</span> <span class="token function">userRepo</span>(): UserRepository {
         <span class="token keyword">return</span> this.getRepositoryInstance&lt;UserRepository&gt;(<span class="token string">&#039;UserRepository&#039;</span>);
     }
@@ -325,12 +325,12 @@ beanFactory.<span class="token function">register</span>(<span class="token stri
 <div class="code-block-wrapper">
   <div class="code-block-header">
     <span class="code-lang-tag">typescript</span>
-    <button class="copy-btn" data-code-id="code-z1oiqwv" title="复制代码">
+    <button class="copy-btn" data-code-id="code-oih6tdw" title="复制代码">
       <svg class="copy-icon" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
       <span class="copy-label">复制</span>
     </button>
   </div>
-  <pre class="code-block"><code id="code-z1oiqwv" class="language-typescript"><span class="token comment">// 这样写</span>
+  <pre class="code-block"><code id="code-oih6tdw" class="language-typescript"><span class="token comment">// 这样写</span>
 <span class="token keyword">private</span> <span class="token keyword">get</span> <span class="token function">userRepo</span>(): UserRepository {
     <span class="token keyword">return</span> this.getRepositoryInstance&lt;UserRepository&gt;(<span class="token string">&#039;UserRepository&#039;</span>);
 }
@@ -345,12 +345,12 @@ beanFactory.<span class="token function">register</span>(<span class="token stri
 <div class="code-block-wrapper">
   <div class="code-block-header">
     <span class="code-lang-tag">typescript</span>
-    <button class="copy-btn" data-code-id="code-l6e4sr4" title="复制代码">
+    <button class="copy-btn" data-code-id="code-2qu5ts8" title="复制代码">
       <svg class="copy-icon" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
       <span class="copy-label">复制</span>
     </button>
   </div>
-  <pre class="code-block"><code id="code-l6e4sr4" class="language-typescript"><span class="token comment">// 没问题：各自只在方法真正运行时才解析对方</span>
+  <pre class="code-block"><code id="code-2qu5ts8" class="language-typescript"><span class="token comment">// 没问题：各自只在方法真正运行时才解析对方</span>
 <span class="token keyword">class</span> UserService <span class="token keyword">extends</span> <span class="token builtin">CommonService</span> {
     <span class="token keyword">private</span> <span class="token keyword">get</span> <span class="token function">accounts</span>(): AccountService {
         <span class="token keyword">return</span> beanFactory.createBean&lt;AccountService&gt;(<span class="token string">&#039;AccountService&#039;</span>)!;
@@ -362,12 +362,12 @@ beanFactory.<span class="token function">register</span>(<span class="token stri
 <div class="code-block-wrapper">
   <div class="code-block-header">
     <span class="code-lang-tag">text</span>
-    <button class="copy-btn" data-code-id="code-263ofu0" title="复制代码">
+    <button class="copy-btn" data-code-id="code-idko3ab" title="复制代码">
       <svg class="copy-icon" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
       <span class="copy-label">复制</span>
     </button>
   </div>
-  <pre class="code-block"><code id="code-263ofu0" class="language-text">Circular dependency detected: UserService -&gt; AccountService -&gt; UserService</code></pre>
+  <pre class="code-block"><code id="code-idko3ab" class="language-text">Circular dependency detected: UserService -&gt; AccountService -&gt; UserService</code></pre>
 </div>
 <p>这条消息在告诉你：某个构造函数在做它不该做的事。把它挪进方法里。</p>
 <h2 id="bean-很多的时候" class="heading-anchor"><a href="#bean-很多的时候" class="header-link">#</a> bean 很多的时候</h2>
@@ -376,12 +376,12 @@ beanFactory.<span class="token function">register</span>(<span class="token stri
 <div class="code-block-wrapper">
   <div class="code-block-header">
     <span class="code-lang-tag">typescript</span>
-    <button class="copy-btn" data-code-id="code-6k1h65q" title="复制代码">
+    <button class="copy-btn" data-code-id="code-fefomqr" title="复制代码">
       <svg class="copy-icon" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
       <span class="copy-label">复制</span>
     </button>
   </div>
-  <pre class="code-block"><code id="code-6k1h65q" class="language-typescript"><span class="token keyword">import</span> { Beans } <span class="token keyword">from</span> <span class="token string">&#039;@ticatec/keelson-core&#039;</span>;
+  <pre class="code-block"><code id="code-fefomqr" class="language-typescript"><span class="token keyword">import</span> { Beans } <span class="token keyword">from</span> <span class="token string">&#039;@ticatec/keelson-core&#039;</span>;
 
 <span class="token keyword">protected</span> <span class="token keyword">async</span> <span class="token function">beforeStart</span>(): <span class="token builtin">Promise</span>&lt;<span class="token keyword">void</span>&gt; {
     DBManager.<span class="token function">init</span>(<span class="token function">initializePg</span>(AppConf.<span class="token function">getInstance</span>()!.<span class="token keyword">get</span>(<span class="token string">&#039;database&#039;</span>)));
@@ -407,12 +407,12 @@ beanFactory.<span class="token function">register</span>(<span class="token stri
 <div class="code-block-wrapper">
   <div class="code-block-header">
     <span class="code-lang-tag">text</span>
-    <button class="copy-btn" data-code-id="code-x6rssk2" title="复制代码">
+    <button class="copy-btn" data-code-id="code-1c26ty1" title="复制代码">
       <svg class="copy-icon" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
       <span class="copy-label">复制</span>
     </button>
   </div>
-  <pre class="code-block"><code id="code-x6rssk2" class="language-text">Repository &quot;UserRepository&quot; is not registered in BeanFactory.
+  <pre class="code-block"><code id="code-1c26ty1" class="language-text">Repository &quot;UserRepository&quot; is not registered in BeanFactory.
 Please register it via beanFactory.register(&#039;UserRepository&#039;, Class) before usage.</code></pre>
 </div>
 <p>按可能性排序的三个常见原因：注册用的名字和查找用的名字拼得不一样——它们是字符串，没有任何东西会替你核对；注册写在了错误的生命周期方法里；或者 <code class="inline-code">Beans</code> 的加载器指向的模块没有 <code class="inline-code">default</code> 导出。</p>

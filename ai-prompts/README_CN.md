@@ -1,6 +1,6 @@
 # Keelson AI 提示词
 
-中文 | [English](AI_PROMPTS.md)
+中文 | [English](README.md)
 
 用来驱动 AI 助手按本框架的约定写代码，而不是让它自己发明一套。会话开始时先贴一次下面的
 规则块，然后贴你正在写的那一层的提示词。

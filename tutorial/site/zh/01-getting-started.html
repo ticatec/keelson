@@ -85,6 +85,24 @@
       <ul class="sidebar-subnav">
         
           <li class="sidebar-subnav-item level-2">
+            <a href="#什么是-keelson" class="subnav-link" data-toc-target="什么是-keelson">
+              什么是 Keelson？
+            </a>
+          </li>
+        
+          <li class="sidebar-subnav-item level-3">
+            <a href="#核心设计哲学" class="subnav-link" data-toc-target="核心设计哲学">
+              核心设计哲学
+            </a>
+          </li>
+        
+          <li class="sidebar-subnav-item level-3">
+            <a href="#严格的四层分层架构" class="subnav-link" data-toc-target="严格的四层分层架构">
+              严格的四层分层架构
+            </a>
+          </li>
+        
+          <li class="sidebar-subnav-item level-2">
             <a href="#安装" class="subnav-link" data-toc-target="安装">
               安装
             </a>
@@ -239,17 +257,31 @@
         <article class="markdown-body">
           <h1 id="1-起步" class="heading-anchor"><a href="#1-起步" class="header-link">#</a> 1. 起步</h1>
 <p>读完这一章，你会有一个连上 PostgreSQL、能响应请求、能报告自身健康状况的服务。自己写的代码大约六十行。</p>
+<h2 id="什么是-keelson" class="heading-anchor"><a href="#什么是-keelson" class="header-link">#</a> 什么是 Keelson？</h2>
+<p><strong>Keelson</strong>（龙骨内板）是造船工程中紧固在龙骨之上、贯穿整条船体底部的关键内纵梁。它将全船的肋骨牢固锁紧为一个坚不可摧的整体——平时你从外面看不到它，但没有它整个船体结构便无法承载。</p>
+<p>在 Node.js 与 Express 生态中，Keelson 是一个专为<strong>企业级关系型数据库应用</strong>设计的 TypeScript 业务开发框架。它适合这类典型的后端服务：大部分接口在一个事务内读写几张表、租户与用户信息从请求透传、业务的核心是严谨的领域规则而非重复的基础设施拼装。</p>
+<h3 id="核心设计哲学" class="heading-anchor"><a href="#核心设计哲学" class="header-link">#</a> 核心设计哲学</h3>
+<p>Keelson 对应用程序的骨架有明确的主张，而在其他各处保持极度的精简与克制：</p>
+<ul class="doc-list">
+<li><strong>不造笨重的 ORM，拥抱原生 SQL</strong>：SQL 历经数十年检验，是与关系数据库对话最精确、性能最透明的语言。在 Keelson 中，你直接书写带有参数绑定的原生 SQL，复杂查询由强类型的动态查询构造器辅助完成，没有黑盒生成的低效关联。</li>
+<li><strong>基于上下文隐式贯穿的声明式事务</strong>：事务在 Service 层声明一次，通过 Node.js 原生的 <code class="inline-code">AsyncLocalStorage</code> 隐式向下贯穿。不论调用栈多深、横跨多少个 Repository 和 DAO，它们自动共享同一个数据库连接与事务上下文，<strong>无需在函数签名间层层手工传递连接对象</strong>。</li>
+<li><strong>轻量显式的依赖注入（BeanFactory）</strong>：摒弃繁重复杂的全局元数据扫描与魔术装配。组件通过名称显式注册、按需惰性单例实例化，彻底解耦模块初始化顺序，杜绝循环依赖引起的隐蔽启动故障。</li>
+</ul>
+<h3 id="严格的四层分层架构" class="heading-anchor"><a href="#严格的四层分层架构" class="header-link">#</a> 严格的四层分层架构</h3>
+<p>Keelson 将后端业务逻辑严格划分在四层之中，各层各司其职，仅向下单向依赖：</p>
+<div class="table-container"><table><thead><tr><th>层级</th><th>职责与约定</th><th>关键技术 / 约束</th></tr></thead><tbody><tr><td><strong>Web 层</strong> (<code class="inline-code">routes</code> + <code class="inline-code">controller</code>)</td><td>HTTP 路由映射与<strong>所有边界参数校验</strong></td><td>基于 <code class="inline-code">@ticatec/bean-validator</code> 声明式校验，下游永不重复校验入参结构</td></tr><tr><td><strong>Service 层</strong></td><td>核心业务逻辑与<strong>唯一的事务边界</strong></td><td>写操作使用 <code class="inline-code">@Transaction()</code>，读操作使用 <code class="inline-code">@Transaction(Propagation.NONE)</code></td></tr><tr><td><strong>Repository 层</strong></td><td>领域实体组装、简单状态检查与缓存管理</td><td>数据与业务的桥梁，Redis 缓存归此层管理，绝不向上或向下泄露</td></tr><tr><td><strong>DAO 层</strong></td><td>单表纯 SQL 数据读写</td><td>绝无业务规则，从事务上下文自动拾取数据库连接</td></tr></tbody></table></div>
+<hr class="divider" />
 <h2 id="安装" class="heading-anchor"><a href="#安装" class="header-link">#</a> 安装</h2>
 
 <div class="code-block-wrapper">
   <div class="code-block-header">
     <span class="code-lang-tag">bash</span>
-    <button class="copy-btn" data-code-id="code-ckmlu08" title="复制代码">
+    <button class="copy-btn" data-code-id="code-9n10oxw" title="复制代码">
       <svg class="copy-icon" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
       <span class="copy-label">复制</span>
     </button>
   </div>
-  <pre class="code-block"><code id="code-ckmlu08" class="language-bash"><span class="token keyword">pnpm</span> add @ticatec/keelson<span class="token property">-express</span> @ticatec/keelson<span class="token property">-core</span> \
+  <pre class="code-block"><code id="code-9n10oxw" class="language-bash"><span class="token keyword">pnpm</span> add @ticatec/keelson<span class="token property">-express</span> @ticatec/keelson<span class="token property">-core</span> \
          @ticatec/bean<span class="token property">-validator</span> @ticatec/<span class="token keyword">node</span><span class="token property">-exception</span> \
          @ticatec/logger<span class="token property">-api</span> reflect<span class="token property">-metadata</span>
 
@@ -262,12 +294,12 @@
 <div class="code-block-wrapper">
   <div class="code-block-header">
     <span class="code-lang-tag">json</span>
-    <button class="copy-btn" data-code-id="code-ukhnss6" title="复制代码">
+    <button class="copy-btn" data-code-id="code-hemrk95" title="复制代码">
       <svg class="copy-icon" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
       <span class="copy-label">复制</span>
     </button>
   </div>
-  <pre class="code-block"><code id="code-ukhnss6" class="language-json">{
+  <pre class="code-block"><code id="code-hemrk95" class="language-json">{
   <span class="token property">&quot;compilerOptions&quot;</span>: {
     <span class="token property">&quot;target&quot;</span>: <span class="token string">&quot;es2022&quot;</span>,
     <span class="token property">&quot;module&quot;</span>: <span class="token string">&quot;NodeNext&quot;</span>,
@@ -283,12 +315,12 @@
 <div class="code-block-wrapper">
   <div class="code-block-header">
     <span class="code-lang-tag">typescript</span>
-    <button class="copy-btn" data-code-id="code-bj0k050" title="复制代码">
+    <button class="copy-btn" data-code-id="code-jznivjx" title="复制代码">
       <svg class="copy-icon" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
       <span class="copy-label">复制</span>
     </button>
   </div>
-  <pre class="code-block"><code id="code-bj0k050" class="language-typescript"><span class="token comment">// src/main.ts —— 整个程序的第一行</span>
+  <pre class="code-block"><code id="code-jznivjx" class="language-typescript"><span class="token comment">// src/main.ts —— 整个程序的第一行</span>
 <span class="token keyword">import</span> <span class="token string">&#039;reflect-metadata&#039;</span>;</code></pre>
 </div>
 <p>漏了它，<code class="inline-code">@Transaction</code> 会在启动时直接抛错，而不是悄悄地不生效——这正是你想要的失败方式。</p>
@@ -299,12 +331,12 @@
 <div class="code-block-wrapper">
   <div class="code-block-header">
     <span class="code-lang-tag">typescript</span>
-    <button class="copy-btn" data-code-id="code-pwb4f50" title="复制代码">
+    <button class="copy-btn" data-code-id="code-m4vg3e9" title="复制代码">
       <svg class="copy-icon" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
       <span class="copy-label">复制</span>
     </button>
   </div>
-  <pre class="code-block"><code id="code-pwb4f50" class="language-typescript"><span class="token keyword">import</span> { <span class="token builtin">CommonDAO</span> } <span class="token keyword">from</span> <span class="token string">&#039;@ticatec/keelson-core&#039;</span>;
+  <pre class="code-block"><code id="code-m4vg3e9" class="language-typescript"><span class="token keyword">import</span> { <span class="token builtin">CommonDAO</span> } <span class="token keyword">from</span> <span class="token string">&#039;@ticatec/keelson-core&#039;</span>;
 
 <span class="token keyword">export</span> <span class="token keyword">interface</span> Greeting {
     id: string;
@@ -323,12 +355,12 @@
 <div class="code-block-wrapper">
   <div class="code-block-header">
     <span class="code-lang-tag">typescript</span>
-    <button class="copy-btn" data-code-id="code-9s0da0b" title="复制代码">
+    <button class="copy-btn" data-code-id="code-39g2h7p" title="复制代码">
       <svg class="copy-icon" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
       <span class="copy-label">复制</span>
     </button>
   </div>
-  <pre class="code-block"><code id="code-9s0da0b" class="language-typescript"><span class="token keyword">import</span> { <span class="token builtin">CommonRepository</span> } <span class="token keyword">from</span> <span class="token string">&#039;@ticatec/keelson-core&#039;</span>;
+  <pre class="code-block"><code id="code-39g2h7p" class="language-typescript"><span class="token keyword">import</span> { <span class="token builtin">CommonRepository</span> } <span class="token keyword">from</span> <span class="token string">&#039;@ticatec/keelson-core&#039;</span>;
 <span class="token keyword">import</span> { GreetingDAO, Greeting } <span class="token keyword">from</span> <span class="token string">&#039;../dao/GreetingDAO.js&#039;</span>;
 
 <span class="token keyword">export</span> <span class="token keyword">class</span> GreetingRepository <span class="token keyword">extends</span> <span class="token builtin">CommonRepository</span> {
@@ -347,12 +379,12 @@
 <div class="code-block-wrapper">
   <div class="code-block-header">
     <span class="code-lang-tag">typescript</span>
-    <button class="copy-btn" data-code-id="code-ntzkt8i" title="复制代码">
+    <button class="copy-btn" data-code-id="code-cdfg2i1" title="复制代码">
       <svg class="copy-icon" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
       <span class="copy-label">复制</span>
     </button>
   </div>
-  <pre class="code-block"><code id="code-ntzkt8i" class="language-typescript"><span class="token keyword">import</span> { <span class="token builtin">CommonService</span>, Transaction } <span class="token keyword">from</span> <span class="token string">&#039;@ticatec/keelson-core&#039;</span>;
+  <pre class="code-block"><code id="code-cdfg2i1" class="language-typescript"><span class="token keyword">import</span> { <span class="token builtin">CommonService</span>, Transaction } <span class="token keyword">from</span> <span class="token string">&#039;@ticatec/keelson-core&#039;</span>;
 <span class="token keyword">import</span> { ActionNotFoundError } <span class="token keyword">from</span> <span class="token string">&#039;@ticatec/node-exception&#039;</span>;
 <span class="token keyword">import</span> { GreetingRepository } <span class="token keyword">from</span> <span class="token string">&#039;../repository/GreetingRepository.js&#039;</span>;
 <span class="token keyword">import</span> { Greeting } <span class="token keyword">from</span> <span class="token string">&#039;../dao/GreetingDAO.js&#039;</span>;
@@ -377,12 +409,12 @@
 <div class="code-block-wrapper">
   <div class="code-block-header">
     <span class="code-lang-tag">typescript</span>
-    <button class="copy-btn" data-code-id="code-bioqwox" title="复制代码">
+    <button class="copy-btn" data-code-id="code-8ugot0c" title="复制代码">
       <svg class="copy-icon" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
       <span class="copy-label">复制</span>
     </button>
   </div>
-  <pre class="code-block"><code id="code-bioqwox" class="language-typescript"><span class="token keyword">import</span> { CommonRoutes, routerHelper } <span class="token keyword">from</span> <span class="token string">&#039;@ticatec/keelson-express&#039;</span>;
+  <pre class="code-block"><code id="code-8ugot0c" class="language-typescript"><span class="token keyword">import</span> { CommonRoutes, routerHelper } <span class="token keyword">from</span> <span class="token string">&#039;@ticatec/keelson-express&#039;</span>;
 <span class="token keyword">import</span> { beanFactory } <span class="token keyword">from</span> <span class="token string">&#039;@ticatec/keelson-core&#039;</span>;
 <span class="token keyword">import</span> { GreetingService } <span class="token keyword">from</span> <span class="token string">&#039;../service/GreetingService.js&#039;</span>;
 
@@ -405,12 +437,12 @@
 <div class="code-block-wrapper">
   <div class="code-block-header">
     <span class="code-lang-tag">typescript</span>
-    <button class="copy-btn" data-code-id="code-rg7py49" title="复制代码">
+    <button class="copy-btn" data-code-id="code-xhppqda" title="复制代码">
       <svg class="copy-icon" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
       <span class="copy-label">复制</span>
     </button>
   </div>
-  <pre class="code-block"><code id="code-rg7py49" class="language-typescript"><span class="token comment">// src/main.ts</span>
+  <pre class="code-block"><code id="code-xhppqda" class="language-typescript"><span class="token comment">// src/main.ts</span>
 <span class="token keyword">import</span> <span class="token string">&#039;reflect-metadata&#039;</span>;
 <span class="token keyword">import</span> BaseServer, { AppConf } <span class="token keyword">from</span> <span class="token string">&#039;@ticatec/keelson-express&#039;</span>;
 <span class="token keyword">import</span> { DBManager, beanFactory } <span class="token keyword">from</span> <span class="token string">&#039;@ticatec/keelson-core&#039;</span>;
@@ -462,12 +494,12 @@ BaseServer.<span class="token function">startup</span>(<span class="token keywor
 <div class="code-block-wrapper">
   <div class="code-block-header">
     <span class="code-lang-tag">text</span>
-    <button class="copy-btn" data-code-id="code-v5qcbuh" title="复制代码">
+    <button class="copy-btn" data-code-id="code-z9md2o5" title="复制代码">
       <svg class="copy-icon" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
       <span class="copy-label">复制</span>
     </button>
   </div>
-  <pre class="code-block"><code id="code-v5qcbuh" class="language-text">GET /api/greetings/abc     你的路由
+  <pre class="code-block"><code id="code-z9md2o5" class="language-text">GET /api/greetings/abc     你的路由
 GET /health/live           进程活着就返回 200
 GET /health/ready          所有关键检查通过返回 200，否则 503
 GET /health                与 /health/ready 相同</code></pre>
@@ -480,12 +512,12 @@ GET /health                与 /health/ready 相同</code></pre>
 <div class="code-block-wrapper">
   <div class="code-block-header">
     <span class="code-lang-tag">typescript</span>
-    <button class="copy-btn" data-code-id="code-h9d6jom" title="复制代码">
+    <button class="copy-btn" data-code-id="code-vc6q26k" title="复制代码">
       <svg class="copy-icon" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
       <span class="copy-label">复制</span>
     </button>
   </div>
-  <pre class="code-block"><code id="code-h9d6jom" class="language-typescript">AppConf.<span class="token function">getInstance</span>()!.<span class="token keyword">get</span>(<span class="token string">&#039;web.port&#039;</span>);        <span class="token comment">// 3000</span>
+  <pre class="code-block"><code id="code-vc6q26k" class="language-typescript">AppConf.<span class="token function">getInstance</span>()!.<span class="token keyword">get</span>(<span class="token string">&#039;web.port&#039;</span>);        <span class="token comment">// 3000</span>
 AppConf.<span class="token function">getInstance</span>()!.<span class="token keyword">get</span>(<span class="token string">&#039;nope.nothing&#039;</span>);    <span class="token comment">// undefined，不抛异常</span></code></pre>
 </div>
 <p>注意那个 <code class="inline-code">!</code>。<code class="inline-code">getInstance()</code> 的返回类型是 <code class="inline-code">AppConf | null</code>——<code class="inline-code">init()</code> 之前是 null—— 而在一个只会在 <code class="inline-code">loadConfigFile()</code> 之后运行的方法里，这个断言是诚实的。</p>
@@ -536,6 +568,24 @@ AppConf.<span class="token function">getInstance</span>()!.<span class="token ke
         <div class="right-toc-inner">
           <div class="toc-header">本页目录</div>
           <ul class="right-toc-list">
+            
+              <li class="toc-item level-2">
+                <a href="#什么是-keelson" class="toc-link" data-anchor="什么是-keelson">
+                  什么是 Keelson？
+                </a>
+              </li>
+            
+              <li class="toc-item level-3">
+                <a href="#核心设计哲学" class="toc-link" data-anchor="核心设计哲学">
+                  核心设计哲学
+                </a>
+              </li>
+            
+              <li class="toc-item level-3">
+                <a href="#严格的四层分层架构" class="toc-link" data-anchor="严格的四层分层架构">
+                  严格的四层分层架构
+                </a>
+              </li>
             
               <li class="toc-item level-2">
                 <a href="#安装" class="toc-link" data-anchor="安装">

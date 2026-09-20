@@ -263,12 +263,12 @@
 <div class="code-block-wrapper">
   <div class="code-block-header">
     <span class="code-lang-tag">typescript</span>
-    <button class="copy-btn" data-code-id="code-9gwgfeo" title="复制代码">
+    <button class="copy-btn" data-code-id="code-hwn9fiz" title="复制代码">
       <svg class="copy-icon" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
       <span class="copy-label">复制</span>
     </button>
   </div>
-  <pre class="code-block"><code id="code-9gwgfeo" class="language-typescript">AppConf.<span class="token function">init</span>(config);
+  <pre class="code-block"><code id="code-hwn9fiz" class="language-typescript">AppConf.<span class="token function">init</span>(config);
 
 AppConf.<span class="token function">getInstance</span>()!.<span class="token keyword">get</span>(<span class="token string">&#039;web.port&#039;</span>);         <span class="token comment">// 3000</span>
 AppConf.<span class="token function">getInstance</span>()!.<span class="token keyword">get</span>(<span class="token string">&#039;database.host&#039;</span>);    <span class="token comment">// &#039;db.internal&#039;</span>
@@ -282,12 +282,12 @@ AppConf.<span class="token function">getInstance</span>()!.<span class="token ke
 <div class="code-block-wrapper">
   <div class="code-block-header">
     <span class="code-lang-tag">typescript</span>
-    <button class="copy-btn" data-code-id="code-r26owto" title="复制代码">
+    <button class="copy-btn" data-code-id="code-t90kb9h" title="复制代码">
       <svg class="copy-icon" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
       <span class="copy-label">复制</span>
     </button>
   </div>
-  <pre class="code-block"><code id="code-r26owto" class="language-typescript"><span class="token keyword">import</span> { loadConfig } <span class="token keyword">from</span> <span class="token string">&#039;@ticatec/config-loader&#039;</span>;
+  <pre class="code-block"><code id="code-t90kb9h" class="language-typescript"><span class="token keyword">import</span> { loadConfig } <span class="token keyword">from</span> <span class="token string">&#039;@ticatec/config-loader&#039;</span>;
 
 <span class="token keyword">protected</span> <span class="token keyword">async</span> <span class="token function">loadConfigFile</span>(): <span class="token builtin">Promise</span>&lt;<span class="token keyword">void</span>&gt; {
     <span class="token keyword">const</span> { appConf, loggerConf } = <span class="token keyword">await</span> <span class="token function">loadConfig</span>(<span class="token string">&#039;local&#039;</span>, <span class="token string">&#039;app.yaml&#039;</span>, <span class="token string">&#039;logger.yaml&#039;</span>);
@@ -302,12 +302,12 @@ AppConf.<span class="token function">getInstance</span>()!.<span class="token ke
 <div class="code-block-wrapper">
   <div class="code-block-header">
     <span class="code-lang-tag">typescript</span>
-    <button class="copy-btn" data-code-id="code-amc614c" title="复制代码">
+    <button class="copy-btn" data-code-id="code-1srgld3" title="复制代码">
       <svg class="copy-icon" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
       <span class="copy-label">复制</span>
     </button>
   </div>
-  <pre class="code-block"><code id="code-amc614c" class="language-typescript"><span class="token keyword">const</span> { appConf, loggerConf } = <span class="token keyword">await</span> <span class="token function">loadConfig</span>(<span class="token string">&#039;nacos&#039;</span>, <span class="token string">&#039;app.yaml&#039;</span>, <span class="token string">&#039;logger.yaml&#039;</span>);</code></pre>
+  <pre class="code-block"><code id="code-1srgld3" class="language-typescript"><span class="token keyword">const</span> { appConf, loggerConf } = <span class="token keyword">await</span> <span class="token function">loadConfig</span>(<span class="token string">&#039;nacos&#039;</span>, <span class="token string">&#039;app.yaml&#039;</span>, <span class="token string">&#039;logger.yaml&#039;</span>);</code></pre>
 </div>
 <p>Same call, different first argument — <code class="inline-code">&#039;local&#039;</code>, <code class="inline-code">&#039;nacos&#039;</code> or <code class="inline-code">&#039;consul&#039;</code>. The two remote loaders need their client library installed (<code class="inline-code">nacos</code> or <code class="inline-code">consul</code>), which is why they are optional peers and are loaded dynamically: a service using local files does not pay for either.</p>
 <p>Connection details come from environment variables — <code class="inline-code">NACOS_SERVER_ADDR</code> or <code class="inline-code">NACOS_ENDPOINT</code>, <code class="inline-code">CONSUL_HTTP_ADDR</code> and their token variables. Configuration about where configuration lives cannot itself live in the configuration.</p>
@@ -318,12 +318,12 @@ AppConf.<span class="token function">getInstance</span>()!.<span class="token ke
 <div class="code-block-wrapper">
   <div class="code-block-header">
     <span class="code-lang-tag">typescript</span>
-    <button class="copy-btn" data-code-id="code-076o7lr" title="复制代码">
+    <button class="copy-btn" data-code-id="code-tjzcnwy" title="复制代码">
       <svg class="copy-icon" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
       <span class="copy-label">复制</span>
     </button>
   </div>
-  <pre class="code-block"><code id="code-076o7lr" class="language-typescript"><span class="token keyword">const</span> { appConf, loggerConf } = <span class="token keyword">await</span> <span class="token function">loadConfig</span>(
+  <pre class="code-block"><code id="code-tjzcnwy" class="language-typescript"><span class="token keyword">const</span> { appConf, loggerConf } = <span class="token keyword">await</span> <span class="token function">loadConfig</span>(
     <span class="token string">&#039;local&#039;</span>, <span class="token string">&#039;app.yaml&#039;</span>, <span class="token string">&#039;logger.yaml&#039;</span>,
     <span class="token keyword">null</span>,                                              <span class="token comment">// no hook for the logger document</span>
     (text) =&gt; text.<span class="token function">replace</span>(/\$\{(\w+)\}/g, (_, name) =&gt; process.env[name] ?? <span class="token string">&#039;&#039;</span>)
@@ -335,12 +335,12 @@ AppConf.<span class="token function">getInstance</span>()!.<span class="token ke
 <div class="code-block-wrapper">
   <div class="code-block-header">
     <span class="code-lang-tag">typescript</span>
-    <button class="copy-btn" data-code-id="code-9cgrfer" title="复制代码">
+    <button class="copy-btn" data-code-id="code-86okbob" title="复制代码">
       <svg class="copy-icon" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
       <span class="copy-label">复制</span>
     </button>
   </div>
-  <pre class="code-block"><code id="code-9cgrfer" class="language-typescript"><span class="token keyword">const</span> { appConf, loggerConf } = <span class="token keyword">await</span> <span class="token function">loadConfig</span>(<span class="token string">&#039;local&#039;</span>, <span class="token string">&#039;app.yaml&#039;</span>, <span class="token string">&#039;logger.yaml&#039;</span>);
+  <pre class="code-block"><code id="code-86okbob" class="language-typescript"><span class="token keyword">const</span> { appConf, loggerConf } = <span class="token keyword">await</span> <span class="token function">loadConfig</span>(<span class="token string">&#039;local&#039;</span>, <span class="token string">&#039;app.yaml&#039;</span>, <span class="token string">&#039;logger.yaml&#039;</span>);
 appConf.database.password = <span class="token keyword">await</span> vault.<span class="token function">read</span>(<span class="token string">&#039;db&#039;</span>);
 <span class="token function">initialize</span>(loggerConf);
 AppConf.<span class="token function">init</span>(appConf);</code></pre>
@@ -352,12 +352,12 @@ AppConf.<span class="token function">init</span>(appConf);</code></pre>
 <div class="code-block-wrapper">
   <div class="code-block-header">
     <span class="code-lang-tag">typescript</span>
-    <button class="copy-btn" data-code-id="code-d3n51c9" title="复制代码">
+    <button class="copy-btn" data-code-id="code-r6apfqn" title="复制代码">
       <svg class="copy-icon" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
       <span class="copy-label">复制</span>
     </button>
   </div>
-  <pre class="code-block"><code id="code-d3n51c9" class="language-typescript"><span class="token keyword">import</span> { RedisClient } <span class="token keyword">from</span> <span class="token string">&#039;@ticatec/redis-client&#039;</span>;
+  <pre class="code-block"><code id="code-r6apfqn" class="language-typescript"><span class="token keyword">import</span> { RedisClient } <span class="token keyword">from</span> <span class="token string">&#039;@ticatec/redis-client&#039;</span>;
 
 <span class="token keyword">protected</span> <span class="token keyword">async</span> <span class="token function">beforeStart</span>(): <span class="token builtin">Promise</span>&lt;<span class="token keyword">void</span>&gt; {
     <span class="token keyword">await</span> RedisClient.<span class="token function">init</span>(AppConf.<span class="token function">getInstance</span>()!.<span class="token keyword">get</span>(<span class="token string">&#039;redis&#039;</span>));          <span class="token comment">// &#039;default&#039;</span>
@@ -370,12 +370,12 @@ AppConf.<span class="token function">init</span>(appConf);</code></pre>
 <div class="code-block-wrapper">
   <div class="code-block-header">
     <span class="code-lang-tag">typescript</span>
-    <button class="copy-btn" data-code-id="code-1sur0ir" title="复制代码">
+    <button class="copy-btn" data-code-id="code-4t18wdh" title="复制代码">
       <svg class="copy-icon" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
       <span class="copy-label">复制</span>
     </button>
   </div>
-  <pre class="code-block"><code id="code-1sur0ir" class="language-typescript"><span class="token keyword">const</span> redis = RedisClient.<span class="token function">getInstance</span>();              <span class="token comment">// &#039;default&#039;</span>
+  <pre class="code-block"><code id="code-4t18wdh" class="language-typescript"><span class="token keyword">const</span> redis = RedisClient.<span class="token function">getInstance</span>();              <span class="token comment">// &#039;default&#039;</span>
 <span class="token keyword">const</span> sessions = RedisClient.<span class="token function">getInstance</span>(<span class="token string">&#039;sessions&#039;</span>);</code></pre>
 </div>
 <p><code class="inline-code">getInstance()</code> throws if that name was never initialised, naming it. Like the bean accessors, a missing dependency fails immediately rather than returning <code class="inline-code">undefined</code>.</p>
@@ -384,12 +384,12 @@ AppConf.<span class="token function">init</span>(appConf);</code></pre>
 <div class="code-block-wrapper">
   <div class="code-block-header">
     <span class="code-lang-tag">typescript</span>
-    <button class="copy-btn" data-code-id="code-egd8ogn" title="复制代码">
+    <button class="copy-btn" data-code-id="code-1go6694" title="复制代码">
       <svg class="copy-icon" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
       <span class="copy-label">复制</span>
     </button>
   </div>
-  <pre class="code-block"><code id="code-egd8ogn" class="language-typescript"><span class="token keyword">await</span> redis.<span class="token keyword">set</span>(<span class="token string">&#039;greeting&#039;</span>, <span class="token string">&#039;hello&#039;</span>, <span class="token number">300</span>);            <span class="token comment">// string, 300s TTL</span>
+  <pre class="code-block"><code id="code-1go6694" class="language-typescript"><span class="token keyword">await</span> redis.<span class="token keyword">set</span>(<span class="token string">&#039;greeting&#039;</span>, <span class="token string">&#039;hello&#039;</span>, <span class="token number">300</span>);            <span class="token comment">// string, 300s TTL</span>
 <span class="token keyword">const</span> s = <span class="token keyword">await</span> redis.<span class="token keyword">get</span>(<span class="token string">&#039;greeting&#039;</span>);
 
 <span class="token keyword">await</span> redis.<span class="token function">setObject</span>(<span class="token string">&#039;user:U1&#039;</span>, user, <span class="token number">600</span>);          <span class="token comment">// JSON round-trip</span>
@@ -403,12 +403,12 @@ AppConf.<span class="token function">init</span>(appConf);</code></pre>
 <div class="code-block-wrapper">
   <div class="code-block-header">
     <span class="code-lang-tag">typescript</span>
-    <button class="copy-btn" data-code-id="code-mta3g17" title="复制代码">
+    <button class="copy-btn" data-code-id="code-b6iffzn" title="复制代码">
       <svg class="copy-icon" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
       <span class="copy-label">复制</span>
     </button>
   </div>
-  <pre class="code-block"><code id="code-mta3g17" class="language-typescript"><span class="token keyword">const</span> profile = <span class="token keyword">await</span> redis.getOrSet&lt;Profile&gt;(
+  <pre class="code-block"><code id="code-b6iffzn" class="language-typescript"><span class="token keyword">const</span> profile = <span class="token keyword">await</span> redis.getOrSet&lt;Profile&gt;(
     <span class="token string">`profile:${id}`</span>,
     () =&gt; this.service.<span class="token function">loadProfile</span>(id),
     <span class="token number">600</span>
@@ -421,12 +421,12 @@ AppConf.<span class="token function">init</span>(appConf);</code></pre>
 <div class="code-block-wrapper">
   <div class="code-block-header">
     <span class="code-lang-tag">typescript</span>
-    <button class="copy-btn" data-code-id="code-0bw956f" title="复制代码">
+    <button class="copy-btn" data-code-id="code-b358nfw" title="复制代码">
       <svg class="copy-icon" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
       <span class="copy-label">复制</span>
     </button>
   </div>
-  <pre class="code-block"><code id="code-0bw956f" class="language-typescript"><span class="token decorator">@Transaction</span>()
+  <pre class="code-block"><code id="code-b358nfw" class="language-typescript"><span class="token decorator">@Transaction</span>()
 <span class="token keyword">async</span> <span class="token function">updateProfile</span>(user: AppUser, profile: Profile): <span class="token builtin">Promise</span>&lt;<span class="token keyword">void</span>&gt; {
     <span class="token keyword">await</span> this.repo.<span class="token function">update</span>(profile);
 }

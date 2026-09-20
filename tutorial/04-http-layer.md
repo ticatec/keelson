@@ -253,7 +253,7 @@ For anything finer, override `isValidUser()` — chapter 5.
 
 Deeper reference: [keelson-express's README](../packages/keelson-express/README.md) for
 controllers and routes, [bean-validator's README](../packages/bean-validator/README.md) for
-every validator and option, and [the web-layer prompts](../docs/prompts/AI_PROMPTS_2_WEB.md)
+every validator and option, and [the web-layer prompts](../ai-prompts/AI_PROMPTS_2_WEB.md)
 for the rules.
 
 Next: [Identity and access control](05-identity.md).

@@ -242,6 +242,6 @@ export default class UserRoutes extends AuthenticatedRoutes { /* ... */ }
 
 深入参考：[keelson-express 的 README](../packages/keelson-express/README_CN.md)（控制器
 与路由）、[bean-validator 的 README](../packages/bean-validator/README_CN.md)（每个校验器
-与选项），以及 [web 层提示词](../docs/prompts/AI_PROMPTS_2_WEB_CN.md)（规则）。
+与选项），以及 [web 层提示词](../ai-prompts/AI_PROMPTS_2_WEB_CN.md)（规则）。
 
 下一章：[身份与访问控制](05-identity_CN.md)。

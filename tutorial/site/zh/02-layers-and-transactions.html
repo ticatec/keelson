@@ -270,12 +270,12 @@
 <div class="code-block-wrapper">
   <div class="code-block-header">
     <span class="code-lang-tag">typescript</span>
-    <button class="copy-btn" data-code-id="code-1ifxk32" title="复制代码">
+    <button class="copy-btn" data-code-id="code-xrcp28x" title="复制代码">
       <svg class="copy-icon" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
       <span class="copy-label">复制</span>
     </button>
   </div>
-  <pre class="code-block"><code id="code-1ifxk32" class="language-typescript"><span class="token comment">// 凡是没有早早定下规矩的代码库，最后都会长成这样</span>
+  <pre class="code-block"><code id="code-xrcp28x" class="language-typescript"><span class="token comment">// 凡是没有早早定下规矩的代码库，最后都会长成这样</span>
 <span class="token keyword">async</span> <span class="token keyword">function</span> <span class="token function">transfer</span>(conn, fromId, toId, amount) {
     <span class="token keyword">await</span> <span class="token function">debit</span>(conn, fromId, amount);
     <span class="token keyword">await</span> <span class="token function">credit</span>(conn, toId, amount);
@@ -290,12 +290,12 @@
 <div class="code-block-wrapper">
   <div class="code-block-header">
     <span class="code-lang-tag">typescript</span>
-    <button class="copy-btn" data-code-id="code-5yzcnpa" title="复制代码">
+    <button class="copy-btn" data-code-id="code-xgyew3r" title="复制代码">
       <svg class="copy-icon" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
       <span class="copy-label">复制</span>
     </button>
   </div>
-  <pre class="code-block"><code id="code-5yzcnpa" class="language-typescript"><span class="token keyword">export</span> <span class="token keyword">class</span> TransferService <span class="token keyword">extends</span> <span class="token builtin">CommonService</span> {
+  <pre class="code-block"><code id="code-xgyew3r" class="language-typescript"><span class="token keyword">export</span> <span class="token keyword">class</span> TransferService <span class="token keyword">extends</span> <span class="token builtin">CommonService</span> {
     <span class="token keyword">private</span> <span class="token keyword">get</span> <span class="token function">accounts</span>(): AccountRepository {
         <span class="token keyword">return</span> this.getRepositoryInstance&lt;AccountRepository&gt;(<span class="token string">&#039;AccountRepository&#039;</span>);
     }
@@ -336,12 +336,12 @@
 <div class="code-block-wrapper">
   <div class="code-block-header">
     <span class="code-lang-tag">typescript</span>
-    <button class="copy-btn" data-code-id="code-1752ahk" title="复制代码">
+    <button class="copy-btn" data-code-id="code-f45mp7y" title="复制代码">
       <svg class="copy-icon" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
       <span class="copy-label">复制</span>
     </button>
   </div>
-  <pre class="code-block"><code id="code-1752ahk" class="language-typescript"><span class="token decorator">@Transaction</span>(Propagation.REQUIRES_NEW)
+  <pre class="code-block"><code id="code-f45mp7y" class="language-typescript"><span class="token decorator">@Transaction</span>(Propagation.REQUIRES_NEW)
 <span class="token keyword">async</span> <span class="token function">recordAttempt</span>(entry: AuditEntry): <span class="token builtin">Promise</span>&lt;<span class="token keyword">void</span>&gt; {
     <span class="token keyword">await</span> this.auditRepo.<span class="token function">insert</span>(entry);
 }</code></pre>
@@ -354,12 +354,12 @@
 <div class="code-block-wrapper">
   <div class="code-block-header">
     <span class="code-lang-tag">typescript</span>
-    <button class="copy-btn" data-code-id="code-tvs0hkk" title="复制代码">
+    <button class="copy-btn" data-code-id="code-vozvwlr" title="复制代码">
       <svg class="copy-icon" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
       <span class="copy-label">复制</span>
     </button>
   </div>
-  <pre class="code-block"><code id="code-tvs0hkk" class="language-typescript"><span class="token keyword">import</span> { TransactionManager, Propagation } <span class="token keyword">from</span> <span class="token string">&#039;@ticatec/keelson-core&#039;</span>;
+  <pre class="code-block"><code id="code-vozvwlr" class="language-typescript"><span class="token keyword">import</span> { TransactionManager, Propagation } <span class="token keyword">from</span> <span class="token string">&#039;@ticatec/keelson-core&#039;</span>;
 
 <span class="token keyword">await</span> TransactionManager.<span class="token function">execute</span>(Propagation.REQUIRED, <span class="token keyword">async</span> () =&gt; {
     <span class="token keyword">await</span> this.repo.<span class="token function">doSomething</span>();
@@ -389,12 +389,12 @@
 <div class="code-block-wrapper">
   <div class="code-block-header">
     <span class="code-lang-tag">text</span>
-    <button class="copy-btn" data-code-id="code-gsa98fx" title="复制代码">
+    <button class="copy-btn" data-code-id="code-m177nsx" title="复制代码">
       <svg class="copy-icon" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
       <span class="copy-label">复制</span>
     </button>
   </div>
-  <pre class="code-block"><code id="code-gsa98fx" class="language-text">No database connection available. Ensure you are inside a @Transaction or using TransactionManager.execute().</code></pre>
+  <pre class="code-block"><code id="code-m177nsx" class="language-text">No database connection available. Ensure you are inside a @Transaction or using TransactionManager.execute().</code></pre>
 </div>
 <p><code class="inline-code">Propagation.NONE</code> 是&quot;要连接、不要事务&quot;的正规说法。第 1 章的 <code class="inline-code">GreetingService.get()</code> 带着装饰器，是因为总得有人把上下文建立起来，不是为了形式统一。</p>
 <p>读操作<strong>确实</strong>需要事务的场合是：多次读取必须看到同一个快照——比如一份汇总三张表的报表，不能让数据在脚下变动。</p>
@@ -405,12 +405,12 @@
 <div class="code-block-wrapper">
   <div class="code-block-header">
     <span class="code-lang-tag">typescript</span>
-    <button class="copy-btn" data-code-id="code-fxmlup3" title="复制代码">
+    <button class="copy-btn" data-code-id="code-hfmcm6f" title="复制代码">
       <svg class="copy-icon" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
       <span class="copy-label">复制</span>
     </button>
   </div>
-  <pre class="code-block"><code id="code-fxmlup3" class="language-typescript"><span class="token keyword">const</span> conn = <span class="token keyword">await</span> this.<span class="token function">getDBConnection</span>();
+  <pre class="code-block"><code id="code-hfmcm6f" class="language-typescript"><span class="token keyword">const</span> conn = <span class="token keyword">await</span> this.<span class="token function">getDBConnection</span>();
 <span class="token keyword">const</span> placeholders = ids.<span class="token function">map</span>((_, i) =&gt; conn.<span class="token function">getPlaceholder</span>(i + <span class="token number">1</span>)).<span class="token function">join</span>(<span class="token string">&#039;, &#039;</span>);
 <span class="token keyword">return</span> <span class="token keyword">await</span> this.<span class="token function">listQuery</span>(<span class="token string">`SELECT * FROM users WHERE id IN (${placeholders})`</span>, ids);</code></pre>
 </div>
@@ -423,12 +423,12 @@
 <div class="code-block-wrapper">
   <div class="code-block-header">
     <span class="code-lang-tag">typescript</span>
-    <button class="copy-btn" data-code-id="code-o6548wn" title="复制代码">
+    <button class="copy-btn" data-code-id="code-o82sed6" title="复制代码">
       <svg class="copy-icon" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
       <span class="copy-label">复制</span>
     </button>
   </div>
-  <pre class="code-block"><code id="code-o6548wn" class="language-typescript"><span class="token decorator">@Transaction</span>()
+  <pre class="code-block"><code id="code-o82sed6" class="language-typescript"><span class="token decorator">@Transaction</span>()
 <span class="token keyword">async</span> <span class="token function">placeOrder</span>(order: Order): <span class="token builtin">Promise</span>&lt;string&gt; {
     <span class="token keyword">return</span> <span class="token keyword">await</span> this.orderRepo.<span class="token function">insert</span>(order);     <span class="token comment">// 只碰数据库</span>
 }
@@ -438,7 +438,7 @@
 <span class="token keyword">await</span> notifier.<span class="token function">sendConfirmation</span>(id);               <span class="token comment">// 只有提交成功才会走到这里</span></code></pre>
 </div>
 <hr class="divider" />
-<p>深入参考：<a href="../docs/prompts/AI_PROMPTS_3_SERVICE_CN.md" class="doc-link">service 提示词</a>、 <a href="../docs/prompts/AI_PROMPTS_5_DAO_CN.md" class="doc-link">DAO 提示词</a>（分层规则），以及 <a href="../packages/keelson-core/README_CN.md" class="doc-link">keelson-core 的 README</a>（每个查询辅助方法）。</p>
+<p>深入参考：<a href="../ai-prompts/AI_PROMPTS_3_SERVICE_CN.md" class="doc-link">service 提示词</a>、 <a href="../ai-prompts/AI_PROMPTS_5_DAO_CN.md" class="doc-link">DAO 提示词</a>（分层规则），以及 <a href="../packages/keelson-core/README_CN.md" class="doc-link">keelson-core 的 README</a>（每个查询辅助方法）。</p>
 <p>下一章：<a href="03-wiring.html" class="doc-link">装配</a> —— 这些类怎么互相找到。</p>
         </article>
 

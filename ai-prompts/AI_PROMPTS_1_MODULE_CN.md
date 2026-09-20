@@ -1,6 +1,6 @@
 # 1. 模块初始化与访问控制
 
-中文 | [English](AI_PROMPTS_1_MODULE.md) · [目录](AI_PROMPTS_CN.md)
+中文 | [English](AI_PROMPTS_1_MODULE.md) · [目录](README_CN.md)
 
 把一个 Keelson 模块立起来：服务类、它的生命周期、数据库、bean 注册，以及决定谁能进来。
 

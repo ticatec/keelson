@@ -1,6 +1,6 @@
 # 5. DAO layer
 
-[中文](AI_PROMPTS_5_DAO_CN.md) | English · [Index](AI_PROMPTS.md)
+[中文](AI_PROMPTS_5_DAO_CN.md) | English · [Index](README.md)
 
 SQL, and nothing else.
 

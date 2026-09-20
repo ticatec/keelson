@@ -297,13 +297,13 @@ import 'reflect-metadata';
 
 | 参考 | 内容 |
 | --- | --- |
-| [AI 提示词](docs/prompts/AI_PROMPTS_CN.md) | 可粘贴进 AI 会话的分层规则块，以及按层组织的提示词——各项约定以它为准 |
-| [查询条件](docs/prompts/SEARCH_CRITERIA_CN.md) | 动态查询构造器——条件辅助方法、工具方法、扩展点、生成的 SQL |
+| [AI 提示词](ai-prompts/README_CN.md) | 可粘贴进 AI 会话的分层规则块，以及按层组织的提示词——各项约定以它为准 |
+| [查询条件](ai-prompts/SEARCH_CRITERIA_CN.md) | 动态查询构造器——条件辅助方法、工具方法、扩展点、生成的 SQL |
 | [bean-validator README](packages/bean-validator/README_CN.md) | 每个校验器及其选项与默认值、自定义检查、多语言消息 |
 | [keelson-express README](packages/keelson-express/README_CN.md) | 控制器、路由、服务器生命周期、身份 |
 | [keelson-core README](packages/keelson-core/README_CN.md) | DAO 辅助方法、事务、bean 工厂 |
 
-`docs/prompts/` 下的两份文档去掉 `_CN` 后缀即是英文版；每个包的 README 旁边都有
+`ai-prompts/` 下的文档去掉 `_CN` 后缀即是英文版；每个包的 README 旁边都有
 一份 `README_CN.md`。
 
 ## 包重命名

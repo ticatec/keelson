@@ -251,12 +251,12 @@
 <div class="code-block-wrapper">
   <div class="code-block-header">
     <span class="code-lang-tag">typescript</span>
-    <button class="copy-btn" data-code-id="code-gq66pwo" title="复制代码">
+    <button class="copy-btn" data-code-id="code-1pn8df9" title="复制代码">
       <svg class="copy-icon" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
       <span class="copy-label">复制</span>
     </button>
   </div>
-  <pre class="code-block"><code id="code-gq66pwo" class="language-typescript"><span class="token keyword">import</span> { getLogger } <span class="token keyword">from</span> <span class="token string">&#039;@ticatec/logger-api&#039;</span>;
+  <pre class="code-block"><code id="code-1pn8df9" class="language-typescript"><span class="token keyword">import</span> { getLogger } <span class="token keyword">from</span> <span class="token string">&#039;@ticatec/logger-api&#039;</span>;
 
 <span class="token keyword">const</span> logger = <span class="token function">getLogger</span>(<span class="token string">&#039;UserService&#039;</span>, <span class="token string">&#039;service&#039;</span>);
 logger.<span class="token function">info</span>({ orderId }, <span class="token string">&#039;Order placed&#039;</span>);</code></pre>
@@ -267,12 +267,12 @@ logger.<span class="token function">info</span>({ orderId }, <span class="token 
 <div class="code-block-wrapper">
   <div class="code-block-header">
     <span class="code-lang-tag">bash</span>
-    <button class="copy-btn" data-code-id="code-3j35heq" title="复制代码">
+    <button class="copy-btn" data-code-id="code-9lw9sbg" title="复制代码">
       <svg class="copy-icon" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
       <span class="copy-label">复制</span>
     </button>
   </div>
-  <pre class="code-block"><code id="code-3j35heq" class="language-bash">LOG_LEVEL=debug <span class="token keyword">node</span> dist/main.js</code></pre>
+  <pre class="code-block"><code id="code-9lw9sbg" class="language-bash">LOG_LEVEL=debug <span class="token keyword">node</span> dist/main.js</code></pre>
 </div>
 <p>That is a real fallback, not a stub — fine for development and for a container whose logs are collected as plain text.</p>
 <h2 id="structured-logging-with-pino" class="heading-anchor"><a href="#structured-logging-with-pino" class="header-link">#</a> Structured logging with pino</h2>
@@ -281,23 +281,23 @@ logger.<span class="token function">info</span>({ orderId }, <span class="token 
 <div class="code-block-wrapper">
   <div class="code-block-header">
     <span class="code-lang-tag">bash</span>
-    <button class="copy-btn" data-code-id="code-5svfdci" title="复制代码">
+    <button class="copy-btn" data-code-id="code-czuywet" title="复制代码">
       <svg class="copy-icon" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
       <span class="copy-label">复制</span>
     </button>
   </div>
-  <pre class="code-block"><code id="code-5svfdci" class="language-bash"><span class="token keyword">pnpm</span> add @ticatec/logger<span class="token property">-pino</span></code></pre>
+  <pre class="code-block"><code id="code-czuywet" class="language-bash"><span class="token keyword">pnpm</span> add @ticatec/logger<span class="token property">-pino</span></code></pre>
 </div>
 
 <div class="code-block-wrapper">
   <div class="code-block-header">
     <span class="code-lang-tag">typescript</span>
-    <button class="copy-btn" data-code-id="code-yjrxf0h" title="复制代码">
+    <button class="copy-btn" data-code-id="code-xnaarix" title="复制代码">
       <svg class="copy-icon" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
       <span class="copy-label">复制</span>
     </button>
   </div>
-  <pre class="code-block"><code id="code-yjrxf0h" class="language-typescript"><span class="token comment">// src/main.ts, before importing anything that logs</span>
+  <pre class="code-block"><code id="code-xnaarix" class="language-typescript"><span class="token comment">// src/main.ts, before importing anything that logs</span>
 <span class="token keyword">import</span> <span class="token string">&#039;reflect-metadata&#039;</span>;
 <span class="token keyword">import</span> { initialize } <span class="token keyword">from</span> <span class="token string">&#039;@ticatec/logger-pino&#039;</span>;
 
@@ -320,12 +320,12 @@ logger.<span class="token function">info</span>({ orderId }, <span class="token 
 <div class="code-block-wrapper">
   <div class="code-block-header">
     <span class="code-lang-tag">typescript</span>
-    <button class="copy-btn" data-code-id="code-ff0blzo" title="复制代码">
+    <button class="copy-btn" data-code-id="code-dwx1kii" title="复制代码">
       <svg class="copy-icon" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
       <span class="copy-label">复制</span>
     </button>
   </div>
-  <pre class="code-block"><code id="code-ff0blzo" class="language-typescript">logger.<span class="token function">info</span>({ orderId, amount }, <span class="token string">&#039;Order placed&#039;</span>);   <span class="token comment">// context first, message second</span></code></pre>
+  <pre class="code-block"><code id="code-dwx1kii" class="language-typescript">logger.<span class="token function">info</span>({ orderId, amount }, <span class="token string">&#039;Order placed&#039;</span>);   <span class="token comment">// context first, message second</span></code></pre>
 </div>
 <p>Both shapes are in the contract, and <code class="inline-code">logger.info(&#039;message&#039;)</code> works. Prefer the object form: structured fields are what makes a log searchable, and a message with values interpolated into it is a string nobody can query.</p>
 <p>One rule that is easy to get wrong — pass an <code class="inline-code">Error</code> <strong>as</strong> the context, not inside one:</p>
@@ -333,12 +333,12 @@ logger.<span class="token function">info</span>({ orderId }, <span class="token 
 <div class="code-block-wrapper">
   <div class="code-block-header">
     <span class="code-lang-tag">typescript</span>
-    <button class="copy-btn" data-code-id="code-epe10fe" title="复制代码">
+    <button class="copy-btn" data-code-id="code-5vbwfp5" title="复制代码">
       <svg class="copy-icon" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
       <span class="copy-label">复制</span>
     </button>
   </div>
-  <pre class="code-block"><code id="code-epe10fe" class="language-typescript">logger.<span class="token function">error</span>(err, <span class="token string">&#039;Failed to place order&#039;</span>);       <span class="token comment">// message and stack survive</span>
+  <pre class="code-block"><code id="code-5vbwfp5" class="language-typescript">logger.<span class="token function">error</span>(err, <span class="token string">&#039;Failed to place order&#039;</span>);       <span class="token comment">// message and stack survive</span>
 logger.<span class="token function">error</span>({ err }, <span class="token string">&#039;Failed to place order&#039;</span>);   <span class="token comment">// both are lost</span></code></pre>
 </div>
 <p><code class="inline-code">message</code> and <code class="inline-code">stack</code> are not enumerable properties, so once <code class="inline-code">{ err }</code> is serialised all that remains is <code class="inline-code">{&quot;err&quot;:{&quot;code&quot;:&quot;ENOSPC&quot;}}</code> — the one line worth reading is gone.</p>
@@ -350,24 +350,24 @@ logger.<span class="token function">error</span>({ err }, <span class="token str
 <div class="code-block-wrapper">
   <div class="code-block-header">
     <span class="code-lang-tag">text</span>
-    <button class="copy-btn" data-code-id="code-ff2q92b" title="复制代码">
+    <button class="copy-btn" data-code-id="code-o8a80tf" title="复制代码">
       <svg class="copy-icon" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
       <span class="copy-label">复制</span>
     </button>
   </div>
-  <pre class="code-block"><code id="code-ff2q92b" class="language-text">DEBUG [SQL] Executing SQL update {&quot;sql&quot;:&quot;UPDATE users SET pwd = ? WHERE id = ?&quot;,&quot;paramCount&quot;:2}</code></pre>
+  <pre class="code-block"><code id="code-o8a80tf" class="language-text">DEBUG [SQL] Executing SQL update {&quot;sql&quot;:&quot;UPDATE users SET pwd = ? WHERE id = ?&quot;,&quot;paramCount&quot;:2}</code></pre>
 </div>
 <p>When you genuinely need the values to trace a problem:</p>
 
 <div class="code-block-wrapper">
   <div class="code-block-header">
     <span class="code-lang-tag">bash</span>
-    <button class="copy-btn" data-code-id="code-fbhoev1" title="复制代码">
+    <button class="copy-btn" data-code-id="code-i7l0ae3" title="复制代码">
       <svg class="copy-icon" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
       <span class="copy-label">复制</span>
     </button>
   </div>
-  <pre class="code-block"><code id="code-fbhoev1" class="language-bash">KEELSON_LOG_SQL_PARAMS=true <span class="token keyword">node</span> dist/main.js</code></pre>
+  <pre class="code-block"><code id="code-i7l0ae3" class="language-bash">KEELSON_LOG_SQL_PARAMS=true <span class="token keyword">node</span> dist/main.js</code></pre>
 </div>
 <p>It affects every layer — the DAO helpers and the driver both. Turn it off again.</p>
 <p><strong>Request and response bodies.</strong> Off unless you ask:</p>
@@ -375,12 +375,12 @@ logger.<span class="token function">error</span>({ err }, <span class="token str
 <div class="code-block-wrapper">
   <div class="code-block-header">
     <span class="code-lang-tag">typescript</span>
-    <button class="copy-btn" data-code-id="code-ycnd8ik" title="复制代码">
+    <button class="copy-btn" data-code-id="code-zy8bkub" title="复制代码">
       <svg class="copy-icon" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
       <span class="copy-label">复制</span>
     </button>
   </div>
-  <pre class="code-block"><code id="code-ycnd8ik" class="language-typescript"><span class="token keyword">import</span> { Controller } <span class="token keyword">from</span> <span class="token string">&#039;@ticatec/keelson-express&#039;</span>;
+  <pre class="code-block"><code id="code-zy8bkub" class="language-typescript"><span class="token keyword">import</span> { Controller } <span class="token keyword">from</span> <span class="token string">&#039;@ticatec/keelson-express&#039;</span>;
 Controller.debugEnabled = <span class="token keyword">true</span>;</code></pre>
 </div>
 <p>That prints <code class="inline-code">req.body</code> and <code class="inline-code">req.query</code> at debug — everything a client sent, passwords and tokens included. Development only.</p>
@@ -393,12 +393,12 @@ Controller.debugEnabled = <span class="token keyword">true</span>;</code></pre>
 <div class="code-block-wrapper">
   <div class="code-block-header">
     <span class="code-lang-tag">typescript</span>
-    <button class="copy-btn" data-code-id="code-u91rk0t" title="复制代码">
+    <button class="copy-btn" data-code-id="code-hxnf607" title="复制代码">
       <svg class="copy-icon" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
       <span class="copy-label">复制</span>
     </button>
   </div>
-  <pre class="code-block"><code id="code-u91rk0t" class="language-typescript"><span class="token keyword">protected</span> <span class="token keyword">async</span> <span class="token function">beforeStart</span>(): <span class="token builtin">Promise</span>&lt;<span class="token keyword">void</span>&gt; {
+  <pre class="code-block"><code id="code-hxnf607" class="language-typescript"><span class="token keyword">protected</span> <span class="token keyword">async</span> <span class="token function">beforeStart</span>(): <span class="token builtin">Promise</span>&lt;<span class="token keyword">void</span>&gt; {
     DBManager.<span class="token function">init</span>(<span class="token function">initializePg</span>(AppConf.<span class="token function">getInstance</span>()!.<span class="token keyword">get</span>(<span class="token string">&#039;database&#039;</span>)));
 
     this.<span class="token function">registerHealthCheck</span>(<span class="token string">&#039;database&#039;</span>, <span class="token keyword">async</span> () =&gt; {
@@ -427,12 +427,12 @@ Controller.debugEnabled = <span class="token keyword">true</span>;</code></pre>
 <div class="code-block-wrapper">
   <div class="code-block-header">
     <span class="code-lang-tag">bash</span>
-    <button class="copy-btn" data-code-id="code-9aqkklj" title="复制代码">
+    <button class="copy-btn" data-code-id="code-l3vt5se" title="复制代码">
       <svg class="copy-icon" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
       <span class="copy-label">复制</span>
     </button>
   </div>
-  <pre class="code-block"><code id="code-9aqkklj" class="language-bash">LOG_LEVEL=debug                    <span class="token comment"># everything, including route registration</span>
+  <pre class="code-block"><code id="code-l3vt5se" class="language-bash">LOG_LEVEL=debug                    <span class="token comment"># everything, including route registration</span>
 KEELSON_LOG_SQL_PARAMS=true        <span class="token comment"># plus bind parameter values</span></code></pre>
 </div>
 <p>and in the application, <code class="inline-code">Controller.debugEnabled = true</code> for request bodies. All three are development switches. A production service runs with none of them.</p>

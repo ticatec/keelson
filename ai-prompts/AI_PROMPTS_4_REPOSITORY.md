@@ -1,6 +1,6 @@
 # 4. Repository layer
 
-[中文](AI_PROMPTS_4_REPOSITORY_CN.md) | English · [Index](AI_PROMPTS.md)
+[中文](AI_PROMPTS_4_REPOSITORY_CN.md) | English · [Index](README.md)
 
 The bridge between service and DAO. It assembles domain entities, performs the simple
 entity checks, and owns the cache.

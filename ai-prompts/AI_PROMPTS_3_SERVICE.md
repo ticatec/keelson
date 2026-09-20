@@ -1,6 +1,6 @@
 # 3. Service layer — interface and implementation
 
-[中文](AI_PROMPTS_3_SERVICE_CN.md) | English · [Index](AI_PROMPTS.md)
+[中文](AI_PROMPTS_3_SERVICE_CN.md) | English · [Index](README.md)
 
 Business logic and the transaction boundary. Declared as an interface, implemented by a
 class.

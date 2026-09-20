@@ -200,8 +200,8 @@ await notifier.sendConfirmation(id);               // 只有提交成功才会�
 
 ---
 
-深入参考：[service 提示词](../docs/prompts/AI_PROMPTS_3_SERVICE_CN.md)、
-[DAO 提示词](../docs/prompts/AI_PROMPTS_5_DAO_CN.md)（分层规则），以及
+深入参考：[service 提示词](../ai-prompts/AI_PROMPTS_3_SERVICE_CN.md)、
+[DAO 提示词](../ai-prompts/AI_PROMPTS_5_DAO_CN.md)（分层规则），以及
 [keelson-core 的 README](../packages/keelson-core/README_CN.md)（每个查询辅助方法）。
 
 下一章：[装配](03-wiring_CN.md) —— 这些类怎么互相找到。
