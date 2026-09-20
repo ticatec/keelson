@@ -164,6 +164,18 @@ body {
   letter-spacing: -0.02em;
 }
 
+.brand-logo-img {
+  width: 28px;
+  height: 28px;
+  object-fit: contain;
+  border-radius: 6px;
+  background: #ffffff;
+  padding: 2px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  display: block;
+  flex-shrink: 0;
+}
+
 .brand-icon {
   font-size: 1.25rem;
 }
@@ -533,6 +545,41 @@ body {
 .markdown-body p {
   margin-bottom: 16px;
   color: var(--text-primary);
+}
+
+.doc-image-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin: 1.75rem 0;
+}
+
+.doc-image {
+  max-width: 240px;
+  height: auto;
+  border-radius: 12px;
+  background: #ffffff;
+  padding: 12px;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
+  border: 1px solid var(--border-color);
+}
+
+.markdown-body p[align="center"] {
+  text-align: center;
+  margin: 1.75rem 0;
+}
+
+.markdown-body p[align="center"] img,
+.markdown-body div[align="center"] img,
+.markdown-body center img {
+  border-radius: 12px;
+  background: #ffffff;
+  padding: 12px;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
+  border: 1px solid var(--border-color);
+  max-width: 240px;
+  height: auto;
+  display: inline-block;
 }
 
 .markdown-body strong {

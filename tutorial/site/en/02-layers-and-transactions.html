@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>02. Layers &amp; Transactions | Keelson Official Tutorial</title>
   <meta name="description" content="Keelson TypeScript Framework Official Tutorial - Enterprise TypeScript for Express">
+  <link rel="icon" type="image/png" href="../assets/keelson.png">
   <link rel="stylesheet" href="../assets/style.css">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -18,7 +19,7 @@
         <svg viewBox="0 0 24 24" width="22" height="22" stroke="currentColor" stroke-width="2" fill="none"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
       </button>
       <a href="index.html" class="brand-logo">
-        <span class="brand-icon">⚡</span>
+        <img src="../assets/keelson.png" alt="Keelson" class="brand-logo-img" />
         <span class="brand-name">Keelson</span>
         <span class="brand-badge">Tutorial</span>
       </a>
@@ -269,12 +270,12 @@
 <div class="code-block-wrapper">
   <div class="code-block-header">
     <span class="code-lang-tag">typescript</span>
-    <button class="copy-btn" data-code-id="code-h51xnzm" title="复制代码">
+    <button class="copy-btn" data-code-id="code-dnukp2s" title="复制代码">
       <svg class="copy-icon" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
       <span class="copy-label">复制</span>
     </button>
   </div>
-  <pre class="code-block"><code id="code-h51xnzm" class="language-typescript"><span class="token comment">// the shape this turns into, in every codebase that does not decide early</span>
+  <pre class="code-block"><code id="code-dnukp2s" class="language-typescript"><span class="token comment">// the shape this turns into, in every codebase that does not decide early</span>
 <span class="token keyword">async</span> <span class="token keyword">function</span> <span class="token function">transfer</span>(conn, fromId, toId, amount) {
     <span class="token keyword">await</span> <span class="token function">debit</span>(conn, fromId, amount);
     <span class="token keyword">await</span> <span class="token function">credit</span>(conn, toId, amount);
@@ -289,12 +290,12 @@
 <div class="code-block-wrapper">
   <div class="code-block-header">
     <span class="code-lang-tag">typescript</span>
-    <button class="copy-btn" data-code-id="code-4zsmfyp" title="复制代码">
+    <button class="copy-btn" data-code-id="code-62yw1sc" title="复制代码">
       <svg class="copy-icon" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
       <span class="copy-label">复制</span>
     </button>
   </div>
-  <pre class="code-block"><code id="code-4zsmfyp" class="language-typescript"><span class="token keyword">export</span> <span class="token keyword">class</span> TransferService <span class="token keyword">extends</span> <span class="token builtin">CommonService</span> {
+  <pre class="code-block"><code id="code-62yw1sc" class="language-typescript"><span class="token keyword">export</span> <span class="token keyword">class</span> TransferService <span class="token keyword">extends</span> <span class="token builtin">CommonService</span> {
     <span class="token keyword">private</span> <span class="token keyword">get</span> <span class="token function">accounts</span>(): AccountRepository {
         <span class="token keyword">return</span> this.getRepositoryInstance&lt;AccountRepository&gt;(<span class="token string">&#039;AccountRepository&#039;</span>);
     }
@@ -335,12 +336,12 @@
 <div class="code-block-wrapper">
   <div class="code-block-header">
     <span class="code-lang-tag">typescript</span>
-    <button class="copy-btn" data-code-id="code-judo741" title="复制代码">
+    <button class="copy-btn" data-code-id="code-x59kygv" title="复制代码">
       <svg class="copy-icon" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
       <span class="copy-label">复制</span>
     </button>
   </div>
-  <pre class="code-block"><code id="code-judo741" class="language-typescript"><span class="token decorator">@Transaction</span>(Propagation.REQUIRES_NEW)
+  <pre class="code-block"><code id="code-x59kygv" class="language-typescript"><span class="token decorator">@Transaction</span>(Propagation.REQUIRES_NEW)
 <span class="token keyword">async</span> <span class="token function">recordAttempt</span>(entry: AuditEntry): <span class="token builtin">Promise</span>&lt;<span class="token keyword">void</span>&gt; {
     <span class="token keyword">await</span> this.auditRepo.<span class="token function">insert</span>(entry);
 }</code></pre>
@@ -353,12 +354,12 @@
 <div class="code-block-wrapper">
   <div class="code-block-header">
     <span class="code-lang-tag">typescript</span>
-    <button class="copy-btn" data-code-id="code-e7d9fv9" title="复制代码">
+    <button class="copy-btn" data-code-id="code-yes9eow" title="复制代码">
       <svg class="copy-icon" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
       <span class="copy-label">复制</span>
     </button>
   </div>
-  <pre class="code-block"><code id="code-e7d9fv9" class="language-typescript"><span class="token keyword">import</span> { TransactionManager, Propagation } <span class="token keyword">from</span> <span class="token string">&#039;@ticatec/keelson-core&#039;</span>;
+  <pre class="code-block"><code id="code-yes9eow" class="language-typescript"><span class="token keyword">import</span> { TransactionManager, Propagation } <span class="token keyword">from</span> <span class="token string">&#039;@ticatec/keelson-core&#039;</span>;
 
 <span class="token keyword">await</span> TransactionManager.<span class="token function">execute</span>(Propagation.REQUIRED, <span class="token keyword">async</span> () =&gt; {
     <span class="token keyword">await</span> this.repo.<span class="token function">doSomething</span>();
@@ -388,12 +389,12 @@
 <div class="code-block-wrapper">
   <div class="code-block-header">
     <span class="code-lang-tag">text</span>
-    <button class="copy-btn" data-code-id="code-c494ms5" title="复制代码">
+    <button class="copy-btn" data-code-id="code-vz3h6rc" title="复制代码">
       <svg class="copy-icon" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
       <span class="copy-label">复制</span>
     </button>
   </div>
-  <pre class="code-block"><code id="code-c494ms5" class="language-text">No database connection available. Ensure you are inside a @Transaction or using TransactionManager.execute().</code></pre>
+  <pre class="code-block"><code id="code-vz3h6rc" class="language-text">No database connection available. Ensure you are inside a @Transaction or using TransactionManager.execute().</code></pre>
 </div>
 <p><code class="inline-code">Propagation.NONE</code> is the honest way to say &quot;a connection, no transaction&quot;. Chapter 1&#039;s <code class="inline-code">GreetingService.get()</code> carries a decorator because something has to establish the context, not out of ceremony.</p>
 <p>Where a read <em>does</em> want one is when several reads must see the same snapshot — a report summing three tables that must not shift underneath it.</p>
@@ -404,12 +405,12 @@
 <div class="code-block-wrapper">
   <div class="code-block-header">
     <span class="code-lang-tag">typescript</span>
-    <button class="copy-btn" data-code-id="code-alptgl7" title="复制代码">
+    <button class="copy-btn" data-code-id="code-hl4xk2u" title="复制代码">
       <svg class="copy-icon" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
       <span class="copy-label">复制</span>
     </button>
   </div>
-  <pre class="code-block"><code id="code-alptgl7" class="language-typescript"><span class="token keyword">const</span> conn = <span class="token keyword">await</span> this.<span class="token function">getDBConnection</span>();
+  <pre class="code-block"><code id="code-hl4xk2u" class="language-typescript"><span class="token keyword">const</span> conn = <span class="token keyword">await</span> this.<span class="token function">getDBConnection</span>();
 <span class="token keyword">const</span> placeholders = ids.<span class="token function">map</span>((_, i) =&gt; conn.<span class="token function">getPlaceholder</span>(i + <span class="token number">1</span>)).<span class="token function">join</span>(<span class="token string">&#039;, &#039;</span>);
 <span class="token keyword">return</span> <span class="token keyword">await</span> this.<span class="token function">listQuery</span>(<span class="token string">`SELECT * FROM users WHERE id IN (${placeholders})`</span>, ids);</code></pre>
 </div>
@@ -422,12 +423,12 @@
 <div class="code-block-wrapper">
   <div class="code-block-header">
     <span class="code-lang-tag">typescript</span>
-    <button class="copy-btn" data-code-id="code-mxuxxin" title="复制代码">
+    <button class="copy-btn" data-code-id="code-mqnswrj" title="复制代码">
       <svg class="copy-icon" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
       <span class="copy-label">复制</span>
     </button>
   </div>
-  <pre class="code-block"><code id="code-mxuxxin" class="language-typescript"><span class="token decorator">@Transaction</span>()
+  <pre class="code-block"><code id="code-mqnswrj" class="language-typescript"><span class="token decorator">@Transaction</span>()
 <span class="token keyword">async</span> <span class="token function">placeOrder</span>(order: Order): <span class="token builtin">Promise</span>&lt;string&gt; {
     <span class="token keyword">return</span> <span class="token keyword">await</span> this.orderRepo.<span class="token function">insert</span>(order);     <span class="token comment">// database only</span>
 }

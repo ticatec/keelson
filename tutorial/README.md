@@ -1,5 +1,9 @@
 # Keelson Tutorial
 
+<p align="center">
+  <img src="keelson.png" alt="Keelson" width="220">
+</p>
+
 [中文](README_CN.md) | English
 
 Nine chapters, each one topic, each readable on its own. Start wherever your question is.

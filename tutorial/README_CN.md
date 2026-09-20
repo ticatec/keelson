@@ -1,5 +1,9 @@
 # Keelson 教程
 
+<p align="center">
+  <img src="keelson.png" alt="Keelson" width="220">
+</p>
+
 中文 | [English](README.md)
 
 九章，一章一个主题，各章独立成篇。从你当下的问题那一章看起即可。

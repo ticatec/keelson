@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>01. 起步 | Keelson 官方教程</title>
   <meta name="description" content="Keelson TypeScript Framework Official Tutorial - Enterprise TypeScript for Express">
+  <link rel="icon" type="image/png" href="../assets/keelson.png">
   <link rel="stylesheet" href="../assets/style.css">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -18,7 +19,7 @@
         <svg viewBox="0 0 24 24" width="22" height="22" stroke="currentColor" stroke-width="2" fill="none"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
       </button>
       <a href="index.html" class="brand-logo">
-        <span class="brand-icon">⚡</span>
+        <img src="../assets/keelson.png" alt="Keelson" class="brand-logo-img" />
         <span class="brand-name">Keelson</span>
         <span class="brand-badge">教程</span>
       </a>
@@ -243,12 +244,12 @@
 <div class="code-block-wrapper">
   <div class="code-block-header">
     <span class="code-lang-tag">bash</span>
-    <button class="copy-btn" data-code-id="code-kofueb1" title="复制代码">
+    <button class="copy-btn" data-code-id="code-ckmlu08" title="复制代码">
       <svg class="copy-icon" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
       <span class="copy-label">复制</span>
     </button>
   </div>
-  <pre class="code-block"><code id="code-kofueb1" class="language-bash"><span class="token keyword">pnpm</span> add @ticatec/keelson<span class="token property">-express</span> @ticatec/keelson<span class="token property">-core</span> \
+  <pre class="code-block"><code id="code-ckmlu08" class="language-bash"><span class="token keyword">pnpm</span> add @ticatec/keelson<span class="token property">-express</span> @ticatec/keelson<span class="token property">-core</span> \
          @ticatec/bean<span class="token property">-validator</span> @ticatec/<span class="token keyword">node</span><span class="token property">-exception</span> \
          @ticatec/logger<span class="token property">-api</span> reflect<span class="token property">-metadata</span>
 
@@ -261,12 +262,12 @@
 <div class="code-block-wrapper">
   <div class="code-block-header">
     <span class="code-lang-tag">json</span>
-    <button class="copy-btn" data-code-id="code-whgtzrs" title="复制代码">
+    <button class="copy-btn" data-code-id="code-ukhnss6" title="复制代码">
       <svg class="copy-icon" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
       <span class="copy-label">复制</span>
     </button>
   </div>
-  <pre class="code-block"><code id="code-whgtzrs" class="language-json">{
+  <pre class="code-block"><code id="code-ukhnss6" class="language-json">{
   <span class="token property">&quot;compilerOptions&quot;</span>: {
     <span class="token property">&quot;target&quot;</span>: <span class="token string">&quot;es2022&quot;</span>,
     <span class="token property">&quot;module&quot;</span>: <span class="token string">&quot;NodeNext&quot;</span>,
@@ -282,12 +283,12 @@
 <div class="code-block-wrapper">
   <div class="code-block-header">
     <span class="code-lang-tag">typescript</span>
-    <button class="copy-btn" data-code-id="code-ub63ir9" title="复制代码">
+    <button class="copy-btn" data-code-id="code-bj0k050" title="复制代码">
       <svg class="copy-icon" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
       <span class="copy-label">复制</span>
     </button>
   </div>
-  <pre class="code-block"><code id="code-ub63ir9" class="language-typescript"><span class="token comment">// src/main.ts —— 整个程序的第一行</span>
+  <pre class="code-block"><code id="code-bj0k050" class="language-typescript"><span class="token comment">// src/main.ts —— 整个程序的第一行</span>
 <span class="token keyword">import</span> <span class="token string">&#039;reflect-metadata&#039;</span>;</code></pre>
 </div>
 <p>漏了它，<code class="inline-code">@Transaction</code> 会在启动时直接抛错，而不是悄悄地不生效——这正是你想要的失败方式。</p>
@@ -298,12 +299,12 @@
 <div class="code-block-wrapper">
   <div class="code-block-header">
     <span class="code-lang-tag">typescript</span>
-    <button class="copy-btn" data-code-id="code-2h8cnpv" title="复制代码">
+    <button class="copy-btn" data-code-id="code-pwb4f50" title="复制代码">
       <svg class="copy-icon" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
       <span class="copy-label">复制</span>
     </button>
   </div>
-  <pre class="code-block"><code id="code-2h8cnpv" class="language-typescript"><span class="token keyword">import</span> { <span class="token builtin">CommonDAO</span> } <span class="token keyword">from</span> <span class="token string">&#039;@ticatec/keelson-core&#039;</span>;
+  <pre class="code-block"><code id="code-pwb4f50" class="language-typescript"><span class="token keyword">import</span> { <span class="token builtin">CommonDAO</span> } <span class="token keyword">from</span> <span class="token string">&#039;@ticatec/keelson-core&#039;</span>;
 
 <span class="token keyword">export</span> <span class="token keyword">interface</span> Greeting {
     id: string;
@@ -322,12 +323,12 @@
 <div class="code-block-wrapper">
   <div class="code-block-header">
     <span class="code-lang-tag">typescript</span>
-    <button class="copy-btn" data-code-id="code-1s9hw7a" title="复制代码">
+    <button class="copy-btn" data-code-id="code-9s0da0b" title="复制代码">
       <svg class="copy-icon" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
       <span class="copy-label">复制</span>
     </button>
   </div>
-  <pre class="code-block"><code id="code-1s9hw7a" class="language-typescript"><span class="token keyword">import</span> { <span class="token builtin">CommonRepository</span> } <span class="token keyword">from</span> <span class="token string">&#039;@ticatec/keelson-core&#039;</span>;
+  <pre class="code-block"><code id="code-9s0da0b" class="language-typescript"><span class="token keyword">import</span> { <span class="token builtin">CommonRepository</span> } <span class="token keyword">from</span> <span class="token string">&#039;@ticatec/keelson-core&#039;</span>;
 <span class="token keyword">import</span> { GreetingDAO, Greeting } <span class="token keyword">from</span> <span class="token string">&#039;../dao/GreetingDAO.js&#039;</span>;
 
 <span class="token keyword">export</span> <span class="token keyword">class</span> GreetingRepository <span class="token keyword">extends</span> <span class="token builtin">CommonRepository</span> {
@@ -346,12 +347,12 @@
 <div class="code-block-wrapper">
   <div class="code-block-header">
     <span class="code-lang-tag">typescript</span>
-    <button class="copy-btn" data-code-id="code-3fau8iz" title="复制代码">
+    <button class="copy-btn" data-code-id="code-ntzkt8i" title="复制代码">
       <svg class="copy-icon" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
       <span class="copy-label">复制</span>
     </button>
   </div>
-  <pre class="code-block"><code id="code-3fau8iz" class="language-typescript"><span class="token keyword">import</span> { <span class="token builtin">CommonService</span>, Transaction } <span class="token keyword">from</span> <span class="token string">&#039;@ticatec/keelson-core&#039;</span>;
+  <pre class="code-block"><code id="code-ntzkt8i" class="language-typescript"><span class="token keyword">import</span> { <span class="token builtin">CommonService</span>, Transaction } <span class="token keyword">from</span> <span class="token string">&#039;@ticatec/keelson-core&#039;</span>;
 <span class="token keyword">import</span> { ActionNotFoundError } <span class="token keyword">from</span> <span class="token string">&#039;@ticatec/node-exception&#039;</span>;
 <span class="token keyword">import</span> { GreetingRepository } <span class="token keyword">from</span> <span class="token string">&#039;../repository/GreetingRepository.js&#039;</span>;
 <span class="token keyword">import</span> { Greeting } <span class="token keyword">from</span> <span class="token string">&#039;../dao/GreetingDAO.js&#039;</span>;
@@ -376,12 +377,12 @@
 <div class="code-block-wrapper">
   <div class="code-block-header">
     <span class="code-lang-tag">typescript</span>
-    <button class="copy-btn" data-code-id="code-bu93il6" title="复制代码">
+    <button class="copy-btn" data-code-id="code-bioqwox" title="复制代码">
       <svg class="copy-icon" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
       <span class="copy-label">复制</span>
     </button>
   </div>
-  <pre class="code-block"><code id="code-bu93il6" class="language-typescript"><span class="token keyword">import</span> { CommonRoutes, routerHelper } <span class="token keyword">from</span> <span class="token string">&#039;@ticatec/keelson-express&#039;</span>;
+  <pre class="code-block"><code id="code-bioqwox" class="language-typescript"><span class="token keyword">import</span> { CommonRoutes, routerHelper } <span class="token keyword">from</span> <span class="token string">&#039;@ticatec/keelson-express&#039;</span>;
 <span class="token keyword">import</span> { beanFactory } <span class="token keyword">from</span> <span class="token string">&#039;@ticatec/keelson-core&#039;</span>;
 <span class="token keyword">import</span> { GreetingService } <span class="token keyword">from</span> <span class="token string">&#039;../service/GreetingService.js&#039;</span>;
 
@@ -404,12 +405,12 @@
 <div class="code-block-wrapper">
   <div class="code-block-header">
     <span class="code-lang-tag">typescript</span>
-    <button class="copy-btn" data-code-id="code-2j340lp" title="复制代码">
+    <button class="copy-btn" data-code-id="code-rg7py49" title="复制代码">
       <svg class="copy-icon" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
       <span class="copy-label">复制</span>
     </button>
   </div>
-  <pre class="code-block"><code id="code-2j340lp" class="language-typescript"><span class="token comment">// src/main.ts</span>
+  <pre class="code-block"><code id="code-rg7py49" class="language-typescript"><span class="token comment">// src/main.ts</span>
 <span class="token keyword">import</span> <span class="token string">&#039;reflect-metadata&#039;</span>;
 <span class="token keyword">import</span> BaseServer, { AppConf } <span class="token keyword">from</span> <span class="token string">&#039;@ticatec/keelson-express&#039;</span>;
 <span class="token keyword">import</span> { DBManager, beanFactory } <span class="token keyword">from</span> <span class="token string">&#039;@ticatec/keelson-core&#039;</span>;
@@ -461,12 +462,12 @@ BaseServer.<span class="token function">startup</span>(<span class="token keywor
 <div class="code-block-wrapper">
   <div class="code-block-header">
     <span class="code-lang-tag">text</span>
-    <button class="copy-btn" data-code-id="code-advpx70" title="复制代码">
+    <button class="copy-btn" data-code-id="code-v5qcbuh" title="复制代码">
       <svg class="copy-icon" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
       <span class="copy-label">复制</span>
     </button>
   </div>
-  <pre class="code-block"><code id="code-advpx70" class="language-text">GET /api/greetings/abc     你的路由
+  <pre class="code-block"><code id="code-v5qcbuh" class="language-text">GET /api/greetings/abc     你的路由
 GET /health/live           进程活着就返回 200
 GET /health/ready          所有关键检查通过返回 200，否则 503
 GET /health                与 /health/ready 相同</code></pre>
@@ -479,12 +480,12 @@ GET /health                与 /health/ready 相同</code></pre>
 <div class="code-block-wrapper">
   <div class="code-block-header">
     <span class="code-lang-tag">typescript</span>
-    <button class="copy-btn" data-code-id="code-5wue0cc" title="复制代码">
+    <button class="copy-btn" data-code-id="code-h9d6jom" title="复制代码">
       <svg class="copy-icon" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
       <span class="copy-label">复制</span>
     </button>
   </div>
-  <pre class="code-block"><code id="code-5wue0cc" class="language-typescript">AppConf.<span class="token function">getInstance</span>()!.<span class="token keyword">get</span>(<span class="token string">&#039;web.port&#039;</span>);        <span class="token comment">// 3000</span>
+  <pre class="code-block"><code id="code-h9d6jom" class="language-typescript">AppConf.<span class="token function">getInstance</span>()!.<span class="token keyword">get</span>(<span class="token string">&#039;web.port&#039;</span>);        <span class="token comment">// 3000</span>
 AppConf.<span class="token function">getInstance</span>()!.<span class="token keyword">get</span>(<span class="token string">&#039;nope.nothing&#039;</span>);    <span class="token comment">// undefined，不抛异常</span></code></pre>
 </div>
 <p>注意那个 <code class="inline-code">!</code>。<code class="inline-code">getInstance()</code> 的返回类型是 <code class="inline-code">AppConf | null</code>——<code class="inline-code">init()</code> 之前是 null—— 而在一个只会在 <code class="inline-code">loadConfigFile()</code> 之后运行的方法里，这个断言是诚实的。</p>

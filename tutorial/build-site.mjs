@@ -301,10 +301,20 @@ function parseMarkdown(rawContent, isZh) {
 
   let paragraphBuffer = [];
   let blockquoteBuffer = [];
+  let inHtmlBlock = false;
+  let htmlBlockBuffer = [];
 
   function parseInline(text) {
     if (!text) return '';
     let res = escapeHtml(text);
+
+    // 0. Extract and protect images ![alt](url) before processing links and italics
+    const images = [];
+    res = res.replace(/!\[([^\]]*)\]\(([^)]+)\)/g, (m, alt, url) => {
+      const idx = images.length;
+      images.push(`<span class="doc-image-container"><img src="${url}" alt="${alt}" class="doc-image" /></span>`);
+      return `___IMG_TOKEN_${idx}___`;
+    });
 
     // 1. Inline code `code`
     res = res.replace(/`([^`]+)`/g, '<code class="inline-code">$1</code>');
@@ -327,6 +337,9 @@ function parseMarkdown(rawContent, isZh) {
 
     // 5. Restore protected links
     res = res.replace(/___LINK_TOKEN_(\d+)___/g, (m, idx) => links[Number(idx)]);
+
+    // 6. Restore protected images
+    res = res.replace(/___IMG_TOKEN_(\d+)___/g, (m, idx) => images[Number(idx)]);
 
     return res;
   }
@@ -427,11 +440,42 @@ function parseMarkdown(rawContent, isZh) {
     }
 
     // Skip the top markdown language switcher line (e.g. "中文 | [English]..." or "[English] | 中文...")
-    if (skipLangSwitcher && (line.includes('中文 | [English]') || line.includes('[English]') || line.includes('[中文]') || line.includes('English | [中文]'))) {
+    if (line.includes('中文 | [English]') || line.includes('[English]') || line.includes('[中文]') || line.includes('English | [中文]')) {
       continue;
     }
-    if (line.trim().length > 0 && !line.startsWith('#')) {
-      skipLangSwitcher = false;
+
+    // Raw HTML block handling (e.g. <p align="center">... or <img ...>)
+    if (inHtmlBlock) {
+      htmlBlockBuffer.push(line);
+      if (line.includes('</p>') || line.includes('</div>') || line.includes('</center>')) {
+        inHtmlBlock = false;
+        htmlParts.push(htmlBlockBuffer.join('\n'));
+        htmlBlockBuffer = [];
+      }
+      continue;
+    }
+
+    if (/^<(p|div|center)\b/i.test(line.trim())) {
+      flushParagraph();
+      flushBlockquote();
+      closeList();
+      closeTable();
+      if (line.includes('</p>') || line.includes('</div>') || line.includes('</center>')) {
+        htmlParts.push(line.trim());
+      } else {
+        inHtmlBlock = true;
+        htmlBlockBuffer = [line];
+      }
+      continue;
+    }
+
+    if (/^<img\b[^>]*\/?>/i.test(line.trim())) {
+      flushParagraph();
+      flushBlockquote();
+      closeList();
+      closeTable();
+      htmlParts.push(line.trim());
+      continue;
     }
 
     // Empty line
@@ -543,6 +587,11 @@ function parseMarkdown(rawContent, isZh) {
   flushBlockquote();
   closeList();
   closeTable();
+  if (inHtmlBlock) {
+    htmlParts.push(htmlBlockBuffer.join('\n'));
+    inHtmlBlock = false;
+    htmlBlockBuffer = [];
+  }
 
   return {
     html: htmlParts.join('\n'),
@@ -646,6 +695,7 @@ function renderPage({ currentChapter, isZh, htmlContent, toc }) {
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>${escapeHtml(pageTitle)}</title>
   <meta name="description" content="Keelson TypeScript Framework Official Tutorial - Enterprise TypeScript for Express">
+  <link rel="icon" type="image/png" href="${rootPrefix}assets/keelson.png">
   <link rel="stylesheet" href="${rootPrefix}assets/style.css">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -659,7 +709,7 @@ function renderPage({ currentChapter, isZh, htmlContent, toc }) {
         <svg viewBox="0 0 24 24" width="22" height="22" stroke="currentColor" stroke-width="2" fill="none"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
       </button>
       <a href="index.html" class="brand-logo">
-        <span class="brand-icon">⚡</span>
+        <img src="${rootPrefix}assets/keelson.png" alt="Keelson" class="brand-logo-img" />
         <span class="brand-name">Keelson</span>
         <span class="brand-badge">${isZh ? '教程' : 'Tutorial'}</span>
       </a>
@@ -923,6 +973,18 @@ body {
   font-weight: 700;
   font-size: 1.15rem;
   letter-spacing: -0.02em;
+}
+
+.brand-logo-img {
+  width: 28px;
+  height: 28px;
+  object-fit: contain;
+  border-radius: 6px;
+  background: #ffffff;
+  padding: 2px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  display: block;
+  flex-shrink: 0;
 }
 
 .brand-icon {
@@ -1294,6 +1356,41 @@ body {
 .markdown-body p {
   margin-bottom: 16px;
   color: var(--text-primary);
+}
+
+.doc-image-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin: 1.75rem 0;
+}
+
+.doc-image {
+  max-width: 240px;
+  height: auto;
+  border-radius: 12px;
+  background: #ffffff;
+  padding: 12px;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
+  border: 1px solid var(--border-color);
+}
+
+.markdown-body p[align="center"] {
+  text-align: center;
+  margin: 1.75rem 0;
+}
+
+.markdown-body p[align="center"] img,
+.markdown-body div[align="center"] img,
+.markdown-body center img {
+  border-radius: 12px;
+  background: #ffffff;
+  padding: 12px;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
+  border: 1px solid var(--border-color);
+  max-width: 240px;
+  height: auto;
+  display: inline-block;
 }
 
 .markdown-body strong {
@@ -1798,6 +1895,16 @@ function build() {
   fs.writeFileSync(path.join(assetsDir, 'style.css'), generateCss(), 'utf-8');
   fs.writeFileSync(path.join(assetsDir, 'app.js'), generateJs(), 'utf-8');
   console.log('✅ Generated assets (style.css, app.js)');
+
+  // Copy keelson.png logo
+  const logoSrc = path.join(TUTORIAL_DIR, 'keelson.png');
+  if (fs.existsSync(logoSrc)) {
+    fs.copyFileSync(logoSrc, path.join(assetsDir, 'keelson.png'));
+    fs.copyFileSync(logoSrc, path.join(zhDir, 'keelson.png'));
+    fs.copyFileSync(logoSrc, path.join(enDir, 'keelson.png'));
+    fs.copyFileSync(logoSrc, path.join(SITE_DIR, 'keelson.png'));
+    console.log('✅ Copied keelson.png logo to assets, site root, and language directories');
+  }
 
   // Write root index.html
   fs.writeFileSync(path.join(SITE_DIR, 'index.html'), generateRootIndex(), 'utf-8');

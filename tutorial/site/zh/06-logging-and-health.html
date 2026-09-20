@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>06. 日志与健康检查 | Keelson 官方教程</title>
   <meta name="description" content="Keelson TypeScript Framework Official Tutorial - Enterprise TypeScript for Express">
+  <link rel="icon" type="image/png" href="../assets/keelson.png">
   <link rel="stylesheet" href="../assets/style.css">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -18,7 +19,7 @@
         <svg viewBox="0 0 24 24" width="22" height="22" stroke="currentColor" stroke-width="2" fill="none"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
       </button>
       <a href="index.html" class="brand-logo">
-        <span class="brand-icon">⚡</span>
+        <img src="../assets/keelson.png" alt="Keelson" class="brand-logo-img" />
         <span class="brand-name">Keelson</span>
         <span class="brand-badge">教程</span>
       </a>
@@ -250,12 +251,12 @@
 <div class="code-block-wrapper">
   <div class="code-block-header">
     <span class="code-lang-tag">typescript</span>
-    <button class="copy-btn" data-code-id="code-5zbndna" title="复制代码">
+    <button class="copy-btn" data-code-id="code-6wy4ssm" title="复制代码">
       <svg class="copy-icon" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
       <span class="copy-label">复制</span>
     </button>
   </div>
-  <pre class="code-block"><code id="code-5zbndna" class="language-typescript"><span class="token keyword">import</span> { getLogger } <span class="token keyword">from</span> <span class="token string">&#039;@ticatec/logger-api&#039;</span>;
+  <pre class="code-block"><code id="code-6wy4ssm" class="language-typescript"><span class="token keyword">import</span> { getLogger } <span class="token keyword">from</span> <span class="token string">&#039;@ticatec/logger-api&#039;</span>;
 
 <span class="token keyword">const</span> logger = <span class="token function">getLogger</span>(<span class="token string">&#039;UserService&#039;</span>, <span class="token string">&#039;service&#039;</span>);
 logger.<span class="token function">info</span>({ orderId }, <span class="token string">&#039;Order placed&#039;</span>);</code></pre>
@@ -266,12 +267,12 @@ logger.<span class="token function">info</span>({ orderId }, <span class="token 
 <div class="code-block-wrapper">
   <div class="code-block-header">
     <span class="code-lang-tag">bash</span>
-    <button class="copy-btn" data-code-id="code-hcjvccy" title="复制代码">
+    <button class="copy-btn" data-code-id="code-qp1bsnn" title="复制代码">
       <svg class="copy-icon" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
       <span class="copy-label">复制</span>
     </button>
   </div>
-  <pre class="code-block"><code id="code-hcjvccy" class="language-bash">LOG_LEVEL=debug <span class="token keyword">node</span> dist/main.js</code></pre>
+  <pre class="code-block"><code id="code-qp1bsnn" class="language-bash">LOG_LEVEL=debug <span class="token keyword">node</span> dist/main.js</code></pre>
 </div>
 <p>这是一个真正可用的回退，不是占位实现——开发时够用，日志被当作纯文本采集的容器里也够用。</p>
 <h2 id="用-pino-做结构化日志" class="heading-anchor"><a href="#用-pino-做结构化日志" class="header-link">#</a> 用 pino 做结构化日志</h2>
@@ -280,23 +281,23 @@ logger.<span class="token function">info</span>({ orderId }, <span class="token 
 <div class="code-block-wrapper">
   <div class="code-block-header">
     <span class="code-lang-tag">bash</span>
-    <button class="copy-btn" data-code-id="code-0vcehhn" title="复制代码">
+    <button class="copy-btn" data-code-id="code-e8btv8t" title="复制代码">
       <svg class="copy-icon" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
       <span class="copy-label">复制</span>
     </button>
   </div>
-  <pre class="code-block"><code id="code-0vcehhn" class="language-bash"><span class="token keyword">pnpm</span> add @ticatec/logger<span class="token property">-pino</span></code></pre>
+  <pre class="code-block"><code id="code-e8btv8t" class="language-bash"><span class="token keyword">pnpm</span> add @ticatec/logger<span class="token property">-pino</span></code></pre>
 </div>
 
 <div class="code-block-wrapper">
   <div class="code-block-header">
     <span class="code-lang-tag">typescript</span>
-    <button class="copy-btn" data-code-id="code-5i1zkne" title="复制代码">
+    <button class="copy-btn" data-code-id="code-ao6war0" title="复制代码">
       <svg class="copy-icon" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
       <span class="copy-label">复制</span>
     </button>
   </div>
-  <pre class="code-block"><code id="code-5i1zkne" class="language-typescript"><span class="token comment">// src/main.ts，在引入任何会打日志的模块之前</span>
+  <pre class="code-block"><code id="code-ao6war0" class="language-typescript"><span class="token comment">// src/main.ts，在引入任何会打日志的模块之前</span>
 <span class="token keyword">import</span> <span class="token string">&#039;reflect-metadata&#039;</span>;
 <span class="token keyword">import</span> { initialize } <span class="token keyword">from</span> <span class="token string">&#039;@ticatec/logger-pino&#039;</span>;
 
@@ -319,12 +320,12 @@ logger.<span class="token function">info</span>({ orderId }, <span class="token 
 <div class="code-block-wrapper">
   <div class="code-block-header">
     <span class="code-lang-tag">typescript</span>
-    <button class="copy-btn" data-code-id="code-92j9dqu" title="复制代码">
+    <button class="copy-btn" data-code-id="code-7jcx9vq" title="复制代码">
       <svg class="copy-icon" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
       <span class="copy-label">复制</span>
     </button>
   </div>
-  <pre class="code-block"><code id="code-92j9dqu" class="language-typescript">logger.<span class="token function">info</span>({ orderId, amount }, <span class="token string">&#039;Order placed&#039;</span>);   <span class="token comment">// 上下文在前，消息在后</span></code></pre>
+  <pre class="code-block"><code id="code-7jcx9vq" class="language-typescript">logger.<span class="token function">info</span>({ orderId, amount }, <span class="token string">&#039;Order placed&#039;</span>);   <span class="token comment">// 上下文在前，消息在后</span></code></pre>
 </div>
 <p>契约里两种形式都支持，<code class="inline-code">logger.info(&#039;message&#039;)</code> 也能用。优先用对象形式：结构化字段才让日志可检索，而把值拼进消息字符串里，谁也查不了。</p>
 <p>有一条容易搞错——<code class="inline-code">Error</code> 要<strong>作为</strong>上下文传，而不是包在对象里：</p>
@@ -332,12 +333,12 @@ logger.<span class="token function">info</span>({ orderId }, <span class="token 
 <div class="code-block-wrapper">
   <div class="code-block-header">
     <span class="code-lang-tag">typescript</span>
-    <button class="copy-btn" data-code-id="code-v3fv9i9" title="复制代码">
+    <button class="copy-btn" data-code-id="code-5a3ur8q" title="复制代码">
       <svg class="copy-icon" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
       <span class="copy-label">复制</span>
     </button>
   </div>
-  <pre class="code-block"><code id="code-v3fv9i9" class="language-typescript">logger.<span class="token function">error</span>(err, <span class="token string">&#039;Failed to place order&#039;</span>);       <span class="token comment">// message 与 stack 都在</span>
+  <pre class="code-block"><code id="code-5a3ur8q" class="language-typescript">logger.<span class="token function">error</span>(err, <span class="token string">&#039;Failed to place order&#039;</span>);       <span class="token comment">// message 与 stack 都在</span>
 logger.<span class="token function">error</span>({ err }, <span class="token string">&#039;Failed to place order&#039;</span>);   <span class="token comment">// 两个都没了</span></code></pre>
 </div>
 <p><code class="inline-code">message</code> 与 <code class="inline-code">stack</code> 都不是可枚举属性，<code class="inline-code">{ err }</code> 序列化之后只剩 <code class="inline-code">{&quot;err&quot;:{&quot;code&quot;:&quot;ENOSPC&quot;}}</code>——最该看的那行没了。</p>
@@ -349,24 +350,24 @@ logger.<span class="token function">error</span>({ err }, <span class="token str
 <div class="code-block-wrapper">
   <div class="code-block-header">
     <span class="code-lang-tag">text</span>
-    <button class="copy-btn" data-code-id="code-yych1fi" title="复制代码">
+    <button class="copy-btn" data-code-id="code-qdo9hz9" title="复制代码">
       <svg class="copy-icon" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
       <span class="copy-label">复制</span>
     </button>
   </div>
-  <pre class="code-block"><code id="code-yych1fi" class="language-text">DEBUG [SQL] Executing SQL update {&quot;sql&quot;:&quot;UPDATE users SET pwd = ? WHERE id = ?&quot;,&quot;paramCount&quot;:2}</code></pre>
+  <pre class="code-block"><code id="code-qdo9hz9" class="language-text">DEBUG [SQL] Executing SQL update {&quot;sql&quot;:&quot;UPDATE users SET pwd = ? WHERE id = ?&quot;,&quot;paramCount&quot;:2}</code></pre>
 </div>
 <p>确实需要参数值来排查问题时：</p>
 
 <div class="code-block-wrapper">
   <div class="code-block-header">
     <span class="code-lang-tag">bash</span>
-    <button class="copy-btn" data-code-id="code-0hdxn8r" title="复制代码">
+    <button class="copy-btn" data-code-id="code-f6cxf5c" title="复制代码">
       <svg class="copy-icon" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
       <span class="copy-label">复制</span>
     </button>
   </div>
-  <pre class="code-block"><code id="code-0hdxn8r" class="language-bash">KEELSON_LOG_SQL_PARAMS=true <span class="token keyword">node</span> dist/main.js</code></pre>
+  <pre class="code-block"><code id="code-f6cxf5c" class="language-bash">KEELSON_LOG_SQL_PARAMS=true <span class="token keyword">node</span> dist/main.js</code></pre>
 </div>
 <p>它对每一层都生效——DAO 的辅助方法和驱动层都在内。用完记得关掉。</p>
 <p><strong>请求体与响应体。</strong> 不主动打开就不记录：</p>
@@ -374,12 +375,12 @@ logger.<span class="token function">error</span>({ err }, <span class="token str
 <div class="code-block-wrapper">
   <div class="code-block-header">
     <span class="code-lang-tag">typescript</span>
-    <button class="copy-btn" data-code-id="code-b5i2feh" title="复制代码">
+    <button class="copy-btn" data-code-id="code-5zv3bvq" title="复制代码">
       <svg class="copy-icon" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
       <span class="copy-label">复制</span>
     </button>
   </div>
-  <pre class="code-block"><code id="code-b5i2feh" class="language-typescript"><span class="token keyword">import</span> { Controller } <span class="token keyword">from</span> <span class="token string">&#039;@ticatec/keelson-express&#039;</span>;
+  <pre class="code-block"><code id="code-5zv3bvq" class="language-typescript"><span class="token keyword">import</span> { Controller } <span class="token keyword">from</span> <span class="token string">&#039;@ticatec/keelson-express&#039;</span>;
 Controller.debugEnabled = <span class="token keyword">true</span>;</code></pre>
 </div>
 <p>它会把 <code class="inline-code">req.body</code> 与 <code class="inline-code">req.query</code> 打到 debug——客户端发来的一切，包括口令与 token。仅限开发环境。</p>
@@ -392,12 +393,12 @@ Controller.debugEnabled = <span class="token keyword">true</span>;</code></pre>
 <div class="code-block-wrapper">
   <div class="code-block-header">
     <span class="code-lang-tag">typescript</span>
-    <button class="copy-btn" data-code-id="code-1gglxte" title="复制代码">
+    <button class="copy-btn" data-code-id="code-12xdr8j" title="复制代码">
       <svg class="copy-icon" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
       <span class="copy-label">复制</span>
     </button>
   </div>
-  <pre class="code-block"><code id="code-1gglxte" class="language-typescript"><span class="token keyword">protected</span> <span class="token keyword">async</span> <span class="token function">beforeStart</span>(): <span class="token builtin">Promise</span>&lt;<span class="token keyword">void</span>&gt; {
+  <pre class="code-block"><code id="code-12xdr8j" class="language-typescript"><span class="token keyword">protected</span> <span class="token keyword">async</span> <span class="token function">beforeStart</span>(): <span class="token builtin">Promise</span>&lt;<span class="token keyword">void</span>&gt; {
     DBManager.<span class="token function">init</span>(<span class="token function">initializePg</span>(AppConf.<span class="token function">getInstance</span>()!.<span class="token keyword">get</span>(<span class="token string">&#039;database&#039;</span>)));
 
     this.<span class="token function">registerHealthCheck</span>(<span class="token string">&#039;database&#039;</span>, <span class="token keyword">async</span> () =&gt; {
@@ -426,12 +427,12 @@ Controller.debugEnabled = <span class="token keyword">true</span>;</code></pre>
 <div class="code-block-wrapper">
   <div class="code-block-header">
     <span class="code-lang-tag">bash</span>
-    <button class="copy-btn" data-code-id="code-7vwnaiy" title="复制代码">
+    <button class="copy-btn" data-code-id="code-zcy19n9" title="复制代码">
       <svg class="copy-icon" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
       <span class="copy-label">复制</span>
     </button>
   </div>
-  <pre class="code-block"><code id="code-7vwnaiy" class="language-bash">LOG_LEVEL=debug                    <span class="token comment"># 一切，包括路由注册</span>
+  <pre class="code-block"><code id="code-zcy19n9" class="language-bash">LOG_LEVEL=debug                    <span class="token comment"># 一切，包括路由注册</span>
 KEELSON_LOG_SQL_PARAMS=true        <span class="token comment"># 外加绑定参数值</span></code></pre>
 </div>
 <p>以及在应用里设 <code class="inline-code">Controller.debugEnabled = true</code> 看请求体。这三个都是开发期开关，生产服务一个都不该开。</p>
