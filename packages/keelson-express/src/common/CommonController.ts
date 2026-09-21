@@ -4,12 +4,14 @@ import beanValidator, {ValidationRules} from "@ticatec/bean-validator";
 import {RestfulFunction} from "../RouterHelper.js";
 import {Request} from "express";
 import Controller from "./Controller.js";
+import {CommonUser, RegisteredUser} from "../LoggedUser.js";
 
 /**
  * Controller class that implements Create/Read/Update/Delete operations
  * @template T The service type this controller depends on
+ * @template U The logged-in user type, defaults to server-wide RegisteredUser
  */
-export default abstract class CommonController<T> extends BaseController<T> {
+export default abstract class CommonController<T, U extends CommonUser = RegisteredUser> extends BaseController<T, U> {
 
     /**
      * Constructor for common controller

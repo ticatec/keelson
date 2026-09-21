@@ -468,9 +468,10 @@ Base class for route definitions featuring:
 
 ### Controller Hierarchy
 
-- **BaseController<T>**: Base controller providing logging and user context access
-- **CommonController<T>**: Base CRUD controller with automatic validation and default user argument passing `[loggedUser, req.body]`
-- **CommonSearchController<T>**: Search controller providing out-of-the-box search query handling
+- **Controller**: Lightweight root base controller providing structured logging (`this.logger`) and global debug flag (`Controller.debugEnabled`). Ideal for public APIs, webhooks, health checks, or endpoints that do not depend on a business service or authenticated user context.
+- **BaseController<T, U = RegisteredUser>**: Business service controller providing `this.service: T` injection and logged-in user access `this.getLoggedUser(req): U`. Defaults to the server-wide `RegisteredUser`, and supports custom user typing per controller (e.g. `BaseController<AdminService, AdminUser>`).
+- **CommonController<T, U = RegisteredUser>**: Base CRUD controller with automatic validation and default user argument passing `[loggedUser, req.body]`.
+- **CommonSearchController<T, U = RegisteredUser>**: Search controller providing out-of-the-box search query handling.
 
 📚 **[Full HTTP layer tutorial →](https://github.com/ticatec/keelson/blob/main/tutorial/04-http-layer.md)**
 

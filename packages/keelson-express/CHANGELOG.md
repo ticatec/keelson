@@ -1,5 +1,26 @@
 # Changelog
 
+## [1.1.0] - 2026-09-22
+
+### Added
+
+- **Generic user type parameter on `BaseController<T, U = RegisteredUser>`.**
+  Controllers can now declare a specific user type (e.g. `BaseController<AdminService, AdminUser>`),
+  causing `this.getLoggedUser(req)` to return `U` directly with full static typing without manual casting.
+  Cascaded through `CommonController<T, U>` and `CommonSearchController<T, U>`. Fully backward-compatible;
+  defaults to server-wide `RegisteredUser`.
+
+- **Lightweight, zero-auth root `Controller`.**
+  Extracted pure HTTP root base class `Controller` providing structured logging (`this.logger`) and the
+  shared debug flag (`Controller.debugEnabled`) without requiring a service or user authentication. Ideal
+  for public APIs, webhooks, and health probes.
+
+### Changed
+
+- **Optimized controller logger initialization.**
+  `this.logger` is initialized once as an instance property `getLogger(this.constructor.name)` instead of
+  re-evaluating on every property access.
+
 ## [1.0.0] - 2026-09-19
 
 ### ⚠️ Breaking Changes

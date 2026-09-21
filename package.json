@@ -1,6 +1,6 @@
 {
   "name": "@ticatec/keelson",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "private": true,
   "description": "Keelson — an enterprise TypeScript framework for Node.js and Express: layered data access, declarative transactions, dependency injection, bean validation and server scaffolding.",
   "keywords": [

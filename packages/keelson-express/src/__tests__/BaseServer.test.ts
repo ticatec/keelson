@@ -566,6 +566,44 @@ describe('keelson-express comprehensive test suite', () => {
             expect((appUser.actAs as any).userId).toBe('usr-002');
         });
 
+        test('should allow pure Controller without service or getLoggedUser for public APIs', () => {
+            class PublicPingController extends Controller {
+                constructor() {
+                    super();
+                }
+                public ping() {
+                    return 'pong';
+                }
+                public checkLogger() {
+                    return this.logger;
+                }
+            }
+
+            const pingCtrl = new PublicPingController();
+            expect(pingCtrl.ping()).toBe('pong');
+            expect(pingCtrl.checkLogger()).toBeDefined();
+            // getLoggedUser is not on Controller
+            expect((pingCtrl as any).getLoggedUser).toBeUndefined();
+        });
+
+        test('should support specific user generic on BaseController and return strongly-typed user', () => {
+            class SpecificAdminController extends BaseController<MockService, AppUser> {
+                constructor(service: MockService) {
+                    super(service);
+                }
+                public getUserRole(req: any): string | undefined {
+                    const user = this.getLoggedUser(req);
+                    return user?.role;
+                }
+            }
+
+            const adminCtrl = new SpecificAdminController(new MockService());
+            const reqWithAdmin: any = {
+                user: { userId: 'admin-1', role: 'SUPER_ADMIN' }
+            };
+            expect(adminCtrl.getUserRole(reqWithAdmin)).toBe('SUPER_ADMIN');
+        });
+
         test('should return actAs user when impersonation is present in getLoggedUser', () => {
             const ctrl = new UserTestController(new MockService());
 

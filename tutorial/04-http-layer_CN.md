@@ -128,9 +128,11 @@ service"——通常有软删标记、级联关系，或者关于谁有权删的
 
 ### 不是 CRUD 的接口
 
-`BaseController<T>` 是 `CommonController` 下面的那一层：它只持有注入进来的 service 和
-logger，别的什么都没有。当一个接口有自己的形状时继承它——导出、审批、批量操作——
-方法自己写。
+`BaseController<T, U = RegisteredUser>` 是 `CommonController` 下面的那一层：它持有注入进来的 service、logger 以及获取当前登录用户的 `this.getLoggedUser(req): U`。当一个接口有自己的业务形状时继承它——导出、审批、批量操作——方法自己写。
+
+如果你需要针对特定控制器指定独立的用户模型（例如后台管理员控制器），传入第二个泛型即可（如 `BaseController<ReportService, AdminUser>`），`this.getLoggedUser(req)` 会直接返回强类型的用户对象，省去所有手动类型转换。
+
+如果你的控制器是一个纯粹的公开端点、Webhook 回调或健康探测，不需要注入任何 service 和登录态，可以直接继承最轻量的根类 `Controller`：它只提供 `this.logger` 和全局调试开关，无额外包袱。
 
 在它里面，两个受保护的辅助方法给你和 CRUD 方法一样的延迟派发：
 

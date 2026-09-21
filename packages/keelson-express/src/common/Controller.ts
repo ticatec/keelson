@@ -1,6 +1,4 @@
 import {getLogger, Logger} from "@ticatec/logger-api";
-import {Request} from "express";
-import LoggedUser, { RegisteredUser } from "../LoggedUser.js";
 
 /**
  * 开关挂在 globalThis 上，而不是类静态字段。
@@ -18,9 +16,13 @@ interface ControllerDebugState {
 const debugState: ControllerDebugState = ((globalThis as any)[DEBUG_KEY] ??= { enabled: false });
 
 /**
- * Base Controller providing logger and logged user access
+ * Lightweight root Controller class providing structured logging and global debug flag.
+ * Ideal for public APIs, webhooks, health probes, or endpoints that do not depend on
+ * a business service or authenticated user context.
  */
 export default abstract class Controller {
+
+    protected logger: Logger = getLogger(this.constructor.name);
 
     /** Flag to enable debug logging, shared across the CommonJS and ESM builds */
     static get debugEnabled(): boolean {
@@ -31,27 +33,10 @@ export default abstract class Controller {
         debugState.enabled = value;
     }
 
-    /** Logger instance for this controller */
-    protected get logger(): Logger {
-        return getLogger(this.constructor.name);
-    }
-
     /**
      * Constructor for base controller
      * @protected
      */
     protected constructor() {
-    }
-
-    /**
-     * Gets the current logged user, if acting as another user, returns the acted user,
-     * returns null for requests without user injection.
-     * Automatically resolves to the server-wide RegisteredUser type.
-     * @param req Express request object
-     * @returns The current user typed as RegisteredUser or null if no user is logged in
-     */
-    protected getLoggedUser = (req: Request): RegisteredUser => {
-        const user: LoggedUser | undefined = req.user;
-        return (user?.actAs || user) as RegisteredUser;
     }
 }

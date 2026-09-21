@@ -1,12 +1,14 @@
 import {Request} from "express";
 import CommonController from "./CommonController.js";
 import Controller from "./Controller.js";
+import {CommonUser, RegisteredUser} from "../LoggedUser.js";
 
 /**
  * Interface with search capabilities for tenant use
  * @template T The service type this controller depends on
+ * @template U The logged-in user type, defaults to server-wide RegisteredUser
  */
-export default class CommonSearchController<T> extends CommonController<T> {
+export default class CommonSearchController<T, U extends CommonUser = RegisteredUser> extends CommonController<T, U> {
 
     /**
      * Search method for querying entities with tenant context

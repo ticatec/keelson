@@ -133,9 +133,11 @@ about who may — so the framework declines to guess.
 
 ### An endpoint that is not CRUD
 
-`BaseController<T>` is the layer beneath `CommonController`: it holds the injected service
-and the logger, and nothing else. Extend it when the endpoint has its own shape — an
-export, an approval step, a bulk action — and write the method yourself.
+`BaseController<T, U = RegisteredUser>` is the layer beneath `CommonController`: it holds the injected service, the logger, and `this.getLoggedUser(req): U` for resolving the current authenticated user. Extend it when the endpoint has its own shape — an export, an approval step, a bulk action — and write the method yourself.
+
+When a controller serves a specific user type (such as an administrative user with distinct permissions), specify the second generic parameter (e.g. `BaseController<ReportService, AdminUser>`). `this.getLoggedUser(req)` will then return the strongly-typed user directly without manual type assertions.
+
+For public endpoints, webhook handlers, or health probes that need neither a service nor user authentication context, extend the lightweight root class `Controller` directly: it provides structured logging and the global debug switch with zero overhead.
 
 Inside it, two protected helpers give you the same late-bound dispatch the CRUD methods
 use:

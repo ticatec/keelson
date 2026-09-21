@@ -104,9 +104,11 @@ declare module '@ticatec/keelson-express' {
 }
 ```
 
-From then on `req.user` and `getLoggedUser(req)` are typed as `AppUser` everywhere, with no
+From then on `req.user` and `getLoggedUser(req)` are typed as `AppUser` by default everywhere, with no
 casts. `req.user` is declared on Express's `Request` by this package, so you do not augment
 `Express.Request` yourself.
+
+If your service caters to multiple distinct clients simultaneously (e.g. back-office administrators and mobile end-users), you can also specify the user type directly via the controller's generic parameter: `class AdminController extends BaseController<AdminService, AdminUser>`. In that controller, `this.getLoggedUser(req)` resolves directly to `AdminUser`.
 
 ## Impersonation
 

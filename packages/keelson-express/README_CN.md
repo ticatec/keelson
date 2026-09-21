@@ -465,10 +465,11 @@ routerHelper.invokeController()    // 包装控制器处理器
 - `bindRoutes()` - 定义你的路由
 
 ### 控制器层次结构
-
-- **BaseController<T>**: 基础控制器，提供日志记录和登录用户上下文访问
-- **CommonController<T>**: 统一 CRUD 控制器，提供自动校验并默认自动透传用户参数 `[loggedUser, req.body]`
-- **CommonSearchController<T>**: 搜索控制器，提供开箱即用的搜索查询处理
+ 
+- **Controller**: 轻量级控制器根基类，提供统一结构化日志（`this.logger`）与全局调试开关（`Controller.debugEnabled`）。适用于公共开放 API、Webhook 回调、健康检查或不需要业务服务及登录用户的端点。
+- **BaseController<T, U = RegisteredUser>**: 业务服务控制器基类，提供业务服务注入（`this.service: T`）与登录用户访问（`this.getLoggedUser(req): U`）。默认解析为全局 `RegisteredUser`，并支持在具体控制器上显式指定特定端用户类型（如 `BaseController<AdminService, AdminUser>`）。
+- **CommonController<T, U = RegisteredUser>**: 统一 CRUD 控制器，提供自动校验并默认自动透传用户参数 `[loggedUser, req.body]`。
+- **CommonSearchController<T, U = RegisteredUser>**: 搜索控制器，提供开箱即用的搜索查询处理。
 
 📚 **[完整 HTTP 层教程 →](https://github.com/ticatec/keelson/blob/main/tutorial/04-http-layer_CN.md)**
 

@@ -263,12 +263,12 @@
 <div class="code-block-wrapper">
   <div class="code-block-header">
     <span class="code-lang-tag">typescript</span>
-    <button class="copy-btn" data-code-id="code-cza2qi7" title="复制代码">
+    <button class="copy-btn" data-code-id="code-fk9ldrx" title="复制代码">
       <svg class="copy-icon" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
       <span class="copy-label">复制</span>
     </button>
   </div>
-  <pre class="code-block"><code id="code-cza2qi7" class="language-typescript"><span class="token keyword">import</span> { CommonRoutes, routerHelper } <span class="token keyword">from</span> <span class="token string">&#039;@ticatec/keelson-express&#039;</span>;
+  <pre class="code-block"><code id="code-fk9ldrx" class="language-typescript"><span class="token keyword">import</span> { CommonRoutes, routerHelper } <span class="token keyword">from</span> <span class="token string">&#039;@ticatec/keelson-express&#039;</span>;
 
 <span class="token keyword">export</span> <span class="token keyword">default</span> <span class="token keyword">class</span> UserRoutes <span class="token keyword">extends</span> CommonRoutes {
     <span class="token keyword">protected</span> <span class="token function">bindRoutes</span>() {
@@ -284,12 +284,12 @@
 <div class="code-block-wrapper">
   <div class="code-block-header">
     <span class="code-lang-tag">typescript</span>
-    <button class="copy-btn" data-code-id="code-srut9t2" title="复制代码">
+    <button class="copy-btn" data-code-id="code-ny6qidk" title="复制代码">
       <svg class="copy-icon" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
       <span class="copy-label">复制</span>
     </button>
   </div>
-  <pre class="code-block"><code id="code-srut9t2" class="language-typescript"><span class="token keyword">protected</span> <span class="token keyword">async</span> <span class="token function">setupRoutes</span>(): <span class="token builtin">Promise</span>&lt;<span class="token keyword">void</span>&gt; {
+  <pre class="code-block"><code id="code-ny6qidk" class="language-typescript"><span class="token keyword">protected</span> <span class="token keyword">async</span> <span class="token function">setupRoutes</span>(): <span class="token builtin">Promise</span>&lt;<span class="token keyword">void</span>&gt; {
     <span class="token keyword">await</span> this.<span class="token function">bindRoutes</span>(<span class="token string">&#039;/users&#039;</span>, () =&gt; <span class="token keyword">import</span>(<span class="token string">&#039;./routes/UserRoutes.js&#039;</span>));
 }</code></pre>
 </div>
@@ -300,12 +300,12 @@
 <div class="code-block-wrapper">
   <div class="code-block-header">
     <span class="code-lang-tag">typescript</span>
-    <button class="copy-btn" data-code-id="code-evqm3le" title="复制代码">
+    <button class="copy-btn" data-code-id="code-onxllnc" title="复制代码">
       <svg class="copy-icon" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
       <span class="copy-label">复制</span>
     </button>
   </div>
-  <pre class="code-block"><code id="code-evqm3le" class="language-typescript">routerHelper.<span class="token function">invokeRestfulAction</span>(<span class="token keyword">async</span> (req) =&gt; {
+  <pre class="code-block"><code id="code-onxllnc" class="language-typescript">routerHelper.<span class="token function">invokeRestfulAction</span>(<span class="token keyword">async</span> (req) =&gt; {
     <span class="token keyword">return</span> <span class="token keyword">await</span> this.service.<span class="token function">find</span>(<span class="token function">String</span>(req.params.id));
 })</code></pre>
 </div>
@@ -315,12 +315,12 @@
 <div class="code-block-wrapper">
   <div class="code-block-header">
     <span class="code-lang-tag">typescript</span>
-    <button class="copy-btn" data-code-id="code-u263bpr" title="复制代码">
+    <button class="copy-btn" data-code-id="code-f5dovu0" title="复制代码">
       <svg class="copy-icon" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
       <span class="copy-label">复制</span>
     </button>
   </div>
-  <pre class="code-block"><code id="code-u263bpr" class="language-typescript">routerHelper.<span class="token function">invokeController</span>(<span class="token keyword">async</span> (req, res) =&gt; {
+  <pre class="code-block"><code id="code-f5dovu0" class="language-typescript">routerHelper.<span class="token function">invokeController</span>(<span class="token keyword">async</span> (req, res) =&gt; {
     <span class="token keyword">const</span> file = <span class="token keyword">await</span> this.service.<span class="token keyword">export</span>(<span class="token function">String</span>(req.params.id));
     res.<span class="token function">setHeader</span>(<span class="token string">&#039;Content-Type&#039;</span>, <span class="token string">&#039;text/csv&#039;</span>);
     res.<span class="token function">send</span>(file);
@@ -334,12 +334,12 @@
 <div class="code-block-wrapper">
   <div class="code-block-header">
     <span class="code-lang-tag">typescript</span>
-    <button class="copy-btn" data-code-id="code-y26fefr" title="复制代码">
+    <button class="copy-btn" data-code-id="code-y0te6v1" title="复制代码">
       <svg class="copy-icon" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
       <span class="copy-label">复制</span>
     </button>
   </div>
-  <pre class="code-block"><code id="code-y26fefr" class="language-typescript"><span class="token keyword">import</span> { CommonSearchController } <span class="token keyword">from</span> <span class="token string">&#039;@ticatec/keelson-express&#039;</span>;
+  <pre class="code-block"><code id="code-y0te6v1" class="language-typescript"><span class="token keyword">import</span> { CommonSearchController } <span class="token keyword">from</span> <span class="token string">&#039;@ticatec/keelson-express&#039;</span>;
 <span class="token keyword">import</span> { beanFactory } <span class="token keyword">from</span> <span class="token string">&#039;@ticatec/keelson-core&#039;</span>;
 
 <span class="token keyword">export</span> <span class="token keyword">class</span> UserController <span class="token keyword">extends</span> CommonSearchController&lt;UserService&gt; {
@@ -366,12 +366,12 @@
 <div class="code-block-wrapper">
   <div class="code-block-header">
     <span class="code-lang-tag">typescript</span>
-    <button class="copy-btn" data-code-id="code-eziuap1" title="复制代码">
+    <button class="copy-btn" data-code-id="code-kc0et67" title="复制代码">
       <svg class="copy-icon" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
       <span class="copy-label">复制</span>
     </button>
   </div>
-  <pre class="code-block"><code id="code-eziuap1" class="language-typescript"><span class="token keyword">protected</span> <span class="token function">getCreateNewArguments</span>(req: Request): <span class="token builtin">Array</span>&lt;any&gt; {
+  <pre class="code-block"><code id="code-kc0et67" class="language-typescript"><span class="token keyword">protected</span> <span class="token function">getCreateNewArguments</span>(req: Request): <span class="token builtin">Array</span>&lt;any&gt; {
     <span class="token keyword">return</span> [this.<span class="token function">getLoggedUser</span>(req), req.body];
 }</code></pre>
 </div>
@@ -380,12 +380,12 @@
 <div class="code-block-wrapper">
   <div class="code-block-header">
     <span class="code-lang-tag">typescript</span>
-    <button class="copy-btn" data-code-id="code-0dci8av" title="复制代码">
+    <button class="copy-btn" data-code-id="code-qa7294c" title="复制代码">
       <svg class="copy-icon" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
       <span class="copy-label">复制</span>
     </button>
   </div>
-  <pre class="code-block"><code id="code-0dci8av" class="language-typescript"><span class="token keyword">export</span> <span class="token keyword">class</span> UserController <span class="token keyword">extends</span> CommonSearchController&lt;UserService&gt; {
+  <pre class="code-block"><code id="code-qa7294c" class="language-typescript"><span class="token keyword">export</span> <span class="token keyword">class</span> UserController <span class="token keyword">extends</span> CommonSearchController&lt;UserService&gt; {
     <span class="token keyword">protected</span> override <span class="token function">getCreateNewArguments</span>(req: Request): <span class="token builtin">Array</span>&lt;any&gt; {
         <span class="token keyword">return</span> [this.<span class="token function">getLoggedUser</span>(req), <span class="token function">String</span>(req.params.tenantId), req.body];
     }
@@ -396,18 +396,20 @@
 <h3 id="del-需要你自己写" class="heading-anchor"><a href="#del-需要你自己写" class="header-link">#</a> <code class="inline-code">del()</code> 需要你自己写</h3>
 <p><code class="inline-code">_del()</code> 默认直接抛 <code class="inline-code">ActionNotFoundError</code>，除非你覆写它。删除很少只是&quot;拿 id 调一下 service&quot;——通常有软删标记、级联关系，或者关于谁有权删的规则——所以框架拒绝替你猜。</p>
 <h3 id="不是-crud-的接口" class="heading-anchor"><a href="#不是-crud-的接口" class="header-link">#</a> 不是 CRUD 的接口</h3>
-<p><code class="inline-code">BaseController&lt;T&gt;</code> 是 <code class="inline-code">CommonController</code> 下面的那一层：它只持有注入进来的 service 和 logger，别的什么都没有。当一个接口有自己的形状时继承它——导出、审批、批量操作—— 方法自己写。</p>
+<p><code class="inline-code">BaseController&lt;T, U = RegisteredUser&gt;</code> 是 <code class="inline-code">CommonController</code> 下面的那一层：它持有注入进来的 service、logger 以及获取当前登录用户的 <code class="inline-code">this.getLoggedUser(req): U</code>。当一个接口有自己的业务形状时继承它——导出、审批、批量操作——方法自己写。</p>
+<p>如果你需要针对特定控制器指定独立的用户模型（例如后台管理员控制器），传入第二个泛型即可（如 <code class="inline-code">BaseController&lt;ReportService, AdminUser&gt;</code>），<code class="inline-code">this.getLoggedUser(req)</code> 会直接返回强类型的用户对象，省去所有手动类型转换。</p>
+<p>如果你的控制器是一个纯粹的公开端点、Webhook 回调或健康探测，不需要注入任何 service 和登录态，可以直接继承最轻量的根类 <code class="inline-code">Controller</code>：它只提供 <code class="inline-code">this.logger</code> 和全局调试开关，无额外包袱。</p>
 <p>在它里面，两个受保护的辅助方法给你和 CRUD 方法一样的延迟派发：</p>
 
 <div class="code-block-wrapper">
   <div class="code-block-header">
     <span class="code-lang-tag">typescript</span>
-    <button class="copy-btn" data-code-id="code-eaya4pn" title="复制代码">
+    <button class="copy-btn" data-code-id="code-228rcon" title="复制代码">
       <svg class="copy-icon" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
       <span class="copy-label">复制</span>
     </button>
   </div>
-  <pre class="code-block"><code id="code-eaya4pn" class="language-typescript"><span class="token keyword">import</span> { BaseController } <span class="token keyword">from</span> <span class="token string">&#039;@ticatec/keelson-express&#039;</span>;
+  <pre class="code-block"><code id="code-228rcon" class="language-typescript"><span class="token keyword">import</span> { BaseController } <span class="token keyword">from</span> <span class="token string">&#039;@ticatec/keelson-express&#039;</span>;
 <span class="token keyword">import</span> <span class="token keyword">type</span> { RestfulFunction } <span class="token keyword">from</span> <span class="token string">&#039;@ticatec/keelson-express&#039;</span>;
 
 <span class="token keyword">export</span> <span class="token keyword">class</span> ReportController <span class="token keyword">extends</span> BaseController&lt;ReportService&gt; {
@@ -431,12 +433,12 @@
 <div class="code-block-wrapper">
   <div class="code-block-header">
     <span class="code-lang-tag">typescript</span>
-    <button class="copy-btn" data-code-id="code-tjpjsns" title="复制代码">
+    <button class="copy-btn" data-code-id="code-qlvirep" title="复制代码">
       <svg class="copy-icon" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
       <span class="copy-label">复制</span>
     </button>
   </div>
-  <pre class="code-block"><code id="code-tjpjsns" class="language-typescript"><span class="token keyword">import</span> { StringValidator, NumberValidator, ValidationRules } <span class="token keyword">from</span> <span class="token string">&#039;@ticatec/bean-validator&#039;</span>;
+  <pre class="code-block"><code id="code-qlvirep" class="language-typescript"><span class="token keyword">import</span> { StringValidator, NumberValidator, ValidationRules } <span class="token keyword">from</span> <span class="token string">&#039;@ticatec/bean-validator&#039;</span>;
 
 <span class="token keyword">protected</span> <span class="token function">getCreateRules</span>(): ValidationRules {
     <span class="token keyword">return</span> [
@@ -462,12 +464,12 @@
 <div class="code-block-wrapper">
   <div class="code-block-header">
     <span class="code-lang-tag">typescript</span>
-    <button class="copy-btn" data-code-id="code-8fmyqul" title="复制代码">
+    <button class="copy-btn" data-code-id="code-nquiryi" title="复制代码">
       <svg class="copy-icon" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
       <span class="copy-label">复制</span>
     </button>
   </div>
-  <pre class="code-block"><code id="code-8fmyqul" class="language-typescript"><span class="token keyword">throw</span> <span class="token keyword">new</span> <span class="token function">IllegalParameterError</span>(<span class="token string">&#039;日期区间不合法&#039;</span>, { cause: parseError });</code></pre>
+  <pre class="code-block"><code id="code-nquiryi" class="language-typescript"><span class="token keyword">throw</span> <span class="token keyword">new</span> <span class="token function">IllegalParameterError</span>(<span class="token string">&#039;日期区间不合法&#039;</span>, { cause: parseError });</code></pre>
 </div>
 <p>不是 <code class="inline-code">HttpError</code> 的异常一律变成 500 并返回一个通用响应体。堆栈只在非生产环境包含； <code class="inline-code">NODE_ENV=production</code> 会剥掉它。</p>
 <p>响应按 <code class="inline-code">Accept</code> 做内容协商——默认 JSON，客户端要 HTML 或纯文本就给对应格式。所有插值进去的内容都做了 HTML 转义。</p>
@@ -478,12 +480,12 @@
 <div class="code-block-wrapper">
   <div class="code-block-header">
     <span class="code-lang-tag">typescript</span>
-    <button class="copy-btn" data-code-id="code-4stayse" title="复制代码">
+    <button class="copy-btn" data-code-id="code-mkqcxoc" title="复制代码">
       <svg class="copy-icon" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
       <span class="copy-label">复制</span>
     </button>
   </div>
-  <pre class="code-block"><code id="code-4stayse" class="language-typescript"><span class="token keyword">export</span> <span class="token keyword">default</span> <span class="token keyword">class</span> UserRoutes <span class="token keyword">extends</span> AuthenticatedRoutes { <span class="token comment">/* ... */</span> }</code></pre>
+  <pre class="code-block"><code id="code-mkqcxoc" class="language-typescript"><span class="token keyword">export</span> <span class="token keyword">default</span> <span class="token keyword">class</span> UserRoutes <span class="token keyword">extends</span> AuthenticatedRoutes { <span class="token comment">/* ... */</span> }</code></pre>
 </div>
 <p>更细的控制覆写 <code class="inline-code">isValidUser()</code>——第 5 章。</p>
 <hr class="divider" />

@@ -270,12 +270,12 @@
 <div class="code-block-wrapper">
   <div class="code-block-header">
     <span class="code-lang-tag">typescript</span>
-    <button class="copy-btn" data-code-id="code-gefedeo" title="复制代码">
+    <button class="copy-btn" data-code-id="code-5d2u991" title="复制代码">
       <svg class="copy-icon" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
       <span class="copy-label">复制</span>
     </button>
   </div>
-  <pre class="code-block"><code id="code-gefedeo" class="language-typescript"><span class="token comment">// the shape this turns into, in every codebase that does not decide early</span>
+  <pre class="code-block"><code id="code-5d2u991" class="language-typescript"><span class="token comment">// the shape this turns into, in every codebase that does not decide early</span>
 <span class="token keyword">async</span> <span class="token keyword">function</span> <span class="token function">transfer</span>(conn, fromId, toId, amount) {
     <span class="token keyword">await</span> <span class="token function">debit</span>(conn, fromId, amount);
     <span class="token keyword">await</span> <span class="token function">credit</span>(conn, toId, amount);
@@ -290,12 +290,12 @@
 <div class="code-block-wrapper">
   <div class="code-block-header">
     <span class="code-lang-tag">typescript</span>
-    <button class="copy-btn" data-code-id="code-4fi6piv" title="复制代码">
+    <button class="copy-btn" data-code-id="code-c64syl9" title="复制代码">
       <svg class="copy-icon" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
       <span class="copy-label">复制</span>
     </button>
   </div>
-  <pre class="code-block"><code id="code-4fi6piv" class="language-typescript"><span class="token keyword">export</span> <span class="token keyword">class</span> TransferService <span class="token keyword">extends</span> <span class="token builtin">CommonService</span> {
+  <pre class="code-block"><code id="code-c64syl9" class="language-typescript"><span class="token keyword">export</span> <span class="token keyword">class</span> TransferService <span class="token keyword">extends</span> <span class="token builtin">CommonService</span> {
     <span class="token keyword">private</span> <span class="token keyword">get</span> <span class="token function">accounts</span>(): AccountRepository {
         <span class="token keyword">return</span> this.getRepositoryInstance&lt;AccountRepository&gt;(<span class="token string">&#039;AccountRepository&#039;</span>);
     }
@@ -336,12 +336,12 @@
 <div class="code-block-wrapper">
   <div class="code-block-header">
     <span class="code-lang-tag">typescript</span>
-    <button class="copy-btn" data-code-id="code-a0ltcbt" title="复制代码">
+    <button class="copy-btn" data-code-id="code-ol45kli" title="复制代码">
       <svg class="copy-icon" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
       <span class="copy-label">复制</span>
     </button>
   </div>
-  <pre class="code-block"><code id="code-a0ltcbt" class="language-typescript"><span class="token decorator">@Transaction</span>(Propagation.REQUIRES_NEW)
+  <pre class="code-block"><code id="code-ol45kli" class="language-typescript"><span class="token decorator">@Transaction</span>(Propagation.REQUIRES_NEW)
 <span class="token keyword">async</span> <span class="token function">recordAttempt</span>(entry: AuditEntry): <span class="token builtin">Promise</span>&lt;<span class="token keyword">void</span>&gt; {
     <span class="token keyword">await</span> this.auditRepo.<span class="token function">insert</span>(entry);
 }</code></pre>
@@ -354,12 +354,12 @@
 <div class="code-block-wrapper">
   <div class="code-block-header">
     <span class="code-lang-tag">typescript</span>
-    <button class="copy-btn" data-code-id="code-514319j" title="复制代码">
+    <button class="copy-btn" data-code-id="code-k3c2eue" title="复制代码">
       <svg class="copy-icon" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
       <span class="copy-label">复制</span>
     </button>
   </div>
-  <pre class="code-block"><code id="code-514319j" class="language-typescript"><span class="token keyword">import</span> { TransactionManager, Propagation } <span class="token keyword">from</span> <span class="token string">&#039;@ticatec/keelson-core&#039;</span>;
+  <pre class="code-block"><code id="code-k3c2eue" class="language-typescript"><span class="token keyword">import</span> { TransactionManager, Propagation } <span class="token keyword">from</span> <span class="token string">&#039;@ticatec/keelson-core&#039;</span>;
 
 <span class="token keyword">await</span> TransactionManager.<span class="token function">execute</span>(Propagation.REQUIRED, <span class="token keyword">async</span> () =&gt; {
     <span class="token keyword">await</span> this.repo.<span class="token function">doSomething</span>();
@@ -389,12 +389,12 @@
 <div class="code-block-wrapper">
   <div class="code-block-header">
     <span class="code-lang-tag">text</span>
-    <button class="copy-btn" data-code-id="code-b8j7jva" title="复制代码">
+    <button class="copy-btn" data-code-id="code-gknjm2s" title="复制代码">
       <svg class="copy-icon" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
       <span class="copy-label">复制</span>
     </button>
   </div>
-  <pre class="code-block"><code id="code-b8j7jva" class="language-text">No database connection available. Ensure you are inside a @Transaction or using TransactionManager.execute().</code></pre>
+  <pre class="code-block"><code id="code-gknjm2s" class="language-text">No database connection available. Ensure you are inside a @Transaction or using TransactionManager.execute().</code></pre>
 </div>
 <p><code class="inline-code">Propagation.NONE</code> is the honest way to say &quot;a connection, no transaction&quot;. Chapter 1&#039;s <code class="inline-code">GreetingService.get()</code> carries a decorator because something has to establish the context, not out of ceremony.</p>
 <p>Where a read <em>does</em> want one is when several reads must see the same snapshot — a report summing three tables that must not shift underneath it.</p>
@@ -405,12 +405,12 @@
 <div class="code-block-wrapper">
   <div class="code-block-header">
     <span class="code-lang-tag">typescript</span>
-    <button class="copy-btn" data-code-id="code-vwbi8r2" title="复制代码">
+    <button class="copy-btn" data-code-id="code-i1nqbkx" title="复制代码">
       <svg class="copy-icon" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
       <span class="copy-label">复制</span>
     </button>
   </div>
-  <pre class="code-block"><code id="code-vwbi8r2" class="language-typescript"><span class="token keyword">const</span> conn = <span class="token keyword">await</span> this.<span class="token function">getDBConnection</span>();
+  <pre class="code-block"><code id="code-i1nqbkx" class="language-typescript"><span class="token keyword">const</span> conn = <span class="token keyword">await</span> this.<span class="token function">getDBConnection</span>();
 <span class="token keyword">const</span> placeholders = ids.<span class="token function">map</span>((_, i) =&gt; conn.<span class="token function">getPlaceholder</span>(i + <span class="token number">1</span>)).<span class="token function">join</span>(<span class="token string">&#039;, &#039;</span>);
 <span class="token keyword">return</span> <span class="token keyword">await</span> this.<span class="token function">listQuery</span>(<span class="token string">`SELECT * FROM users WHERE id IN (${placeholders})`</span>, ids);</code></pre>
 </div>
@@ -423,12 +423,12 @@
 <div class="code-block-wrapper">
   <div class="code-block-header">
     <span class="code-lang-tag">typescript</span>
-    <button class="copy-btn" data-code-id="code-qsvrt7t" title="复制代码">
+    <button class="copy-btn" data-code-id="code-m7kqn7k" title="复制代码">
       <svg class="copy-icon" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
       <span class="copy-label">复制</span>
     </button>
   </div>
-  <pre class="code-block"><code id="code-qsvrt7t" class="language-typescript"><span class="token decorator">@Transaction</span>()
+  <pre class="code-block"><code id="code-m7kqn7k" class="language-typescript"><span class="token decorator">@Transaction</span>()
 <span class="token keyword">async</span> <span class="token function">placeOrder</span>(order: Order): <span class="token builtin">Promise</span>&lt;string&gt; {
     <span class="token keyword">return</span> <span class="token keyword">await</span> this.orderRepo.<span class="token function">insert</span>(order);     <span class="token comment">// database only</span>
 }

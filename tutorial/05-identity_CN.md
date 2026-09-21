@@ -97,9 +97,11 @@ declare module '@ticatec/keelson-express' {
 }
 ```
 
-从此 `req.user` 与 `getLoggedUser(req)` 在任何地方都是 `AppUser` 类型，不需要任何
+从此 `req.user` 与 `getLoggedUser(req)` 默认在任何地方都是 `AppUser` 类型，不需要任何
 类型断言。`req.user` 已由本包声明在 Express 的 `Request` 上，你不必自己去增强
 `Express.Request`。
+
+如果你的服务同时服务不同端（如后台管理员与移动端普通用户），也可以直接在控制器上通过泛型指定具体类型：`class AdminController extends BaseController<AdminService, AdminUser>`，此时控制器内的 `this.getLoggedUser(req)` 会精准返回 `AdminUser`。
 
 ## 代理身份
 
