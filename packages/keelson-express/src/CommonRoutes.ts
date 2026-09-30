@@ -1,7 +1,14 @@
 import {Express, NextFunction, Request, RequestHandler, Response, Router} from "express";
 import {getLogger, Logger} from "@ticatec/logger-api";
 import {UnauthenticatedError} from "@ticatec/node-exception";
-import { RegisteredUser } from "./LoggedUser.js";
+import {
+    CommonUser,
+    RegisteredUser,
+    getEffectiveUser as extractEffectiveUser,
+    getLoggedUser as extractLoggedUser,
+    getRealUser as extractRealUser,
+    isImpersonating as checkImpersonating
+} from "./LoggedUser.js";
 
 /**
  * Base class for a group of routes mounted under one path.
@@ -12,6 +19,8 @@ import { RegisteredUser } from "./LoggedUser.js";
  * 2. `isValidUser()` — authorize; returning false produces a 401
  * 3. `getGlobalHandler()` — anything that applies to the whole group
  * 4. the routes registered in `bindRoutes()`
+ *
+ * @template U The logged-in user type, defaults to server-wide RegisteredUser
  *
  * @example
  * ```typescript
@@ -26,7 +35,7 @@ import { RegisteredUser } from "./LoggedUser.js";
  * }
  * ```
  */
-export default class CommonRoutes {
+export default class CommonRoutes<U extends CommonUser = RegisteredUser> {
 
     /** Express router instance */
     private readonly router: Router;
@@ -41,6 +50,45 @@ export default class CommonRoutes {
      */
     constructor(mergeParams: boolean = false) {
         this.router = Router({mergeParams});
+    }
+
+    /**
+     * Gets the effective user for business logic. If acting as another user (impersonation),
+     * returns the impersonated user; otherwise returns the logged-in user.
+     * Automatically resolves to type U (defaults to server-wide RegisteredUser).
+     * @param req Express request object
+     * @returns The effective user typed as U or undefined/null if no user is injected
+     */
+    protected getEffectiveUser(req: Request): U {
+        return extractEffectiveUser<U>(req);
+    }
+
+    /**
+     * Gets the current effective user. Alias for {@link getEffectiveUser}.
+     * @param req Express request object
+     * @returns The current user typed as U or undefined/null if no user is injected
+     */
+    protected getLoggedUser(req: Request): U {
+        return extractLoggedUser<U>(req);
+    }
+
+    /**
+     * Gets the real authenticated user (the actual person/credential logged in),
+     * without unwrapping impersonation. Useful for audit logging and operator checks.
+     * @param req Express request object
+     * @returns The real logged-in user or undefined if not authenticated
+     */
+    protected getRealUser(req: Request): RegisteredUser | undefined {
+        return extractRealUser(req);
+    }
+
+    /**
+     * Checks whether the current request is operating in user impersonation mode.
+     * @param req Express request object
+     * @returns True if the request is impersonating another user
+     */
+    protected isImpersonating(req: Request): boolean {
+        return checkImpersonating(req);
     }
 
     /**
@@ -63,7 +111,7 @@ export default class CommonRoutes {
             this.router.use(async (req: Request, _res: Response, next: NextFunction) => {
                 try {
                     if (req.user) {
-                        req.user = await userHook(req.user);
+                        req.user = (await userHook(req.user as unknown as U)) as unknown as RegisteredUser;
                     }
                     next();
                 } catch (error) {
@@ -73,12 +121,11 @@ export default class CommonRoutes {
         }
         this.router.use(async (req: Request, res: Response, next: NextFunction) => {
             try {
-                const user = req.user as RegisteredUser | undefined;
-                const subject = ((user as any)?.actAs ?? user) as RegisteredUser;
+                const subject = this.getEffectiveUser(req);
                 if (!await this.isValidUser(subject)) {
                     // 这里原先记的是整个 user 对象——账号、角色、租户，网关塞进头里的
                     // 一切都会落到日志上。校验失败要定位的是哪条路由被拒了，不是这个人是谁。
-                    this.logger.debug({ path, impersonating: (user as any)?.actAs != null }, 'User validation failed');
+                    this.logger.debug({ path, impersonating: this.isImpersonating(req) }, 'User validation failed');
                     next(new UnauthenticatedError());
                 } else {
                     next();
@@ -97,11 +144,11 @@ export default class CommonRoutes {
         this.logger.info({ path }, 'Router bound successfully');
     }
 
-    protected isValidUser(_user: RegisteredUser): boolean | Promise<boolean> {
+    protected isValidUser(_user: U): boolean | Promise<boolean> {
         return true;
     }
 
-    protected getUserHook(): ((user: RegisteredUser) => RegisteredUser | Promise<RegisteredUser>) | null {
+    protected getUserHook(): ((user: U) => U | Promise<U>) | null {
         return null;
     }
 
@@ -273,9 +320,10 @@ export default class CommonRoutes {
 /**
  * Subclass of CommonRoutes that requires an authenticated user by default.
  * Automatically rejects requests with 401 UnauthenticatedError if user is not logged in.
+ * @template U The logged-in user type, defaults to server-wide RegisteredUser
  */
-export class AuthenticatedRoutes extends CommonRoutes {
-    protected isValidUser(user: RegisteredUser): boolean | Promise<boolean> {
+export class AuthenticatedRoutes<U extends CommonUser = RegisteredUser> extends CommonRoutes<U> {
+    protected isValidUser(user: U): boolean | Promise<boolean> {
         return user != null;
     }
 }

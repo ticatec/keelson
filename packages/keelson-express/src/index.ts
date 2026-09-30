@@ -11,6 +11,7 @@ export { default as UserResolver, HeaderUserResolver, setUserResolver, resetUser
 // 这四个全是接口/类型别名，必须走 export type：当作值导出会让 esbuild、swc 这类
 // 只做转译的工具链在运行时去找并不存在的导出。
 export type { default as LoggedUser, CommonUser, CustomUserRegistry, RegisteredUser } from './LoggedUser.js';
+export { getEffectiveUser, getLoggedUser, getRealUser, isImpersonating } from './LoggedUser.js';
 
 export { default as Controller } from './common/Controller.js';
 export { default as BaseController } from './common/BaseController.js';

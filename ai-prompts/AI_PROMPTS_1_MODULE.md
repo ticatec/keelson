@@ -94,21 +94,21 @@ result as the `<x-auth-user>` request header, URL-encoded JSON.
 
 1. Define the application's user model in src/types/user-registry.d.ts:
 
-   import type { CommonUser } from '@ticatec/keelson-express';
+   import type { LoggedUser } from '@ticatec/keelson-express';
 
-   interface AppUser extends CommonUser {
+   interface AppUser extends LoggedUser {
        accountCode: string;
        name: string;
        tenantCode: string;
        roles: string[];
-       actAs?: AppUser;
+       impersonatedUser?: AppUser;
    }
 
    Register it by augmenting CustomUserRegistry from '@ticatec/keelson-express', so that
    req.user and getLoggedUser(req) are typed as AppUser everywhere without casts.
 
-   RegisteredUser resolves through `U extends CommonUser ? U : LoggedUser`. Extend
-   CommonUser explicitly so the declared intent is what the type checks, rather than
+   RegisteredUser resolves through `U extends LoggedUser ? U : LoggedUser`. Extend
+   LoggedUser explicitly so the declared intent is what the type checks, rather than
    relying on the structural match.
 
 2. If the header name is not the default `user`, subclass HeaderUserResolver and override
@@ -177,7 +177,7 @@ Generate the route classes:
    role, and throws InsufficientPermissionError() rather than returning false, so the
    caller gets 403 instead of 401
 
-isValidUser receives the actAs user when impersonation is active. Do not put per-record
+isValidUser receives the impersonatedUser when impersonation is active. Do not put per-record
 permission checks here — those go in the service.
 
 JSDoc on isValidUser in both classes stating the rule it enforces. Where the admin class

@@ -90,21 +90,21 @@
 
 1. 在 src/types/user-registry.d.ts 里定义应用的用户模型：
 
-   import type { CommonUser } from '@ticatec/keelson-express';
+   import type { LoggedUser } from '@ticatec/keelson-express';
 
-   interface AppUser extends CommonUser {
+   interface AppUser extends LoggedUser {
        accountCode: string;
        name: string;
        tenantCode: string;
        roles: string[];
-       actAs?: AppUser;
+       impersonatedUser?: AppUser;
    }
 
    通过增强 '@ticatec/keelson-express' 的 CustomUserRegistry 注册它，使得 req.user 与
    getLoggedUser(req) 在任何地方都是 AppUser 类型，不需要任何断言。
 
-   RegisteredUser 的解析路径是 `U extends CommonUser ? U : LoggedUser`。显式继承
-   CommonUser，让类型检查的是声明出来的意图，而不是靠结构匹配碰巧成立。
+   RegisteredUser 的解析路径是 `U extends LoggedUser ? U : LoggedUser`。显式继承
+   LoggedUser，让类型检查的是声明出来的意图，而不是靠结构匹配碰巧成立。
 
 2. 如果头名不是默认的 `user`，继承 HeaderUserResolver 并**只**覆写 userHeader()——
    解码与语言头保持原样。
@@ -165,7 +165,7 @@ HeaderUserResolver），只实现一个 resolve(req) 方法，返回用户或 un
 2. <Order>AdminRoutes 继承 CommonRoutes —— 覆写 isValidUser(user) 检查角色，
    并且抛 InsufficientPermissionError() 而不是返回 false，让调用者拿到 403 而不是 401
 
-代理身份生效时，isValidUser 拿到的是 actAs 用户。不要把针对单条记录的权限检查写在
+代理身份生效时，isValidUser 拿到的是 impersonatedUser。不要把针对单条记录的权限检查写在
 这里——那属于 service。
 
 两个类的 isValidUser 都写 JSDoc，说明它执行的是哪条规则。admin 那个类抛

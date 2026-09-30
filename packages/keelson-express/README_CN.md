@@ -432,7 +432,6 @@ import { routerHelper } from '@ticatec/keelson-express';
 
 // 使用中间件
 routerHelper.setNoCache           // 禁用缓存
-routerHelper.checkLoggedUser()    // 要求认证
 routerHelper.retrieveUser()       // 解析用户（非侵入式）
 routerHelper.actionNotFound()     // 404 处理器
 routerHelper.invokeRestfulAction() // 包装异步处理器
@@ -568,13 +567,13 @@ API 网关应该：
 // 包含用户扮演的请求头
 {
     'user': encodeURIComponent(JSON.stringify({
-        // 原始特权用户
+        // 原始特权用户（实际操作人）
         accountCode: 'admin123',
         name: '系统管理员',
         tenant: { code: 'system', name: '系统租户' },
 
-        // 被扮演的用户
-        actAs: {
+        // 被扮演的用户（实际业务生效用户）
+        impersonatedUser: {
             accountCode: 'user456',
             name: '目标用户',
             tenant: { code: 'client-a', name: '客户 A' }
@@ -583,6 +582,11 @@ API 网关应该：
     'x-language': 'zh'
 }
 ```
+
+- 在 `BaseController`、`CommonRoutes` 与 `routerHelper` 中：
+  - `getEffectiveUser(req)`：若存在 `impersonatedUser` 则返回被扮演用户，否则返回登录用户（与 `getLoggedUser(req)` 等价别名）。99% 的业务逻辑使用此方法。
+  - `getRealUser(req)`：返回未经解包的原始登录用户身份凭据（`req.user`），适用于操作人审计、运维鉴权等 1% 的场景。
+  - `isImpersonating(req)`：返回当前请求是否处于扮演状态（`boolean`）。
 
 ## 多租户支持
 
@@ -664,32 +668,31 @@ throw new IllegalParameterError('输入数据无效', { cause: parseError });
 
 ```typescript
 // 函数签名
-export type RestfulFunction = (req: Request) => any;
-export type ControlFunction = (req: Request, res: Response) => any;
+export type RestfulFunction<U = RegisteredUser> = (req: Request, user: U) => any;
+export type ControlFunction<U = RegisteredUser> = (req: Request, res: Response, user: U) => any;
 export type moduleLoader = () => Promise<any>;
 
-// 用户接口。两个接口都是空的，这是刻意的：框架从不读取用户对象上的任何字段，
-// 因此也不声明任何字段，形状由你的应用决定。
+// 用户接口。
 export interface CommonUser {}
 
-export interface LoggedUser extends CommonUser {
-    actAs?: CommonUser;   // 用于用户扮演
+export interface LoggedUser<T extends CommonUser = CommonUser> extends CommonUser {
+    impersonatedUser?: T; // 用于用户扮演
 }
 ```
 
-通过模块增强声明一次自己的用户模型，应用里所有 `getLoggedUser(req)` 与 `req.user`
+通过模块增强声明一次自己的用户模型，应用里所有 `getEffectiveUser(req)` / `getLoggedUser(req)` 与 `req.user`
 就都是这个类型：
 
 ```typescript
 // types/keelson-express.d.ts
 import '@ticatec/keelson-express';
 
-interface AppUser {
+interface AppUser extends LoggedUser {
     accountCode: string;
     name: string;
     isPlatform?: boolean;
     tenant?: { code: string; name: string };
-    actAs?: AppUser;
+    impersonatedUser?: AppUser;
 }
 
 declare module '@ticatec/keelson-express' {
@@ -743,7 +746,7 @@ setUserResolver(new SessionResolver());
 
 解析器不负责拒绝请求。返回 `undefined` 表示匿名，公开路由正是靠这个保持公开；
 头格式不对时会记一条日志并同样按匿名处理。授权是 `isValidUser()` 的职责，
-把匿名请求变成 401 的是 `routerHelper.checkLoggedUser()`。
+把匿名请求变成 401 的是 `AuthenticatedRoutes`。
 
 ### 后台处理器
 

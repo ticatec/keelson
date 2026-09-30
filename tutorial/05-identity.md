@@ -89,12 +89,12 @@ the user, so it declares none. Your application declares the shape, once, by aug
 // types/keelson-express.d.ts
 import '@ticatec/keelson-express';
 
-interface AppUser {
+interface AppUser extends LoggedUser {
     accountCode: string;
     name: string;
     isPlatform?: boolean;
     tenant?: { code: string; name: string };
-    actAs?: AppUser;
+    impersonatedUser?: AppUser;
 }
 
 declare module '@ticatec/keelson-express' {
@@ -104,31 +104,29 @@ declare module '@ticatec/keelson-express' {
 }
 ```
 
-From then on `req.user` and `getLoggedUser(req)` are typed as `AppUser` by default everywhere, with no
+From then on `req.user` and `getEffectiveUser(req)` / `getLoggedUser(req)` are typed as `AppUser` by default everywhere, with no
 casts. `req.user` is declared on Express's `Request` by this package, so you do not augment
 `Express.Request` yourself.
 
-If your service caters to multiple distinct clients simultaneously (e.g. back-office administrators and mobile end-users), you can also specify the user type directly via the controller's generic parameter: `class AdminController extends BaseController<AdminService, AdminUser>`. In that controller, `this.getLoggedUser(req)` resolves directly to `AdminUser`.
+If your service caters to multiple distinct clients simultaneously (e.g. back-office administrators and mobile end-users), you can also specify the user type directly via the controller's generic parameter: `class AdminController extends BaseController<AdminService, AdminUser>`. In that controller, `this.getEffectiveUser(req)` resolves directly to `AdminUser`.
 
 ## Impersonation
 
-An `actAs` field on the user means "this administrator is acting as that user". Two rules
-follow from it:
+An `impersonatedUser` field on the user means "this administrator is acting as that user". Three methods support this:
 
-`getLoggedUser(req)` returns **the impersonated user** when `actAs` is present, and the real
-one otherwise. Business code therefore operates on whoever the request is acting as, without
-knowing impersonation exists:
+1. `getEffectiveUser(req)` (aliased as `getLoggedUser(req)`) returns **the impersonated user** when `impersonatedUser` is present, and the real one otherwise. Business code therefore operates on whoever the request is acting as, without knowing impersonation exists:
 
 ```typescript
 protected getCreateNewArguments(req: Request): Array<any> {
-    return [this.getLoggedUser(req), req.body];   // the actAs user, if any
+    return [this.getEffectiveUser(req), req.body];   // the impersonated user, if any
 }
 ```
 
-`isValidUser()` is also handed the `actAs` user when one is present. That is what you want —
-the question is whether *the account being acted as* may do this — but it means the real
-administrator is not re-checked at this point. If your rules need both, read `req.user`
-directly.
+2. `getRealUser(req)` returns the actual authenticated user (`req.user`), which is essential for audit logging and operator-specific checks.
+
+3. `isImpersonating(req)` returns whether user impersonation is active.
+
+`isValidUser()` is also handed the effective user (`impersonatedUser`) when one is present. That is what you want — the question is whether *the account being acted as* may do this. If your rules need the real administrator, check `this.getRealUser(req)`.
 
 ## Authorisation: three places, three questions
 

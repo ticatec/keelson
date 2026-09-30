@@ -79,6 +79,8 @@
                              routerHelper、UserResolver、HeaderUserResolver、
                              setUserResolver、getUserResolver、AppConf、
                              HealthCheckRegistry、CommonProcessor、ProcessorManager；
+                             函数 getEffectiveUser、getLoggedUser、getRealUser、
+                             isImpersonating；
                              类型 LoggedUser、CommonUser、CustomUserRegistry、
                              RegisteredUser、RestfulFunction
   @ticatec/bean-validator    StringValidator、NumberValidator、DateValidator、

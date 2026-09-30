@@ -1,6 +1,13 @@
 import {Request} from "express";
 import Controller from "./Controller.js";
-import LoggedUser, {CommonUser, RegisteredUser} from "../LoggedUser.js";
+import {
+    CommonUser,
+    RegisteredUser,
+    getEffectiveUser as extractEffectiveUser,
+    getLoggedUser as extractLoggedUser,
+    getRealUser as extractRealUser,
+    isImpersonating as checkImpersonating
+} from "../LoggedUser.js";
 
 /**
  * Abstract base service controller class providing business service injection and logged-in user access.
@@ -22,13 +29,41 @@ export default abstract class BaseController<T, U extends CommonUser = Registere
     }
 
     /**
-     * Gets the current logged user. If acting as another user (impersonation), returns the acted user.
+     * Gets the effective user for business logic. If acting as another user (impersonation),
+     * returns the impersonated user; otherwise returns the logged-in user.
      * Automatically resolves to type U (defaults to server-wide RegisteredUser).
+     * @param req Express request object
+     * @returns The effective user typed as U or undefined/null if no user is injected
+     */
+    protected getEffectiveUser = (req: Request): U => {
+        return extractEffectiveUser<U>(req);
+    };
+
+    /**
+     * Gets the current effective user. Alias for {@link getEffectiveUser}.
      * @param req Express request object
      * @returns The current user typed as U or undefined/null if no user is injected
      */
     protected getLoggedUser = (req: Request): U => {
-        const user: LoggedUser | undefined = req.user;
-        return (user?.actAs || user) as unknown as U;
-    }
+        return extractLoggedUser<U>(req);
+    };
+
+    /**
+     * Gets the real authenticated user (the actual person/credential logged in),
+     * without unwrapping impersonation. Useful for audit logging and operator checks.
+     * @param req Express request object
+     * @returns The real logged-in user or undefined if not authenticated
+     */
+    protected getRealUser = (req: Request): RegisteredUser | undefined => {
+        return extractRealUser(req);
+    };
+
+    /**
+     * Checks whether the current request is operating in user impersonation mode.
+     * @param req Express request object
+     * @returns True if the request is impersonating another user
+     */
+    protected isImpersonating = (req: Request): boolean => {
+        return checkImpersonating(req);
+    };
 }

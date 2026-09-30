@@ -83,6 +83,8 @@ WHERE THE BASE CLASSES COME FROM — do not guess an import:
                              routerHelper, UserResolver, HeaderUserResolver,
                              setUserResolver, getUserResolver, AppConf,
                              HealthCheckRegistry, CommonProcessor, ProcessorManager;
+                             functions getEffectiveUser, getLoggedUser, getRealUser,
+                             isImpersonating;
                              types LoggedUser, CommonUser, CustomUserRegistry,
                              RegisteredUser, RestfulFunction
   @ticatec/bean-validator    StringValidator, NumberValidator, DateValidator,

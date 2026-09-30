@@ -78,14 +78,14 @@ export class HeaderUserResolver extends UserResolver {
     }
 
     /**
-     * Writes the caller's language onto the user, and onto `actAs` when impersonating.
+     * Writes the caller's language onto the user, and onto `impersonatedUser` when impersonating.
      * @param user The decoded user.
      * @param language The language header value.
      * @protected
      */
-    protected applyLanguage(user: any, language: string): void {
-        if (user.actAs) {
-            user.actAs.language = language;
+     protected applyLanguage(user: any, language: string): void {
+        if (user.impersonatedUser) {
+            user.impersonatedUser.language = language;
         }
         user.language = language;
     }

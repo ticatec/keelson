@@ -1,29 +1,45 @@
 import {NextFunction, Request, Response} from "express";
-import {ActionNotFoundError, handleError, UnauthenticatedError} from '@ticatec/node-exception';
+import {ActionNotFoundError, handleError} from '@ticatec/node-exception';
 import {getLogger} from "@ticatec/logger-api";
 import {getUserResolver} from "./UserResolver.js";
+import {
+    CommonUser,
+    RegisteredUser,
+    getEffectiveUser as extractEffectiveUser,
+    getLoggedUser as extractLoggedUser,
+    getRealUser as extractRealUser,
+    isImpersonating as checkImpersonating
+} from "./LoggedUser.js";
 
 
 /**
  * Function signature for RESTful API handlers
  *
- * These handlers receive a Request object and return any value.
+ * These handlers receive a Request object and the current logged-in user, and return any value.
  * The returned value will be automatically serialized as JSON.
+ *
+ * @template U The user type, defaults to server-wide RegisteredUser
  *
  * @example
  * ```typescript
  * const handler: RestfulFunction = async (req) => {
  *   return { message: 'Hello' };
  * };
+ *
+ * const userHandler: RestfulFunction<OmniCubeUser> = async (req, user) => {
+ *   return { id: user.id };
+ * };
  * ```
  */
-export type RestfulFunction = (req: Request) => any;
+export type RestfulFunction<U extends CommonUser = RegisteredUser> = (req: Request, user?: U) => any;
 
 /**
  * Function signature for control handlers
  *
- * These handlers receive both Request and Response objects,
+ * These handlers receive Request and Response objects and the current logged-in user,
  * allowing manual control over the response.
+ *
+ * @template U The user type, defaults to server-wide RegisteredUser
  *
  * @example
  * ```typescript
@@ -32,7 +48,7 @@ export type RestfulFunction = (req: Request) => any;
  * };
  * ```
  */
-export type ControlFunction = (req: Request, res: Response) => any;
+export type ControlFunction<U extends CommonUser = RegisteredUser> = (req: Request, res: Response, user?: U) => any;
 
 /**
  * Internal class providing middleware and utilities for Express routing
@@ -80,13 +96,54 @@ class RouterHelper {
     }
 
     /**
+     * Gets the effective user for business logic. If acting as another user (impersonation),
+     * returns the impersonated user; otherwise returns the logged-in user.
+     * Automatically resolves to type U (defaults to server-wide RegisteredUser).
+     * @param req Express request object
+     * @returns The effective user typed as U or undefined/null if no user is injected
+     */
+    getEffectiveUser<U extends CommonUser = RegisteredUser>(req: Request): U {
+        return extractEffectiveUser<U>(req);
+    }
+
+    /**
+     * Gets the current effective user. Alias for {@link getEffectiveUser}.
+     * @param req Express request object
+     * @returns The current user typed as U or undefined/null if no user is injected
+     */
+    getLoggedUser<U extends CommonUser = RegisteredUser>(req: Request): U {
+        return extractLoggedUser<U>(req);
+    }
+
+    /**
+     * Gets the real authenticated user (the actual person/credential logged in),
+     * without unwrapping impersonation. Useful for audit logging and operator checks.
+     * @param req Express request object
+     * @returns The real logged-in user or undefined if not authenticated
+     */
+    getRealUser(req: Request): RegisteredUser | undefined {
+        return extractRealUser(req);
+    }
+
+    /**
+     * Checks whether the current request is operating in user impersonation mode.
+     * @param req Express request object
+     * @returns True if the request is impersonating another user
+     */
+    isImpersonating(req: Request): boolean {
+        return checkImpersonating(req);
+    }
+
+    /**
      * Invokes a RESTful operation and wraps the result in JSON format for the client
      *
      * This middleware wrapper automatically handles:
      * - Awaiting async function execution
+     * - Passing the resolved current user (typed as U) to the handler function
      * - Serializing the result as JSON (returns 204 No Content if result is null)
      * - Catching errors and passing them to error handling middleware
      *
+     * @template U The user type, defaults to server-wide RegisteredUser
      * @param func The RESTful function to execute
      * @returns Express middleware function
      *
@@ -106,10 +163,11 @@ class RouterHelper {
      * }
      * ```
      */
-    invokeRestfulAction(func: RestfulFunction): any {
+    invokeRestfulAction<U extends CommonUser = RegisteredUser>(func: RestfulFunction<U>): any {
         return async (req: Request, res: Response, _next: NextFunction): Promise<void> => {
             try {
-                const result = await func(req);
+                const user = this.getLoggedUser<U>(req);
+                const result = await func(req, user);
                 if (result != null) {
                     res.json(result);
                 } else {
@@ -130,6 +188,7 @@ class RouterHelper {
      * Use this for controllers that need manual control over the Response object.
      * Automatically catches errors and passes them to error handling middleware.
      *
+     * @template U The user type, defaults to server-wide RegisteredUser
      * @param func The controller function to execute
      * @returns Express middleware function
      *
@@ -150,10 +209,11 @@ class RouterHelper {
      * }
      * ```
      */
-    invokeController(func: ControlFunction) {
+    invokeController<U extends CommonUser = RegisteredUser>(func: ControlFunction<U>) {
         return async (req: Request, res: Response, _next: NextFunction): Promise<void> => {
             try {
-                await func(req, res);
+                const user = this.getLoggedUser<U>(req);
+                await func(req, res, user);
             } catch (ex) {
                 handleError(ex, req, res, null);
             }
@@ -201,7 +261,7 @@ class RouterHelper {
         const user = await getUserResolver().resolve(req);
         if (user != null) {
             req.user = user;
-            this.logger.debug({ path: req.path, impersonating: (user as any).actAs != null },
+            this.logger.debug({ path: req.path, impersonating: this.isImpersonating(req) },
                 'User attached to request');
         }
     }
@@ -238,44 +298,6 @@ class RouterHelper {
         return async (req: Request, _res: Response, next: any) => {
             await this.resolveUser(req);
             next();
-        }
-    }
-
-
-    /**
-     * Middleware to check if user is authenticated
-     *
-     * This middleware first calls retrieveUser() to parse user from headers,
-     * then checks if req['user'] exists. If not, throws UnauthenticatedError.
-     *
-     * Use this middleware for routes that require authentication.
-     *
-     * @returns Express middleware function that validates user authentication
-     *
-     * @example
-     * ```typescript
-     * import { routerHelper } from '@ticatec/keelson-express';
-     *
-     * class ProtectedRoutes extends CommonRoutes {
-     *   protected bindRoutes() {
-     *     // Require authentication for all routes in this router
-     *     this.get('/profile', routerHelper.checkLoggedUser(), async (req, res) => {
-     *       res.json(req['user']);
-     *     });
-     *   }
-     * }
-     * ```
-     */
-    checkLoggedUser() {
-        return async (req: Request, res: Response, next: any) => {
-            await this.resolveUser(req);
-            if (req.user == null) {
-                this.logger.warn({path: req.path, method: req.method}, 'Unauthenticated request');
-                handleError(new UnauthenticatedError(), req, res, null);
-            } else {
-                this.logger.debug({ path: req.path, method: req.method }, 'Authenticated request');
-                next();
-            }
         }
     }
 

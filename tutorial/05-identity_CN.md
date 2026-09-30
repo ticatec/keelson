@@ -82,12 +82,12 @@ protected async beforeStart(): Promise<void> {
 // types/keelson-express.d.ts
 import '@ticatec/keelson-express';
 
-interface AppUser {
+interface AppUser extends LoggedUser {
     accountCode: string;
     name: string;
     isPlatform?: boolean;
     tenant?: { code: string; name: string };
-    actAs?: AppUser;
+    impersonatedUser?: AppUser;
 }
 
 declare module '@ticatec/keelson-express' {
@@ -97,28 +97,29 @@ declare module '@ticatec/keelson-express' {
 }
 ```
 
-从此 `req.user` 与 `getLoggedUser(req)` 默认在任何地方都是 `AppUser` 类型，不需要任何
+从此 `req.user` 与 `getEffectiveUser(req)` / `getLoggedUser(req)` 默认在任何地方都是 `AppUser` 类型，不需要任何
 类型断言。`req.user` 已由本包声明在 Express 的 `Request` 上，你不必自己去增强
 `Express.Request`。
 
-如果你的服务同时服务不同端（如后台管理员与移动端普通用户），也可以直接在控制器上通过泛型指定具体类型：`class AdminController extends BaseController<AdminService, AdminUser>`，此时控制器内的 `this.getLoggedUser(req)` 会精准返回 `AdminUser`。
+如果你的服务同时服务不同端（如后台管理员与移动端普通用户），也可以直接在控制器上通过泛型指定具体类型：`class AdminController extends BaseController<AdminService, AdminUser>`，此时控制器内的 `this.getEffectiveUser(req)` 会精准返回 `AdminUser`。
 
-## 代理身份
+## 代理身份（用户扮演）
 
-用户对象上的 `actAs` 字段表示"这个管理员正在以那个用户的身份操作"。由此引出两条规则。
+用户对象上的 `impersonatedUser` 字段表示"这个管理员正在以那个用户的身份操作"。框架提供以下能力支持：
 
-`getLoggedUser(req)` 在存在 `actAs` 时返回**被代理的那个用户**，否则返回真实用户。
-业务代码因此操作的始终是"这个请求正在代表谁"，而不需要知道代理身份这回事：
+1. `getEffectiveUser(req)`（别名 `getLoggedUser(req)`）在存在 `impersonatedUser` 时返回**被扮演的目标用户**，否则返回真实用户。业务代码因此操作的始终是"当前生效的业务用户"，无需关心是否处于扮演状态：
 
 ```typescript
 protected getCreateNewArguments(req: Request): Array<any> {
-    return [this.getLoggedUser(req), req.body];   // 有 actAs 时就是 actAs
+    return [this.getEffectiveUser(req), req.body];   // 有扮演时即为 impersonatedUser
 }
 ```
 
-`isValidUser()` 拿到的同样是 `actAs`（如果有）。这正是你要的——要问的是**被代理的那个
-账号**能不能做这件事——但也意味着真实管理员在这一步没有被再次检查。如果你的规则需要
-同时判断两者，直接读 `req.user`。
+2. `getRealUser(req)` 返回原始登录凭据（`req.user`），用于操作审计日志或特权操作人二次确认。
+
+3. `isImpersonating(req)` 返回是否处于代理身份状态。
+
+`isValidUser()` 拿到的同样是生效用户（`impersonatedUser`）。这正是你要的——要问的是**被扮演的那个账号**能不能做这件事。如果你的规则需要同时判断真实管理员，直接调用 `this.getRealUser(req)`。
 
 ## 鉴权：三个位置，三个问题
 

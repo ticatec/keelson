@@ -15,11 +15,18 @@ import CommonSearchController from '../common/CommonSearchController.js';
 import BaseController from '../common/BaseController.js';
 import CommonRoutes, { AuthenticatedRoutes } from '../CommonRoutes.js';
 import BaseServer from '../BaseServer.js';
-import LoggedUser, { CommonUser } from '../LoggedUser.js';
+import LoggedUser, {
+    CommonUser,
+    getEffectiveUser,
+    getLoggedUser,
+    getRealUser,
+    isImpersonating
+} from '../LoggedUser.js';
 import { HealthCheckRegistry } from '../health/HealthCheckRegistry.js';
 import { createSystemHealthIndicator } from '../health/BuiltinHealthIndicators.js';
 import { HealthRoutes } from '../health/HealthRoutes.js';
 import { StringValidator, NumberValidator } from '@ticatec/bean-validator';
+import { UnauthenticatedError } from '@ticatec/node-exception';
 
 /** Silences framework logging for the duration of the suite. */
 const SILENT: Logger = (() => {
@@ -315,22 +322,6 @@ describe('keelson-express comprehensive test suite', () => {
         expect(await (protectedRoutes as any).isValidUser({ accountCode: 'U1', name: 'Bob' })).toBe(true);
     });
 
-    test('should reject unauthenticated request in checkLoggedUser middleware', async () => {
-        const req: any = {
-            headers: {},
-            path: '/priv/test',
-            method: 'GET',
-            get: jest.fn().mockReturnValue(null),
-            accepts: jest.fn().mockReturnValue('json')
-        };
-        const res: any = { status: jest.fn().mockReturnThis(), json: jest.fn(), setHeader: jest.fn() };
-        const next = jest.fn();
-
-        await routerHelper.checkLoggedUser()(req, res, next);
-        expect(next).not.toHaveBeenCalled();
-        expect(res.status).toHaveBeenCalledWith(401);
-    });
-
     test('should start, write check.dat with actual port, and shutdown server gracefully', async () => {
         const server = new TestServer();
         server.listenPort = 0; // Dynamic port
@@ -540,30 +531,40 @@ describe('keelson-express comprehensive test suite', () => {
             public getDirectUser(req: any) {
                 return this.getLoggedUser(req);
             }
+            public getEffective(req: any) {
+                return this.getEffectiveUser(req);
+            }
+            public getReal(req: any) {
+                return this.getRealUser(req);
+            }
+            public checkImpersonating(req: any) {
+                return this.isImpersonating(req);
+            }
         }
 
         test('should allow custom user structures extending CommonUser and LoggedUser', () => {
             const basicUser: CommonUser = {};
             expect(basicUser).toBeDefined();
 
-            const loggedUser: LoggedUser = {
-                actAs: {
+            // Option A: impersonatedUser
+            const loggedUserWithImpersonation: LoggedUser = {
+                impersonatedUser: {
                     targetId: 'target-123'
                 } as any
             };
-            expect(loggedUser.actAs).toBeDefined();
+            expect(loggedUserWithImpersonation.impersonatedUser).toBeDefined();
 
             const appUser: AppUser = {
                 userId: 'usr-001',
                 userName: 'Alice',
                 role: 'admin',
-                actAs: {
+                impersonatedUser: {
                     userId: 'usr-002',
                     userName: 'ImpersonatedBob'
                 } as any
             };
             expect(appUser.userId).toBe('usr-001');
-            expect((appUser.actAs as any).userId).toBe('usr-002');
+            expect((appUser.impersonatedUser as any).userId).toBe('usr-002');
         });
 
         test('should allow pure Controller without service or getLoggedUser for public APIs', () => {
@@ -584,6 +585,7 @@ describe('keelson-express comprehensive test suite', () => {
             expect(pingCtrl.checkLogger()).toBeDefined();
             // getLoggedUser is not on Controller
             expect((pingCtrl as any).getLoggedUser).toBeUndefined();
+            expect((pingCtrl as any).getEffectiveUser).toBeUndefined();
         });
 
         test('should support specific user generic on BaseController and return strongly-typed user', () => {
@@ -592,7 +594,7 @@ describe('keelson-express comprehensive test suite', () => {
                     super(service);
                 }
                 public getUserRole(req: any): string | undefined {
-                    const user = this.getLoggedUser(req);
+                    const user = this.getEffectiveUser(req);
                     return user?.role;
                 }
             }
@@ -604,37 +606,73 @@ describe('keelson-express comprehensive test suite', () => {
             expect(adminCtrl.getUserRole(reqWithAdmin)).toBe('SUPER_ADMIN');
         });
 
-        test('should return actAs user when impersonation is present in getLoggedUser', () => {
+        test('should handle impersonatedUser, real user and impersonating status correctly', () => {
             const ctrl = new UserTestController(new MockService());
 
-            // 1. With actAs impersonation
+            // 1. With impersonatedUser
             const impersonatedReq: any = {
                 user: {
                     userId: 'admin-1',
-                    actAs: { userId: 'tenant-user-2', name: 'Impersonated User' }
+                    name: 'Admin Operator',
+                    impersonatedUser: { userId: 'tenant-user-2', name: 'Impersonated User' }
                 }
             };
-            const activeUser: any = ctrl.getDirectUser(impersonatedReq);
-            expect(activeUser.userId).toBe('tenant-user-2');
-            expect(activeUser.name).toBe('Impersonated User');
+            expect(ctrl.getEffective(impersonatedReq)).toEqual({ userId: 'tenant-user-2', name: 'Impersonated User' });
+            expect(ctrl.getDirectUser(impersonatedReq)).toEqual({ userId: 'tenant-user-2', name: 'Impersonated User' });
+            expect(ctrl.getReal(impersonatedReq)).toEqual(impersonatedReq.user);
+            expect(ctrl.checkImpersonating(impersonatedReq)).toBe(true);
 
-            // 2. Direct user without actAs
+            // Also check routerHelper helpers and standalone LoggedUser functions
+            expect(routerHelper.getEffectiveUser(impersonatedReq)).toEqual({ userId: 'tenant-user-2', name: 'Impersonated User' });
+            expect(routerHelper.getRealUser(impersonatedReq)).toEqual(impersonatedReq.user);
+            expect(getEffectiveUser(impersonatedReq)).toEqual({ userId: 'tenant-user-2', name: 'Impersonated User' });
+            expect(getLoggedUser(impersonatedReq)).toEqual({ userId: 'tenant-user-2', name: 'Impersonated User' });
+            expect(getRealUser(impersonatedReq)).toEqual(impersonatedReq.user);
+            expect(isImpersonating(impersonatedReq)).toBe(true);
+
+            // 2. Direct user without impersonation
             const directReq: any = {
                 user: { userId: 'normal-user-1', name: 'Direct User' }
             };
-            const directUser: any = ctrl.getDirectUser(directReq);
-            expect(directUser.userId).toBe('normal-user-1');
-            expect(directUser.name).toBe('Direct User');
+            expect(ctrl.getEffective(directReq)).toEqual(directReq.user);
+            expect(ctrl.getDirectUser(directReq)).toEqual(directReq.user);
+            expect(ctrl.getReal(directReq)).toEqual(directReq.user);
+            expect(ctrl.checkImpersonating(directReq)).toBe(false);
+            expect(routerHelper.isImpersonating(directReq)).toBe(false);
 
-            // 3. No logged in user
+            // 3. No logged in user (anonymous)
             const anonReq: any = {};
+            expect(ctrl.getEffective(anonReq)).toBeUndefined();
             expect(ctrl.getDirectUser(anonReq)).toBeUndefined();
+            expect(ctrl.getReal(anonReq)).toBeUndefined();
+            expect(ctrl.checkImpersonating(anonReq)).toBe(false);
+            expect(routerHelper.isImpersonating(anonReq)).toBe(false);
         });
 
-        test('should decode user header and inject x-language into both user and actAs', async () => {
+        test('should ignore obsolete actAs field and not treat as impersonation', async () => {
             const rawUser = {
                 userId: 'admin-root',
                 actAs: { userId: 'client-user' }
+            };
+            const req: any = {
+                headers: {
+                    user: encodeURIComponent(JSON.stringify(rawUser))
+                }
+            };
+            const next = jest.fn();
+            await routerHelper.retrieveUser()(req, {} as any, next);
+
+            expect(next).toHaveBeenCalled();
+            expect(req.user.userId).toBe('admin-root');
+            expect(req.user.impersonatedUser).toBeUndefined();
+            expect(getEffectiveUser(req)).toEqual(req.user);
+            expect(isImpersonating(req)).toBe(false);
+        });
+
+        test('should decode user header and inject x-language into user and impersonatedUser', async () => {
+            const rawUser = {
+                userId: 'admin-root',
+                impersonatedUser: { userId: 'client-user' }
             };
             const req: any = {
                 headers: {
@@ -642,20 +680,17 @@ describe('keelson-express comprehensive test suite', () => {
                     'x-language': 'zh-CN'
                 }
             };
-            const res: any = {};
             const next = jest.fn();
-
-            await routerHelper.retrieveUser()(req, res, next);
+            await routerHelper.retrieveUser()(req, {} as any, next);
 
             expect(next).toHaveBeenCalled();
-            expect(req.user).toBeDefined();
             expect(req.user.userId).toBe('admin-root');
             expect(req.user.language).toBe('zh-CN');
-            expect(req.user.actAs.userId).toBe('client-user');
-            expect(req.user.actAs.language).toBe('zh-CN');
+            expect(req.user.impersonatedUser.userId).toBe('client-user');
+            expect(req.user.impersonatedUser.language).toBe('zh-CN');
         });
 
-        test('should validate actAs user in CommonRoutes when impersonating', async () => {
+        test('should validate impersonatedUser in CommonRoutes when impersonating', async () => {
             let validatedUser: any = null;
             class TestImpersonationRoutes extends CommonRoutes {
                 protected override isValidUser(user: any): boolean {
@@ -679,7 +714,7 @@ describe('keelson-express comprehensive test suite', () => {
             const mockReq: any = {
                 user: {
                     userId: 'admin-super',
-                    actAs: { userId: 'allowed-tenant-user' }
+                    impersonatedUser: { userId: 'allowed-tenant-user' }
                 }
             };
             const nextFn = jest.fn();
@@ -687,6 +722,87 @@ describe('keelson-express comprehensive test suite', () => {
 
             expect(validatedUser).toEqual({ userId: 'allowed-tenant-user' });
             expect(nextFn).toHaveBeenCalledWith();
+        });
+
+        test('should support custom user generic on CommonRoutes and AuthenticatedRoutes', async () => {
+            interface CustomCommonUser extends CommonUser {
+                customId: string;
+                level: number;
+            }
+
+            class CustomCommonRoutes extends CommonRoutes<CustomCommonUser> {
+                public directGetUser(req: any): CustomCommonUser {
+                    return this.getLoggedUser(req);
+                }
+
+                protected override isValidUser(user: CustomCommonUser): boolean {
+                    return user.level > 1;
+                }
+
+                protected bindRoutes() {}
+            }
+
+            class CustomAuthRoutes extends AuthenticatedRoutes<CustomCommonUser> {
+                public directGetUser(req: any): CustomCommonUser {
+                    return this.getLoggedUser(req);
+                }
+
+                protected bindRoutes() {}
+            }
+
+            const routes = new CustomCommonRoutes();
+            const authRoutes = new CustomAuthRoutes();
+
+            const req: any = {
+                user: {
+                    customId: 'c-1',
+                    level: 2
+                }
+            };
+
+            expect(routes.directGetUser(req)).toEqual({ customId: 'c-1', level: 2 });
+            expect(await (routes as any).isValidUser(req.user)).toBe(true);
+            expect(await (routes as any).isValidUser({ customId: 'c-2', level: 0 })).toBe(false);
+
+            expect(await (authRoutes as any).isValidUser(null)).toBe(false);
+            expect(await (authRoutes as any).isValidUser(req.user)).toBe(true);
+        });
+
+        test('should support routerHelper getLoggedUser and invokeRestfulAction with custom user generic', async () => {
+            interface OmniCubeUser extends CommonUser {
+                id: string;
+                organization?: { id: string; name: string } | null;
+            }
+
+            const req: any = {
+                user: {
+                    id: 'cube-001',
+                    organization: { id: 'org-1', name: 'Ticatec' }
+                }
+            };
+
+            // 1. routerHelper.getLoggedUser with generic
+            const extractedCubeUser = routerHelper.getLoggedUser<OmniCubeUser>(req);
+            expect(extractedCubeUser.id).toBe('cube-001');
+            expect(extractedCubeUser.organization?.name).toBe('Ticatec');
+
+            // 2. routerHelper.invokeRestfulAction passes typed user
+            let handlerPassedUser: OmniCubeUser | undefined = undefined;
+            const res: any = {
+                json: jest.fn(),
+                status: jest.fn().mockReturnThis(),
+                send: jest.fn()
+            };
+            const next = jest.fn();
+
+            const action = routerHelper.invokeRestfulAction<OmniCubeUser>(async (_req, user) => {
+                handlerPassedUser = user;
+                return { success: true, userId: user?.id };
+            });
+
+            await action(req, res, next);
+            expect(handlerPassedUser).toEqual(req.user);
+            expect(res.json).toHaveBeenCalledWith({ success: true, userId: 'cube-001' });
         });
     });
 
@@ -707,14 +823,14 @@ describe('keelson-express comprehensive test suite', () => {
             const req: any = {
                 path: '/x',
                 headers: {
-                    user: encodeURIComponent(JSON.stringify({ accountCode: 'U1', actAs: { accountCode: 'U2' } })),
+                    user: encodeURIComponent(JSON.stringify({ accountCode: 'U1', impersonatedUser: { accountCode: 'U2' } })),
                     'x-language': 'zh-CN'
                 }
             };
             await runResolver(req);
             expect(req.user.accountCode).toBe('U1');
             expect(req.user.language).toBe('zh-CN');
-            expect(req.user.actAs.language).toBe('zh-CN');
+            expect(req.user.impersonatedUser.language).toBe('zh-CN');
         });
 
         test('a malformed header leaves the request anonymous instead of failing it', async () => {
@@ -783,15 +899,24 @@ describe('keelson-express comprehensive test suite', () => {
             expect(getUserResolver()).toBe(custom);
         });
 
-        test('checkLoggedUser rejects a request the resolver left anonymous', async () => {
-            const req: any = { path: '/x', method: 'GET', headers: {}, accepts: jest.fn().mockReturnValue('json') };
-            const res: any = { status: jest.fn().mockReturnThis(), json: jest.fn(), setHeader: jest.fn() };
-            const next = jest.fn();
+        test('AuthenticatedRoutes rejects a request the resolver left anonymous', async () => {
+            class TestAuthRoutes extends AuthenticatedRoutes {
+                protected bindRoutes() {
+                    this.get('/profile', async (_req) => ({ ok: true }));
+                }
+            }
+            const app: any = { use: jest.fn() };
+            const routes = new TestAuthRoutes();
+            await routes.bind(app, '/test');
 
-            await routerHelper.checkLoggedUser()(req, res, next);
+            const routerInstance = app.use.mock.calls[0][1];
+            const validationLayer = routerInstance.stack.find((layer: any) => layer.handle && layer.handle.length === 3);
 
-            expect(next).not.toHaveBeenCalled();
-            expect(res.status).toHaveBeenCalledWith(401);
+            const mockReq: any = { user: undefined };
+            const nextFn = jest.fn();
+            await validationLayer.handle(mockReq, {}, nextFn);
+
+            expect(nextFn).toHaveBeenCalledWith(expect.any(UnauthenticatedError));
         });
     });
 

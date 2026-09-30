@@ -434,7 +434,6 @@ import { routerHelper } from '@ticatec/keelson-express';
 
 // Use middleware
 routerHelper.setNoCache           // Disable caching
-routerHelper.checkLoggedUser()    // Require authentication
 routerHelper.retrieveUser()       // Extract user (non-blocking)
 routerHelper.actionNotFound()     // 404 handler
 routerHelper.invokeRestfulAction() // Wrap async handler
@@ -570,13 +569,13 @@ The library supports user impersonation for debugging and troubleshooting:
 // Headers with user impersonation
 {
     'user': encodeURIComponent(JSON.stringify({
-        // Original privileged user
+        // Original privileged user (operator)
         accountCode: 'admin123',
         name: 'System Admin',
         tenant: { code: 'system', name: 'System Tenant' },
 
-        // User being impersonated
-        actAs: {
+        // User being impersonated (effective user for business logic)
+        impersonatedUser: {
             accountCode: 'user456',
             name: 'Target User',
             tenant: { code: 'client-a', name: 'Client A' }
@@ -585,6 +584,11 @@ The library supports user impersonation for debugging and troubleshooting:
     'x-language': 'en'
 }
 ```
+
+- In `BaseController`, `CommonRoutes`, and `routerHelper`:
+  - `getEffectiveUser(req)`: Returns `impersonatedUser` if present, otherwise returns `user` (aliased as `getLoggedUser(req)`).
+  - `getRealUser(req)`: Returns the actual authenticated user credential (`req.user`), useful for audit logs.
+  - `isImpersonating(req)`: Returns `true` if operating in impersonation mode.
 
 ## Multi-tenant Support
 
@@ -666,32 +670,31 @@ throw new IllegalParameterError('Invalid input', { cause: parseError });
 
 ```typescript
 // Function signatures
-export type RestfulFunction = (req: Request) => any;
-export type ControlFunction = (req: Request, res: Response) => any;
+export type RestfulFunction<U = RegisteredUser> = (req: Request, user: U) => any;
+export type ControlFunction<U = RegisteredUser> = (req: Request, res: Response, user: U) => any;
 export type moduleLoader = () => Promise<any>;
 
-// User interfaces. Both are deliberately empty: the framework never reads a field off
-// the user, so it declares none. Your application supplies the shape.
+// User interfaces.
 export interface CommonUser {}
 
-export interface LoggedUser extends CommonUser {
-    actAs?: CommonUser;   // For user impersonation
+export interface LoggedUser<T extends CommonUser = CommonUser> extends CommonUser {
+    impersonatedUser?: T; // For user impersonation
 }
 ```
 
 Declare your own user model once, through module augmentation, and every
-`getLoggedUser(req)` and `req.user` in the application is typed as it:
+`getEffectiveUser(req)` / `getLoggedUser(req)` and `req.user` in the application is typed as it:
 
 ```typescript
 // types/keelson-express.d.ts
 import '@ticatec/keelson-express';
 
-interface AppUser {
+interface AppUser extends LoggedUser {
     accountCode: string;
     name: string;
     isPlatform?: boolean;
     tenant?: { code: string; name: string };
-    actAs?: AppUser;
+    impersonatedUser?: AppUser;
 }
 
 declare module '@ticatec/keelson-express' {
@@ -747,7 +750,7 @@ setUserResolver(new SessionResolver());
 
 A resolver never rejects a request. Returning `undefined` leaves it anonymous, which is
 how a public route stays public; a malformed header is logged and treated the same way.
-Authorization is `isValidUser()`'s job, and `routerHelper.checkLoggedUser()` is what turns
+Authorization is `isValidUser()`'s job, and `AuthenticatedRoutes` is what turns
 an anonymous request into a 401.
 
 ### Background processors

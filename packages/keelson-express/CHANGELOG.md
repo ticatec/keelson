@@ -1,5 +1,34 @@
 # Changelog
 
+## [2.0.0] - 2026-10-01
+
+### Breaking Changes
+
+- **`actAs` removed in favor of `impersonatedUser`:**
+  The legacy `actAs` property has been completely removed from `LoggedUser` and `UserResolver`. API gateways (such as `unity-gateway`) and upstream reverse proxies must format the impersonated user under the `impersonatedUser` key in the JSON-encoded `user` header.
+- **`routerHelper.checkLoggedUser()` removed:**
+  Route authentication protection must be handled via `AuthenticatedRoutes`.
+- **`RegisteredUser` type constraint tightened:**
+  `CustomUserRegistry['user']` resolution was changed to `U extends LoggedUser ? U : LoggedUser` (previously `U extends CommonUser`). Custom user models declared in application code via module augmentation must extend `LoggedUser` rather than `CommonUser`.
+
+### Added
+
+- **Generic user support across routing and controllers (`CommonRoutes<U>`, `AuthenticatedRoutes<U>`, `RouterHelper`).**
+  Routes and router helper functions now accept an optional generic type parameter `U extends CommonUser = RegisteredUser`, enabling per-route-group and per-action strongly-typed user handling (e.g. `OmniAdminUser` vs `OmniCubeUser`).
+- **Explicit user impersonation model (`impersonatedUser`).**
+  - Added generic `impersonatedUser?: T` on `LoggedUser<T extends CommonUser = CommonUser>`.
+  - Added shared utility functions `getEffectiveUser(req)`, `getLoggedUser(req)`, `getRealUser(req)`, and `isImpersonating(req)` exported directly from `@ticatec/keelson-express` and available on `BaseController`, `CommonRoutes`, and `routerHelper`.
+  - `getEffectiveUser(req)` returns `impersonatedUser ?? req.user` for business logic (aliased as `getLoggedUser(req)`).
+  - `getRealUser(req)` returns the raw `req.user` without unwrapping impersonation, designed for operator audit logging and security verification.
+  - `isImpersonating(req)` returns whether user impersonation is currently active.
+- **Language injection support for impersonated user.**
+  `HeaderUserResolver.applyLanguage()` automatically injects the language header onto `user.impersonatedUser` as well as the root user.
+
+### Changed & Migration Notes
+
+- **`invokeRestfulAction` and `invokeController` pass user as second argument:**
+  Handlers receive `(req: Request, user?: U)`. If you previously passed a function with an optional second parameter, note that it will now receive the resolved effective user object.
+
 ## [1.1.0] - 2026-09-22
 
 ### Added
