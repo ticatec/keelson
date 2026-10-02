@@ -1,5 +1,15 @@
 # Changelog
 
+## [2.0.1] - 2026-10-02
+
+### Added
+
+- **`CommonRoutes.invokeRestfulAction()` / `invokeController()`.**
+  Protected methods on `CommonRoutes<U>` that delegate to `routerHelper` and type the handler's `user`
+  argument with the route group's `U`, so `this.invokeRestfulAction(async (req, user) => ...)` needs no
+  explicit generic. `routerHelper.invokeRestfulAction` / `invokeController` remain available for code
+  outside route classes.
+
 ## [2.0.0] - 2026-10-01
 
 ### Breaking Changes

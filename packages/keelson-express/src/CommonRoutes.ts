@@ -1,5 +1,6 @@
 import {Express, NextFunction, Request, RequestHandler, Response, Router} from "express";
 import {getLogger, Logger} from "@ticatec/logger-api";
+import routerHelper, {ControlFunction, RestfulFunction} from "./RouterHelper.js";
 import {UnauthenticatedError} from "@ticatec/node-exception";
 import {
     CommonUser,
@@ -30,7 +31,7 @@ import {
  *     }
  *
  *     protected bindRoutes() {
- *         this.get('/profile', routerHelper.invokeRestfulAction(req => req.user));
+ *         this.get('/profile', this.invokeRestfulAction(req => req.user));
  *     }
  * }
  * ```
@@ -89,6 +90,28 @@ export default class CommonRoutes<U extends CommonUser = RegisteredUser> {
      */
     protected isImpersonating(req: Request): boolean {
         return checkImpersonating(req);
+    }
+
+    /**
+     * Wraps a RESTful function as an Express handler, typed with this route group's user type `U`.
+     * Delegates to {@link routerHelper.invokeRestfulAction}; the handler receives `(req, user)`
+     * where `user` is the effective user.
+     * @param func The RESTful function to execute
+     * @returns Express middleware function
+     */
+    protected invokeRestfulAction(func: RestfulFunction<U>): any {
+        return routerHelper.invokeRestfulAction<U>(func);
+    }
+
+    /**
+     * Wraps a controller function that writes the response itself, typed with this route
+     * group's user type `U`. Delegates to {@link routerHelper.invokeController}; the handler
+     * receives `(req, res, user)`.
+     * @param func The controller function to execute
+     * @returns Express middleware function
+     */
+    protected invokeController(func: ControlFunction<U>) {
+        return routerHelper.invokeController<U>(func);
     }
 
     /**
@@ -172,7 +195,7 @@ export default class CommonRoutes<U extends CommonUser = RegisteredUser> {
      *   });
      *
      *   // Using routerHelper for automatic error handling
-     *   this.post('/users', routerHelper.invokeRestfulAction(async (req) => {
+     *   this.post('/users', this.invokeRestfulAction(async (req) => {
      *     return await createNewUser(req.body);
      *   }));
      *
@@ -245,7 +268,7 @@ export default class CommonRoutes<U extends CommonUser = RegisteredUser> {
      * });
      *
      * // With routerHelper for automatic error handling
-     * this.get('/users/:id', routerHelper.invokeRestfulAction(async (req) => {
+     * this.get('/users/:id', this.invokeRestfulAction(async (req) => {
      *   const user = await getUserById(req.params.id);
      *   return user;
      * }));
@@ -270,7 +293,7 @@ export default class CommonRoutes<U extends CommonUser = RegisteredUser> {
      * });
      *
      * // With routerHelper
-     * this.post('/users', routerHelper.invokeRestfulAction(async (req) => {
+     * this.post('/users', this.invokeRestfulAction(async (req) => {
      *   return await createUser(req.body);
      * }));
      * ```
@@ -287,7 +310,7 @@ export default class CommonRoutes<U extends CommonUser = RegisteredUser> {
      *
      * @example
      * ```typescript
-     * this.put('/users/:id', routerHelper.invokeRestfulAction(async (req) => {
+     * this.put('/users/:id', this.invokeRestfulAction(async (req) => {
      *   return await updateUser(req.params.id, req.body);
      * }));
      * ```
@@ -304,7 +327,7 @@ export default class CommonRoutes<U extends CommonUser = RegisteredUser> {
      *
      * @example
      * ```typescript
-     * this.delete('/users/:id', routerHelper.invokeRestfulAction(async (req) => {
+     * this.delete('/users/:id', this.invokeRestfulAction(async (req) => {
      *   await deleteUser(req.params.id);
      *   res.status(204).send();
      * }));

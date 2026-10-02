@@ -1,6 +1,5 @@
 import { Request, Response } from 'express';
 import CommonRoutes from '../CommonRoutes.js';
-import routerHelper from '../RouterHelper.js';
 import { HealthCheckRegistry } from './HealthCheckRegistry.js';
 
 export class HealthRoutes extends CommonRoutes {
@@ -19,7 +18,7 @@ export class HealthRoutes extends CommonRoutes {
     }
 
     protected bindRoutes(): void {
-        this.get('/live', routerHelper.invokeRestfulAction(this.getLiveness));
+        this.get('/live', this.invokeRestfulAction(this.getLiveness));
         this.get('/ready', this.getReadinessCustomHandler);
         this.get('/', this.getReadinessCustomHandler);
     }

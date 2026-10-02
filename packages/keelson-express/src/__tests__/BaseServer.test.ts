@@ -804,6 +804,33 @@ describe('keelson-express comprehensive test suite', () => {
             expect(handlerPassedUser).toEqual(req.user);
             expect(res.json).toHaveBeenCalledWith({ success: true, userId: 'cube-001' });
         });
+        test('CommonRoutes.invokeRestfulAction and invokeController receive the effective user typed by the route group', async () => {
+            interface CubeUser extends CommonUser { id: string }
+
+            const captured: any = {};
+            class CubeRoutes extends AuthenticatedRoutes<CubeUser> {
+                public restful = this.invokeRestfulAction(async (_req, user) => {
+                    captured.restful = user;
+                    return { id: user?.id };
+                });
+                public controller = this.invokeController(async (_req, res, user) => {
+                    captured.controller = user;
+                    res.json({ id: user?.id });
+                });
+            }
+            const routes = new CubeRoutes();
+            const req: any = { user: { id: 'real', impersonatedUser: { id: 'target' } } };
+            const res: any = { json: jest.fn(), status: jest.fn().mockReturnThis(), send: jest.fn() };
+
+            await routes.restful(req, res, jest.fn());
+            expect(captured.restful).toEqual({ id: 'target' });
+            expect(res.json).toHaveBeenCalledWith({ id: 'target' });
+
+            res.json.mockClear();
+            await routes.controller(req, res, jest.fn());
+            expect(captured.controller).toEqual({ id: 'target' });
+            expect(res.json).toHaveBeenCalledWith({ id: 'target' });
+        });
     });
 
 
