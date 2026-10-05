@@ -20,21 +20,22 @@
 
 ## Architecture
 
-### Base class: `CommonSearchCriteria`
+### Base class: `CommonSearchCriteria<C = any>`
 
 An abstract class providing the shared query and pagination logic. Subclasses implement `buildDynamicQuery()`.
+`C` is the type of the search criteria object, defaulting to `any`.
 
-`SearchCriteria` is an empty subclass kept for backward compatibility (`abstract class SearchCriteria extends CommonSearchCriteria {}`). It adds no behaviour — extend `CommonSearchCriteria` directly in new code.
+`SearchCriteria<C = any>` is an empty subclass kept for backward compatibility (`abstract class SearchCriteria<C = any> extends CommonSearchCriteria<C> {}`). It adds no behaviour — extend `CommonSearchCriteria` directly in new code.
 
 #### Constructor
 
 ```typescript
-protected constructor(criteria?: any)
+protected constructor(conn: DBConnection, criteria?: C)
 ```
 
-The constructor is `protected`, so the class is only usable through a subclass — declare your own `public` constructor and call `super(criteria)`.
+The constructor is `protected`, so the class is only usable through a subclass — declare your own `public` constructor and call `super(conn, criteria)`.
 
-It reads two fields off `criteria` and clamps them:
+It accepts the active `conn: DBConnection` and reads two fields off `criteria` and clamps them:
 
 | Field | Default | Clamped to |
 | --- | --- | --- |
@@ -47,11 +48,11 @@ The two are not clamped the same way, and the difference matters. A `page` below
 
 ```typescript
 protected readonly logger: Logger;      // scoped to the concrete subclass name
-protected conn?: DBConnection;          // set before each run; backs getPlaceholder()
+protected conn: DBConnection;           // injected in constructor; backs getPlaceholder()
 protected sql: string;                  // the query being built (starts as '')
 protected orderBy: string;              // ORDER BY clause (starts as '')
 protected params: Array<any>;           // bound parameters
-protected criteria: any;                // the incoming criteria object
+protected criteria?: C;                 // the incoming criteria object
 protected booleanFields?: Array<string>; // set via setBooleanFields()
 ```
 
@@ -66,9 +67,9 @@ Set `sql`, `params` and `orderBy` in the **constructor**. On the first execution
 - the base parameters (a tenant code, an owner id) survive every run
 
 ```typescript
-const criteria = new ProductSearchCriteria('tenant001', { name: 'iPhone*' });
-await criteria.paginationQuery(conn);   // → ... AND p.tenant_code = $1 AND p.name LIKE $2
-await criteria.paginationQuery(conn);   // → identical; no duplicated clause, no extra params
+const criteria = new ProductSearchCriteria(conn, 'tenant001', { name: 'iPhone*' });
+await criteria.paginationQuery();   // → ... AND p.tenant_code = $1 AND p.name LIKE $2
+await criteria.paginationQuery();   // → identical; no duplicated clause, no extra params
 ```
 
 ---
@@ -128,10 +129,10 @@ this.addRangeCriteria(this.criteria?.dateFrom, this.criteria?.dateTo, 'p.created
 
 ### Execution
 
-#### `paginationQuery(conn)`
+#### `paginationQuery<T>()`
 
 ```typescript
-async paginationQuery(conn: DBConnection): Promise<PaginationList>
+async paginationQuery<T = any>(): Promise<PaginationList<T>>
 ```
 
 Runs `select count(*) as cc from (<sql>) a`, then the page query with the driver's limit/offset clause.
@@ -142,7 +143,7 @@ Two consequences of that count wrapping your SQL in a subquery. Keep `ORDER BY` 
 {
   count: number,     // total matching rows
   hasMore: boolean,  // whether a further page exists
-  list: Array<any>,  // the current page
+  list: Array<T>,    // the current page
   pages: number      // Math.ceil(count / pageSize)
 }
 ```
@@ -151,10 +152,10 @@ Two consequences of that count wrapping your SQL in a subquery. Keep `ORDER BY` 
 
 When the count is `0`, it short-circuits to `{ count: 0, hasMore: false, list: [], pages: 0 }` without running the page query. It short-circuits again whenever `offset >= count` — any page past the end returns an empty list after the COUNT alone, so `page=10000000` costs one round trip rather than two, and needs no guard of your own.
 
-#### `query(conn)`
+#### `query<T>()`
 
 ```typescript
-async query(conn: DBConnection): Promise<Array<any>>
+async query<T = any>(): Promise<Array<T>>
 ```
 
 Runs the query unpaginated and returns every matching row, with the same post-processing and boolean coercion. Mind the result size — there is no limit clause.
@@ -199,8 +200,6 @@ protected getPlaceholder(index: number): string
 
 Returns the active connection's placeholder for a 1-based parameter index. Use it when appending a raw fragment that the builders do not cover.
 
-There is no connection yet while the constructor runs — `conn` is assigned just before each execution — so calling this from a constructor silently returns PostgreSQL-style `$n` whatever the real dialect is. Build placeholders in `buildDynamicQuery()`, not in the constructor.
-
 ### Utilities
 
 | Method | Purpose |
@@ -220,7 +219,17 @@ There is no connection yet while the constructor runs — `conn` is assigned jus
 ### 1. Defining a query class
 
 ```typescript
-import { CommonSearchCriteria } from '@ticatec/keelson-core';
+import { CommonSearchCriteria, DBConnection } from '@ticatec/keelson-core';
+
+interface ProductCriteria {
+    page?: number;
+    pageSize?: number;
+    name?: string;
+    status?: string;
+    categoryPath?: string;
+    priceFrom?: number;
+    priceTo?: number;
+}
 
 const BASE_SQL = `
     SELECT p.code, p.name, p.status, p.price, pc.name AS "category.name"
@@ -228,10 +237,10 @@ const BASE_SQL = `
       JOIN wms_product_categories pc ON pc.code = p.category_code
      WHERE p.tenant_code = $1 AND p.deleted = false`;
 
-export default class ProductSearchCriteria extends CommonSearchCriteria {
+export default class ProductSearchCriteria extends CommonSearchCriteria<ProductCriteria> {
 
-    constructor(tenantCode: string, criteria?: any) {
-        super(criteria);
+    constructor(conn: DBConnection, tenantCode: string, criteria?: ProductCriteria) {
+        super(conn, criteria);
         this.sql = BASE_SQL;                 // baseline
         this.params = [tenantCode];          // baseline
         this.orderBy = 'ORDER BY p.name';    // baseline
@@ -262,7 +271,7 @@ export default class ProductSearchCriteria extends CommonSearchCriteria {
 ### 2. Running it
 
 ```typescript
-const criteria = new ProductSearchCriteria('tenant001', {
+const criteria = new ProductSearchCriteria(conn, 'tenant001', {
     page: 1,
     pageSize: 20,
     name: 'iPhone*',                        // wildcard
@@ -272,20 +281,20 @@ const criteria = new ProductSearchCriteria('tenant001', {
     priceTo: 1000
 });
 
-const result = await criteria.paginationQuery(conn);
+const result = await criteria.paginationQuery<Product>();
 console.log(`Total: ${result.count}, pages: ${result.pages}, more: ${result.hasMore}`);
 console.log(result.list);
 
 // Unpaginated, e.g. for an export
-const allRows = await criteria.query(conn);
+const allRows = await criteria.query<Product>();
 ```
 
-From a DAO, let `executePaginationQuery()` resolve the connection for you:
+From a DAO, let `executePaginationQuery()` run the criteria query:
 
 ```typescript
 export class ProductDAO extends CommonDAO {
-  async search(criteria: ProductSearchCriteria): Promise<PaginationList> {
-    return await this.executePaginationQuery(criteria);
+  async search(criteria: ProductSearchCriteria): Promise<PaginationList<Product>> {
+    return await this.executePaginationQuery<Product>(criteria);
   }
 }
 ```

@@ -80,15 +80,15 @@ throw-site logging rule simply does not come up. Where one does throw, the rule 
 
 | Method | Returns |
 | --- | --- |
-| `findByPK(sql, params)` | The first row mapped, or `null` |
-| `findFirst(sql, params)` | The same, for a query that is not a key lookup |
-| `listQuery(sql, params)` | All rows mapped |
+| `findByPK<T>(sql, params)` | The first row mapped, or `null` |
+| `findFirst<T>(sql, params)` | The same, for a query that is not a key lookup |
+| `listQuery<T>(sql, params)` | All rows mapped |
 | `executeInsertQuery<T>(sql, params)` | `InsertResult<T>` — `affectedRows`, `record`, `insertId` |
 | `executeUpdateQuery<T>(sql, params)` | `UpdateResult<T>` — `affectedRows`, `record` |
 | `executeDeleteQuery(sql, params)` | Affected row count |
 | `executeCountSQL(sql, params, key?)` | A number, key defaults to `cc` |
 | `quickSearch<T>(sql, params, pageNo, rowCount, booleanFields?)` | `QuickSearchResult<T>` — `list`, `hasMore` |
-| `executePaginationQuery(criteria)` | `PaginationList` from a `CommonSearchCriteria` |
+| `executePaginationQuery<T>(criteria)` | `PaginationList<T>` from a `CommonSearchCriteria` |
 | `genID()` | A 32-character UUID v7, time-ordered, usable as a primary key |
 | `toBooleanInt(b)` / `toBooleanChar(b)` | Write direction: boolean to `1`/`0`, boolean to `'T'`/`'F'` |
 
@@ -177,26 +177,26 @@ For a paginated criteria query, declare the fields on the criteria class with
 
 Two mechanisms, answering different questions. Pick by whether the screen shows a total.
 
-| | `executePaginationQuery(criteria)` | `quickSearch(sql, params, pageNo, rowCount)` |
+| | `executePaginationQuery<T>(criteria)` | `quickSearch(sql, params, pageNo, rowCount)` |
 | --- | --- | --- |
-| Returns | `PaginationList` — `count`, `pages`, `hasMore`, `list` | `QuickSearchResult<T>` — `list`, `hasMore` |
+| Returns | `PaginationList<T>` — `count`, `pages`, `hasMore`, `list` | `QuickSearchResult<T>` — `list`, `hasMore` |
 | Round trips | two — a COUNT, then the page | one |
 | Conditions | built by a criteria class | written into the SQL by you |
 | Boolean fields | `setBooleanFields()` on the criteria | the fifth argument |
 | Use for | a search screen with a pager: "142 results, page 3 of 6" | infinite scroll, a picker, a type-ahead |
 
-`PaginationList` takes **no type parameter** — its `list` is `Array<any>`. Write
-`Promise<PaginationList>`, never `Promise<PaginationList<Order>>`; the latter does not
-compile. `QuickSearchResult<T>` is generic and does type its list.
+`PaginationList<T>` is generic (defaults to `any`) — its `list` is `Array<T>`. You can write
+`Promise<PaginationList<Order>>` to type the result. `QuickSearchResult<T>` is likewise generic
+and types its list.
 
 ### The criteria route
 
 Three pieces: a criteria class that owns the SQL, a one-line DAO method, and a caller that
-passes the raw request criteria straight through.
+passes the connection and the raw request criteria.
 
 ```typescript
 // src/dao/criteria/OrderSearchCriteria.ts
-import { CommonSearchCriteria } from '@ticatec/keelson-core';
+import { CommonSearchCriteria, DBConnection } from '@ticatec/keelson-core';
 
 const BASE_SQL = `
     SELECT o.id, o.code, o.status, o.amount, o.currency, o.is_urgent, o.created_at,
@@ -207,8 +207,8 @@ const BASE_SQL = `
 
 export default class OrderSearchCriteria extends CommonSearchCriteria {
 
-    constructor(tenantCode: string, criteria?: any) {
-        super(criteria);
+    constructor(conn: DBConnection, tenantCode: string, criteria?: any) {
+        super(conn, criteria);
         this.sql = BASE_SQL;                            // baseline
         this.params = [tenantCode];                     // baseline
         this.orderBy = 'ORDER BY o.created_at DESC';    // baseline — kept out of this.sql
@@ -232,14 +232,15 @@ export default class OrderSearchCriteria extends CommonSearchCriteria {
  * @param criteria - a prepared OrderSearchCriteria carrying conditions, ordering and page bounds
  * @returns the requested page, plus the total matching count and page count
  */
-async searchByCriteria(criteria: OrderSearchCriteria): Promise<PaginationList> {
-    return this.executePaginationQuery(criteria);
+async searchByCriteria(criteria: OrderSearchCriteria): Promise<PaginationList<Order>> {
+    return this.executePaginationQuery<Order>(criteria);
 }
 ```
 
 ```typescript
 // src/repository/OrderRepository.ts — the criteria object comes from the request, unchanged
-const criteria = new OrderSearchCriteria(user.tenantCode, params);
+// pass the active connection (or resolve via TransactionManager) to the criteria constructor
+const criteria = new OrderSearchCriteria(conn, user.tenantCode, params);
 return this.orderDAO.searchByCriteria(criteria);
 ```
 
@@ -360,7 +361,7 @@ createdFrom, createdTo, page, pageSize.
 
 Create src/dao/criteria/<Order>SearchCriteria.ts extending CommonSearchCriteria:
 
-- public constructor(tenantCode: string, criteria?: any), calling super(criteria)
+- public constructor(conn: DBConnection, tenantCode: string, criteria?: any), calling super(conn, criteria)
 - in the constructor set the baseline: this.sql (a SELECT over `orders`, LEFT JOIN
   `customers` for the customer name only), this.params = [tenantCode],
   this.orderBy = 'ORDER BY o.created_at DESC'
@@ -373,19 +374,20 @@ Create src/dao/criteria/<Order>SearchCriteria.ts extending CommonSearchCriteria:
 
 Then add to <Order>DAO:
 
-  searchByCriteria(criteria: <Order>SearchCriteria): Promise<PaginationList>
+  searchByCriteria(criteria: <Order>SearchCriteria): Promise<PaginationList<<Order>>>
 
-a single call to executePaginationQuery(criteria).
+a single call to executePaginationQuery<<Order>>(criteria).
 
 Constraints:
-- PaginationList is NOT generic. Promise<PaginationList<<Order>>> does not compile.
+- PaginationList<<T>> is generic. Use Promise<PaginationList<<Order>>> to type the returned page items.
+- conn is passed to the criteria constructor to decouple from global context.
 - page and pageSize are read off the raw criteria object by the base constructor. Do not
   add them as method parameters and do not bound them yourself — a page below 1 becomes 1,
   a pageSize below 1 falls back to the default 25, and one above 1000 is capped at 1000.
 - do not recompute count / pages / hasMore anywhere above this method; they come back
   filled in.
 
-Show the repository-side call that builds the criteria from the request object, and a
+Show the repository-side call that builds the criteria from the request object and connection, and a
 JSDoc block on the DAO method describing the returned shape.
 ```
 

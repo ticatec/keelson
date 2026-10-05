@@ -71,15 +71,15 @@ JSDoc 能。这是读者最容易需要靠猜的一层，也是猜错就变成�
 
 | 方法 | 返回 |
 | --- | --- |
-| `findByPK(sql, params)` | 映射好的第一行，或 `null` |
-| `findFirst(sql, params)` | 同上，用于非主键查询 |
-| `listQuery(sql, params)` | 映射好的全部行 |
+| `findByPK<T>(sql, params)` | 映射好的第一行，或 `null` |
+| `findFirst<T>(sql, params)` | 同上，用于非主键查询 |
+| `listQuery<T>(sql, params)` | 映射好的全部行 |
 | `executeInsertQuery<T>(sql, params)` | `InsertResult<T>`——`affectedRows`、`record`、`insertId` |
 | `executeUpdateQuery<T>(sql, params)` | `UpdateResult<T>`——`affectedRows`、`record` |
 | `executeDeleteQuery(sql, params)` | 影响行数 |
 | `executeCountSQL(sql, params, key?)` | 一个数字，key 默认 `cc` |
 | `quickSearch<T>(sql, params, pageNo, rowCount, booleanFields?)` | `QuickSearchResult<T>`——`list`、`hasMore` |
-| `executePaginationQuery(criteria)` | 由 `CommonSearchCriteria` 得到的 `PaginationList` |
+| `executePaginationQuery<T>(criteria)` | 由 `CommonSearchCriteria` 得到的 `PaginationList<T>` |
 | `genID()` | 32 字符的 UUID v7，时间有序，可直接做主键 |
 | `toBooleanInt(b)` / `toBooleanChar(b)` | 写入方向：布尔转 `1`/`0`、布尔转 `'T'`/`'F'` |
 
@@ -160,26 +160,26 @@ select o.id, o.customer_id, o.status,
 
 两套机制，回答的是不同的问题。按"界面上要不要显示总数"来选。
 
-| | `executePaginationQuery(criteria)` | `quickSearch(sql, params, pageNo, rowCount)` |
+| | `executePaginationQuery<T>(criteria)` | `quickSearch(sql, params, pageNo, rowCount)` |
 | --- | --- | --- |
-| 返回 | `PaginationList`——`count`、`pages`、`hasMore`、`list` | `QuickSearchResult<T>`——`list`、`hasMore` |
+| 返回 | `PaginationList<T>`——`count`、`pages`、`hasMore`、`list` | `QuickSearchResult<T>`——`list`、`hasMore` |
 | 往返次数 | 两次——先 COUNT，再取当页 | 一次 |
 | 查询条件 | 由 criteria 类构造 | 你自己写进 SQL |
 | 布尔字段 | criteria 上的 `setBooleanFields()` | 第五个参数 |
 | 适用 | 带页码器的查询界面："共 142 条，第 3/6 页" | 无限滚动、选择器、联想输入 |
 
-`PaginationList` **没有类型参数**——它的 `list` 是 `Array<any>`。写
-`Promise<PaginationList>`，不要写 `Promise<PaginationList<Order>>`，后者编译不过。
-`QuickSearchResult<T>` 是泛型的，它的 list 有类型。
+`PaginationList<T>` 是泛型（默认 `any`）——它的 `list` 是 `Array<T>`。写
+`Promise<PaginationList<Order>>` 可为返回的数据集指定具体类型。
+`QuickSearchResult<T>` 也是泛型的，它的 list 有类型。
 
 ### criteria 路线
 
-三个部件：拥有 SQL 的 criteria 类、一行的 DAO 方法、把请求里的原始 criteria 直接透传的
+三个部件：拥有 SQL 的 criteria 类、一行的 DAO 方法、把连接与请求里的原始 criteria 传入的
 调用方。
 
 ```typescript
 // src/dao/criteria/OrderSearchCriteria.ts
-import { CommonSearchCriteria } from '@ticatec/keelson-core';
+import { CommonSearchCriteria, DBConnection } from '@ticatec/keelson-core';
 
 const BASE_SQL = `
     SELECT o.id, o.code, o.status, o.amount, o.currency, o.is_urgent, o.created_at,
@@ -190,8 +190,8 @@ const BASE_SQL = `
 
 export default class OrderSearchCriteria extends CommonSearchCriteria {
 
-    constructor(tenantCode: string, criteria?: any) {
-        super(criteria);
+    constructor(conn: DBConnection, tenantCode: string, criteria?: any) {
+        super(conn, criteria);
         this.sql = BASE_SQL;                            // 基线
         this.params = [tenantCode];                     // 基线
         this.orderBy = 'ORDER BY o.created_at DESC';    // 基线——不要写进 this.sql
@@ -215,14 +215,14 @@ export default class OrderSearchCriteria extends CommonSearchCriteria {
  * @param criteria - 已构造好的 OrderSearchCriteria，自带条件、排序与分页边界
  * @returns 请求的那一页，以及匹配总数与总页数
  */
-async searchByCriteria(criteria: OrderSearchCriteria): Promise<PaginationList> {
-    return this.executePaginationQuery(criteria);
+async searchByCriteria(criteria: OrderSearchCriteria): Promise<PaginationList<Order>> {
+    return this.executePaginationQuery<Order>(criteria);
 }
 ```
 
 ```typescript
-// src/repository/OrderRepository.ts —— criteria 对象来自请求，原样传入
-const criteria = new OrderSearchCriteria(user.tenantCode, params);
+// src/repository/OrderRepository.ts —— criteria 对象来自请求，传入连接和参数
+const criteria = new OrderSearchCriteria(conn, user.tenantCode, params);
 return this.orderDAO.searchByCriteria(criteria);
 ```
 
@@ -337,7 +337,7 @@ page、pageSize。
 
 创建 src/dao/criteria/<Order>SearchCriteria.ts，继承 CommonSearchCriteria：
 
-- public constructor(tenantCode: string, criteria?: any)，内部调用 super(criteria)
+- public constructor(conn: DBConnection, tenantCode: string, criteria?: any)，内部调用 super(conn, criteria)
 - 在构造函数里设定基线：this.sql（对 `orders` 的 SELECT，为取客户名 LEFT JOIN
   `customers`）、this.params = [tenantCode]、
   this.orderBy = 'ORDER BY o.created_at DESC'
@@ -350,18 +350,19 @@ page、pageSize。
 
 然后给 <Order>DAO 加上：
 
-  searchByCriteria(criteria: <Order>SearchCriteria): Promise<PaginationList>
+  searchByCriteria(criteria: <Order>SearchCriteria): Promise<PaginationList<<Order>>>
 
-方法体只有一行：executePaginationQuery(criteria)。
+方法体只有一行：executePaginationQuery<<Order>>(criteria)。
 
 约束：
-- PaginationList 不是泛型。Promise<PaginationList<<Order>>> 编译不过。
+- PaginationList<<T>> 支持泛型。使用 Promise<PaginationList<<Order>>> 约束返回结果的列表类型。
+- conn 作为构造函数参数传入 criteria，实现与全局事务上下文解耦。
 - page 与 pageSize 由基类构造函数从原始 criteria 对象上读取。不要把它们加成方法参数，
   也不要自己做边界处理——page 小于 1 会变成 1，pageSize 小于 1 会回落到默认值 25，
   大于 1000 会被压到 1000。
 - 不要在这个方法之上的任何一层重新计算 count / pages / hasMore；它们返回时已经填好。
 
-给出 repository 一侧用请求对象构造 criteria 的调用，以及 DAO 方法上描述返回形状的
+给出 repository 一侧用连接与请求对象构造 criteria 的调用，以及 DAO 方法上描述返回形状的
 JSDoc。
 ```
 

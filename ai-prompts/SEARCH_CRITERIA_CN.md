@@ -20,21 +20,22 @@
 
 ## 架构
 
-### 基类：`CommonSearchCriteria`
+### 基类：`CommonSearchCriteria<C = any>`
 
 提供公共查询与分页逻辑的抽象类，子类实现 `buildDynamicQuery()`。
+`C` 为查询条件 criteria 对象的类型，默认为 `any`。
 
-`SearchCriteria` 是为向后兼容保留的空子类（`abstract class SearchCriteria extends CommonSearchCriteria {}`），不附加任何行为 —— 新代码请直接继承 `CommonSearchCriteria`。
+`SearchCriteria<C = any>` 是为向后兼容保留的空子类（`abstract class SearchCriteria<C = any> extends CommonSearchCriteria<C> {}`），不附加任何行为 —— 新代码请直接继承 `CommonSearchCriteria`。
 
 #### 构造函数
 
 ```typescript
-protected constructor(criteria?: any)
+protected constructor(conn: DBConnection, criteria?: C)
 ```
 
-构造函数为 `protected`，因此只能通过子类使用 —— 请在子类中声明 `public` 构造函数并调用 `super(criteria)`。
+构造函数为 `protected`，因此只能通过子类使用 —— 请在子类中声明 `public` 构造函数并调用 `super(conn, criteria)`。
 
-它从 `criteria` 读取两个字段并做边界收敛：
+它接收活动的 `conn: DBConnection`，并从 `criteria` 读取两个字段并做边界收敛：
 
 | 字段 | 默认值 | 收敛范围 |
 | --- | --- | --- |
@@ -47,11 +48,11 @@ protected constructor(criteria?: any)
 
 ```typescript
 protected readonly logger: Logger;      // 以具体子类名命名
-protected conn?: DBConnection;          // 每次执行前设置，为 getPlaceholder() 提供依据
+protected conn: DBConnection;           // 构造函数传入，为 getPlaceholder() 等提供连接
 protected sql: string;                  // 正在构建的查询（初始为 ''）
 protected orderBy: string;              // ORDER BY 子句（初始为 ''）
 protected params: Array<any>;           // 绑定参数
-protected criteria: any;                // 传入的 criteria 对象
+protected criteria?: C;                 // 传入的 criteria 对象
 protected booleanFields?: Array<string>; // 通过 setBooleanFields() 设置
 ```
 
@@ -66,9 +67,9 @@ protected booleanFields?: Array<string>; // 通过 setBooleanFields() 设置
 - 基础参数（租户码、归属人 ID 等）在每次执行中都会保留
 
 ```typescript
-const criteria = new ProductSearchCriteria('tenant001', { name: 'iPhone*' });
-await criteria.paginationQuery(conn);   // → ... AND p.tenant_code = $1 AND p.name LIKE $2
-await criteria.paginationQuery(conn);   // → 完全相同；无重复子句，无多余参数
+const criteria = new ProductSearchCriteria(conn, 'tenant001', { name: 'iPhone*' });
+await criteria.paginationQuery();   // → ... AND p.tenant_code = $1 AND p.name LIKE $2
+await criteria.paginationQuery();   // → 完全相同；无重复子句，无多余参数
 ```
 
 ---
@@ -128,10 +129,10 @@ this.addRangeCriteria(this.criteria?.dateFrom, this.criteria?.dateTo, 'p.created
 
 ### 执行方法
 
-#### `paginationQuery(conn)`
+#### `paginationQuery<T>()`
 
 ```typescript
-async paginationQuery(conn: DBConnection): Promise<PaginationList>
+async paginationQuery<T = any>(): Promise<PaginationList<T>>
 ```
 
 先执行 `select count(*) as cc from (<sql>) a`，再套用驱动的 limit/offset 子句执行分页查询。
@@ -142,7 +143,7 @@ async paginationQuery(conn: DBConnection): Promise<PaginationList>
 {
   count: number,     // 匹配总行数
   hasMore: boolean,  // 是否还有下一页
-  list: Array<any>,  // 当前页数据
+  list: Array<T>,    // 当前页数据
   pages: number      // Math.ceil(count / pageSize)
 }
 ```
@@ -151,10 +152,10 @@ async paginationQuery(conn: DBConnection): Promise<PaginationList>
 
 统计结果为 `0` 时直接短路返回 `{ count: 0, hasMore: false, list: [], pages: 0 }`，不再执行分页查询。`offset >= count` 时同样短路——翻过尾页的任何一页，在 COUNT 之后就返回空列表，所以 `page=10000000` 只花一次往返而不是两次，你也不需要自己加保护。
 
-#### `query(conn)`
+#### `query<T>()`
 
 ```typescript
-async query(conn: DBConnection): Promise<Array<any>>
+async query<T = any>(): Promise<Array<T>>
 ```
 
 不分页执行并返回全部匹配行，后置处理与布尔转换逻辑保持一致。注意结果集大小 —— 这里没有 limit 子句。
@@ -199,8 +200,6 @@ protected getPlaceholder(index: number): string
 
 按 1 起始的参数序号返回当前连接的占位符。当需要追加构建方法覆盖不到的原始片段时使用。
 
-构造函数执行期间还没有连接——`conn` 是在每次执行之前才赋值的——所以在构造函数里调用它，无论真实方言是什么，都会悄悄返回 PostgreSQL 风格的 `$n`。占位符要在 `buildDynamicQuery()` 里生成，不要在构造函数里。
-
 ### 工具方法
 
 | 方法 | 用途 |
@@ -220,7 +219,17 @@ protected getPlaceholder(index: number): string
 ### 1. 定义查询类
 
 ```typescript
-import { CommonSearchCriteria } from '@ticatec/keelson-core';
+import { CommonSearchCriteria, DBConnection } from '@ticatec/keelson-core';
+
+interface ProductCriteria {
+    page?: number;
+    pageSize?: number;
+    name?: string;
+    status?: string;
+    categoryPath?: string;
+    priceFrom?: number;
+    priceTo?: number;
+}
 
 const BASE_SQL = `
     SELECT p.code, p.name, p.status, p.price, pc.name AS "category.name"
@@ -228,10 +237,10 @@ const BASE_SQL = `
       JOIN wms_product_categories pc ON pc.code = p.category_code
      WHERE p.tenant_code = $1 AND p.deleted = false`;
 
-export default class ProductSearchCriteria extends CommonSearchCriteria {
+export default class ProductSearchCriteria extends CommonSearchCriteria<ProductCriteria> {
 
-    constructor(tenantCode: string, criteria?: any) {
-        super(criteria);
+    constructor(conn: DBConnection, tenantCode: string, criteria?: ProductCriteria) {
+        super(conn, criteria);
         this.sql = BASE_SQL;                 // 基线
         this.params = [tenantCode];          // 基线
         this.orderBy = 'ORDER BY p.name';    // 基线
@@ -262,7 +271,7 @@ export default class ProductSearchCriteria extends CommonSearchCriteria {
 ### 2. 执行查询
 
 ```typescript
-const criteria = new ProductSearchCriteria('tenant001', {
+const criteria = new ProductSearchCriteria(conn, 'tenant001', {
     page: 1,
     pageSize: 20,
     name: 'iPhone*',                        // 通配符
@@ -272,20 +281,20 @@ const criteria = new ProductSearchCriteria('tenant001', {
     priceTo: 1000
 });
 
-const result = await criteria.paginationQuery(conn);
+const result = await criteria.paginationQuery<Product>();
 console.log(`总计: ${result.count}, 页数: ${result.pages}, 还有更多: ${result.hasMore}`);
 console.log(result.list);
 
 // 不分页执行，例如用于导出
-const allRows = await criteria.query(conn);
+const allRows = await criteria.query<Product>();
 ```
 
-在 DAO 中，交给 `executePaginationQuery()` 解析连接：
+在 DAO 中，交给 `executePaginationQuery()` 执行 criteria 查询：
 
 ```typescript
 export class ProductDAO extends CommonDAO {
-  async search(criteria: ProductSearchCriteria): Promise<PaginationList> {
-    return await this.executePaginationQuery(criteria);
+  async search(criteria: ProductSearchCriteria): Promise<PaginationList<Product>> {
+    return await this.executePaginationQuery<Product>(criteria);
   }
 }
 ```
