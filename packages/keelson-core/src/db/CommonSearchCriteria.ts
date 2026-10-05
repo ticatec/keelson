@@ -7,23 +7,28 @@ import type {Logger} from "../Logger.js";
 const DEFAULT_PAGE_SIZE = 25;
 const FIRST_PAGE = 1;
 
-export default abstract class CommonSearchCriteria {
+/**
+ * Abstract base class for dynamic search criteria query builders with pagination and filtering.
+ * @template C - Type of the search criteria object, defaults to any.
+ */
+export default abstract class CommonSearchCriteria<C = any> {
 
     protected readonly logger: Logger;
-    protected conn?: DBConnection;
+    protected conn: DBConnection;
     protected sql: string = '';
     protected orderBy: string = '';
     protected params: Array<any> = [];
     private readonly page: number;
     private readonly pageSize: number;
-    protected criteria: any;
+    protected criteria?: C;
     protected booleanFields?: Array<string>;
 
-    protected constructor(criteria?: any) {
+    protected constructor(conn: DBConnection, criteria?: C) {
         this.logger = getLogger(this.constructor.name, "db");
-        const rawPage = StringUtils.parseNumber(criteria?.page, FIRST_PAGE);
+        this.conn = conn;
+        const rawPage = StringUtils.parseNumber((criteria as any)?.page, FIRST_PAGE);
         this.page = rawPage < 1 ? FIRST_PAGE : rawPage;
-        const rawPageSize = StringUtils.parseNumber(criteria?.pageSize, DEFAULT_PAGE_SIZE);
+        const rawPageSize = StringUtils.parseNumber((criteria as any)?.pageSize, DEFAULT_PAGE_SIZE);
         this.pageSize = rawPageSize < 1 ? DEFAULT_PAGE_SIZE : Math.min(rawPageSize, 1000);
         this.criteria = criteria;
     }
@@ -232,11 +237,9 @@ export default abstract class CommonSearchCriteria {
      * Resets internal SQL, parameters, and orderBy before building dynamic query.
      * Snapshots the baseline established by subclass constructors on first run,
      * restoring from that baseline on subsequent runs to guarantee re-entrancy.
-     * @param conn - Database connection object.
      * @private
      */
-    private resetState(conn: DBConnection): void {
-        this.conn = conn;
+    private resetState(): void {
         if (this.baseSql === undefined) {
             this.baseSql = this.sql;
             this.baseParams = [...this.params];
@@ -251,18 +254,19 @@ export default abstract class CommonSearchCriteria {
 
     /**
      * Executes a paginated query and returns a PaginationList result.
-     * @param conn - Database connection object.
+     * @template T - Type of items in the paginated list.
+     * @returns Promise resolving to PaginationList<T>.
      */
-    async paginationQuery(conn: DBConnection): Promise<PaginationList> {
-        this.resetState(conn);
-        const count = await this.queryCount(conn, this.sql, this.params);
+    async paginationQuery<T = any>(): Promise<PaginationList<T>> {
+        this.resetState();
+        const count = await this.queryCount(this.conn, this.sql, this.params);
         if (count > 0) {
             const pageSize = this.pageSize;
             const pageNo = this.page;
             const offset = (pageNo - 1) * pageSize;
-            const listSQL = `${this.sql} ${this.orderBy} ${conn.getRowSetLimitClause(pageSize, offset)} `;
+            const listSQL = `${this.sql} ${this.orderBy} ${this.conn.getRowSetLimitClause(pageSize, offset)} `;
             this.logger.debug(`Total matching records: ${count}, need to read ${pageSize} records starting from ${offset}`);
-            const list = count > offset ? await conn.listQuery(listSQL, this.params, this.getPostProcessor(), this.booleanFields) : [];
+            const list = count > offset ? await this.conn.listQuery<T>(listSQL, this.params, this.getPostProcessor(), this.booleanFields) : [];
             const hasMore = offset + pageSize < count;
             const pages = Math.ceil(count / pageSize);
             return {count, hasMore, list, pages};
@@ -274,11 +278,11 @@ export default abstract class CommonSearchCriteria {
     /**
      * Executes an unpaginated query, returning all matching records.
      * Applies getPostProcessor() post-processing callback consistently.
-     * @param conn - Database connection object.
+     * @template T - Type of items in the result list.
      * @returns Promise resolving to an array of result objects.
      */
-    async query(conn: DBConnection): Promise<Array<any>> {
-        this.resetState(conn);
-        return await conn.listQuery(`${this.sql} ${this.orderBy}`, this.params, this.getPostProcessor(), this.booleanFields);
+    async query<T = any>(): Promise<Array<T>> {
+        this.resetState();
+        return await this.conn.listQuery<T>(`${this.sql} ${this.orderBy}`, this.params, this.getPostProcessor(), this.booleanFields);
     }
 }

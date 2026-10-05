@@ -364,20 +364,22 @@ export default abstract class DBConnection {
 
     /**
      * Executes a paginated search query using the provided criteria.
+     * @template T - Result record type.
      * @param criteria - CommonSearchCriteria object.
-     * @returns Promise resolving to PaginationList.
+     * @returns Promise resolving to PaginationList<T>.
      */
-    async executePaginationSQL(criteria: CommonSearchCriteria): Promise<PaginationList> {
-        return criteria.paginationQuery(this);
+    async executePaginationSQL<T = any>(criteria: CommonSearchCriteria): Promise<PaginationList<T>> {
+        return criteria.paginationQuery<T>();
     }
 
     /**
      * Queries all records matching criteria, ignoring pagination.
+     * @template T - Result record type.
      * @param criteria - CommonSearchCriteria object.
      * @returns Promise resolving to array of objects.
      */
-    async queryByCriteria(criteria: CommonSearchCriteria): Promise<Array<any>> {
-        return criteria.query(this);
+    async queryByCriteria<T = any>(criteria: CommonSearchCriteria): Promise<Array<T>> {
+        return criteria.query<T>();
     }
 
     /**

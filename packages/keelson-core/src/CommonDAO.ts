@@ -124,32 +124,42 @@ export default abstract class CommonDAO {
 
     /**
      * Executes a query and returns the first row of the result.
+     * @template T - Type of the result row.
      * @param sql - SQL query statement to execute.
      * @param params - Array of SQL query parameters (defaults to empty array).
      * @protected
      * @returns Promise resolving to the first row, or null if no rows match.
      */
-    protected async findFirst(sql: string, params: Array<any> = []): Promise<any> {
+    protected async findFirst<T = any>(sql: string, params: Array<any> = []): Promise<T | null> {
         const conn = await this.getDBConnection();
         this.logger.debug(sqlContext(sql, params), 'Executing find query');
-        return await conn.find(sql, params);
+        return await conn.find<T>(sql, params);
     }
 
-    protected findByPK(sql: string, params: Array<any> = []): Promise<any> {
-        return this.findFirst(sql, params);
+    /**
+     * Executes a query and returns the first row of the result (alias of findFirst).
+     * @template T - Type of the result row.
+     * @param sql - SQL query statement to execute.
+     * @param params - Array of SQL query parameters (defaults to empty array).
+     * @protected
+     * @returns Promise resolving to the first row, or null if no rows match.
+     */
+    protected findByPK<T = any>(sql: string, params: Array<any> = []): Promise<T | null> {
+        return this.findFirst<T>(sql, params);
     }
 
     /**
      * Executes a query and returns all matching rows as a list.
+     * @template T - Type of items in the result list.
      * @param sql - SQL query statement to execute.
      * @param params - Array of SQL query parameters (defaults to empty array).
      * @protected
      * @returns Promise resolving to the array of result rows.
      */
-    protected async listQuery(sql: string, params: Array<any> = []): Promise<any> {
+    protected async listQuery<T = any>(sql: string, params: Array<any> = []): Promise<Array<T>> {
         const conn = await this.getDBConnection();
         this.logger.debug(sqlContext(sql, params), 'Executing list query');
-        const list = await conn.listQuery(sql, params);
+        const list = await conn.listQuery<T>(sql, params);
         this.logger.debug(`List query returned ${Array.isArray(list) ? list.length : 0} rows`);
         return list;
     }
@@ -199,13 +209,12 @@ export default abstract class CommonDAO {
 
     /**
      * Executes a paginated search query using the provided CommonSearchCriteria object.
-     * Automatically obtains the active database connection from the current context.
+     * @template T - Type of items in the paginated list.
      * @param criteria - CommonSearchCriteria instance defining dynamic query conditions, pagination, and sorting.
      * @protected
      * @returns Promise resolving to PaginationList containing paginated records and metadata.
      */
-    protected async executePaginationQuery(criteria: CommonSearchCriteria): Promise<PaginationList> {
-        const conn = await this.getDBConnection();
-        return criteria.paginationQuery(conn);
+    protected async executePaginationQuery<T = any>(criteria: CommonSearchCriteria): Promise<PaginationList<T>> {
+        return criteria.paginationQuery<T>();
     }
 }

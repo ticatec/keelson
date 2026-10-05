@@ -1,6 +1,6 @@
 {
   "name": "@ticatec/keelson-core",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Core database access, declarative transactions, dependency injection (BeanFactory), four-tier architecture (Service/Repository/DAO), dynamic query building, and pagination framework for Keelson.",
   "type": "module",
   "main": "./lib/cjs/index.js",

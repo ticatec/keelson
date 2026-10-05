@@ -2,6 +2,25 @@
 
 All notable changes to `@ticatec/keelson-core` are documented in this file.
 
+## [1.0.1] - 2026-10-05
+
+### Added
+
+- **Generic type parameters on `CommonDAO` methods.**
+  - `CommonDAO.findFirst<T = any>()` returns `Promise<T | null>`.
+  - `CommonDAO.findByPK<T = any>()` returns `Promise<T | null>`.
+  - `CommonDAO.listQuery<T = any>()` returns `Promise<Array<T>>`.
+  - `CommonDAO.executePaginationQuery<T = any>()` returns `Promise<PaginationList<T>>`.
+- **Generic type parameter `T = any` on `PaginationList<T = any>`.**
+  `PaginationList.list` is now typed as `Array<T>`, defaulting to `any` for 100% backward compatibility.
+- **Generic type parameter `C = any` on `CommonSearchCriteria<C = any>` and `SearchCriteria<C = any>`.**
+  Allows subclasses to strongly type `this.criteria` to their custom search criteria interface.
+
+### Changed
+
+- **`CommonSearchCriteria` receives `conn` in constructor.**
+  `conn: DBConnection` is now passed directly into the `CommonSearchCriteria` constructor (`constructor(conn: DBConnection, criteria?: C)`), making the connection and its placeholder/dialect rules available from construction time and eliminating the need to pass `conn` to `paginationQuery()` or `query()`.
+
 ## [1.0.0] - 2026-09-19
 
 ### Renamed

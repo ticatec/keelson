@@ -1,7 +1,8 @@
 /**
  * Paginated query result interface.
+ * @template T Type of items in the list.
  */
-export default interface PaginationList {
+export default interface PaginationList<T = any> {
     /**
      * Total matching record count.
      */
@@ -13,7 +14,7 @@ export default interface PaginationList {
     /**
      * Array of items on the current page.
      */
-    list: Array<any>;
+    list: Array<T>;
     /**
      * Total calculated number of pages.
      */

@@ -42,8 +42,8 @@ class MockDBConnectionForCriteria extends DBConnection {
 }
 
 class SampleSearchCriteria extends CommonSearchCriteria {
-    public constructor(criteria?: any) {
-        super(criteria);
+    public constructor(conn: DBConnection, criteria?: any) {
+        super(conn, criteria);
         this.sql = 'select * from users where 1=1';
     }
 
@@ -68,13 +68,19 @@ class SampleSearchCriteria extends CommonSearchCriteria {
 }
 
 describe('CommonSearchCriteria', () => {
+    let conn: MockDBConnectionForCriteria;
+
     beforeAll(() => {
         resetLoggerProvider();
         setLoggerProvider(() => SILENT);
     });
 
+    beforeEach(() => {
+        conn = new MockDBConnectionForCriteria();
+    });
+
     test('should build star and range criteria correctly', () => {
-        const criteria = new SampleSearchCriteria();
+        const criteria = new SampleSearchCriteria(conn);
         criteria.testBuildStar('Al*', 'name');
         expect(criteria.getSql()).toContain('name like $1');
         expect(criteria.getParams()).toEqual(['Al%']);
@@ -86,9 +92,8 @@ describe('CommonSearchCriteria', () => {
     });
 
     test('should calculate pages correctly using Math.ceil', async () => {
-        const conn = new MockDBConnectionForCriteria();
-        const criteria = new SampleSearchCriteria({ page: 1, pageSize: 10 });
-        const res = await criteria.paginationQuery(conn);
+        const criteria = new SampleSearchCriteria(conn, { page: 1, pageSize: 10 });
+        const res = await criteria.paginationQuery();
 
         expect(res.count).toBe(35);
         expect(res.pages).toBe(4); // Math.ceil(35 / 10) = 4
@@ -97,9 +102,8 @@ describe('CommonSearchCriteria', () => {
     });
 
     test('should apply postConstructor in unpaginated query() method', async () => {
-        const conn = new MockDBConnectionForCriteria();
-        const criteria = new SampleSearchCriteria();
-        const list = await criteria.query(conn);
+        const criteria = new SampleSearchCriteria(conn);
+        const list = await criteria.query();
 
         expect(list.length).toBe(2);
         expect(list[0].processed).toBe(true);
@@ -107,12 +111,11 @@ describe('CommonSearchCriteria', () => {
     });
 
     test('should be safely re-entrant across multiple executions without duplicating conditions', async () => {
-        const conn = new MockDBConnectionForCriteria();
-        const criteria = new SampleSearchCriteria();
-        await criteria.query(conn);
+        const criteria = new SampleSearchCriteria(conn);
+        await criteria.query();
         const paramsCountFirst = criteria.getParams().length;
 
-        await criteria.query(conn);
+        await criteria.query();
         const paramsCountSecond = criteria.getParams().length;
 
         expect(paramsCountSecond).toBe(paramsCountFirst);
@@ -124,8 +127,8 @@ describe('CommonSearchCriteria', () => {
         }
 
         class DynamicCriteria extends CommonSearchCriteria {
-            public constructor() {
-                super();
+            public constructor(c: DBConnection) {
+                super(c);
             }
 
             protected buildDynamicQuery(): void {
@@ -135,9 +138,9 @@ describe('CommonSearchCriteria', () => {
             public getSql() { return this.sql; }
         }
 
-        const conn = new MySQLMockConnection();
-        const criteria = new DynamicCriteria();
-        await criteria.query(conn);
+        const mysqlConn = new MySQLMockConnection();
+        const criteria = new DynamicCriteria(mysqlConn);
+        await criteria.query();
 
         expect(criteria.getSql()).toContain('status = ?');
         expect(criteria.getSql()).not.toContain('$1');
@@ -146,8 +149,8 @@ describe('CommonSearchCriteria', () => {
     test('should preserve baseline sql, params, and orderBy from constructor across multiple queries', async () => {
         const BASE_SQL = 'select * from products where tenant_code = $1';
         class TenantDocSearchCriteria extends CommonSearchCriteria {
-            public constructor(tenantCode: string, criteria: any) {
-                super(criteria);
+            public constructor(c: DBConnection, tenantCode: string, criteria: any) {
+                super(c, criteria);
                 this.sql = BASE_SQL;
                 this.params = [tenantCode];
                 this.orderBy = 'ORDER BY p.name';
@@ -164,17 +167,16 @@ describe('CommonSearchCriteria', () => {
             public getOrderBy() { return this.orderBy; }
         }
 
-        const conn = new MockDBConnectionForCriteria();
-        const criteria = new TenantDocSearchCriteria('TENANT_A', { name: 'Widget' });
+        const criteria = new TenantDocSearchCriteria(conn, 'TENANT_A', { name: 'Widget' });
 
         // First run
-        await criteria.query(conn);
+        await criteria.query();
         expect(criteria.getSql()).toBe('select * from products where tenant_code = $1 and p.name = $2');
         expect(criteria.getParams()).toEqual(['TENANT_A', 'Widget']);
         expect(criteria.getOrderBy()).toBe('ORDER BY p.name');
 
         // Second run (re-entrancy check)
-        await criteria.query(conn);
+        await criteria.query();
         expect(criteria.getSql()).toBe('select * from products where tenant_code = $1 and p.name = $2');
         expect(criteria.getParams()).toEqual(['TENANT_A', 'Widget']);
         expect(criteria.getOrderBy()).toBe('ORDER BY p.name');
