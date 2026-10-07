@@ -187,8 +187,8 @@
           </li>
         
           <li class="sidebar-subnav-item level-2">
-            <a href="#the-port-file" class="subnav-link" data-toc-target="the-port-file">
-              The port file
+            <a href="#the-listening-port" class="subnav-link" data-toc-target="the-listening-port">
+              The listening port
             </a>
           </li>
         
@@ -251,12 +251,12 @@
 <div class="code-block-wrapper">
   <div class="code-block-header">
     <span class="code-lang-tag">typescript</span>
-    <button class="copy-btn" data-code-id="code-nfgn87x" title="复制代码">
+    <button class="copy-btn" data-code-id="code-r6079dn" title="复制代码">
       <svg class="copy-icon" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
       <span class="copy-label">复制</span>
     </button>
   </div>
-  <pre class="code-block"><code id="code-nfgn87x" class="language-typescript"><span class="token keyword">import</span> { CommonProcessor } <span class="token keyword">from</span> <span class="token string">&#039;@ticatec/keelson-express&#039;</span>;
+  <pre class="code-block"><code id="code-r6079dn" class="language-typescript"><span class="token keyword">import</span> { CommonProcessor } <span class="token keyword">from</span> <span class="token string">&#039;@ticatec/keelson-express&#039;</span>;
 <span class="token keyword">import</span> { beanFactory } <span class="token keyword">from</span> <span class="token string">&#039;@ticatec/keelson-core&#039;</span>;
 
 <span class="token keyword">interface</span> PendingMail { id: string; to: string; body: string; }
@@ -290,12 +290,12 @@
 <div class="code-block-wrapper">
   <div class="code-block-header">
     <span class="code-lang-tag">typescript</span>
-    <button class="copy-btn" data-code-id="code-66b45ym" title="复制代码">
+    <button class="copy-btn" data-code-id="code-93kro4t" title="复制代码">
       <svg class="copy-icon" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
       <span class="copy-label">复制</span>
     </button>
   </div>
-  <pre class="code-block"><code id="code-66b45ym" class="language-typescript"><span class="token keyword">import</span> { ProcessorManager } <span class="token keyword">from</span> <span class="token string">&#039;@ticatec/keelson-express&#039;</span>;
+  <pre class="code-block"><code id="code-93kro4t" class="language-typescript"><span class="token keyword">import</span> { ProcessorManager } <span class="token keyword">from</span> <span class="token string">&#039;@ticatec/keelson-express&#039;</span>;
 
 <span class="token keyword">protected</span> <span class="token keyword">async</span> <span class="token function">beforeStart</span>(): <span class="token builtin">Promise</span>&lt;<span class="token keyword">void</span>&gt; {
     DBManager.<span class="token function">init</span>(<span class="token function">initializePg</span>(AppConf.<span class="token function">getInstance</span>()!.<span class="token keyword">get</span>(<span class="token string">&#039;database&#039;</span>)));
@@ -310,19 +310,19 @@
 <p>Register after the database and the beans — a processor can fire its first tick within a second of starting, and it must find a working world.</p>
 <p>To reach one later, <code class="inline-code">ProcessorManager.getInstance().get(&#039;MailProcessor&#039;)</code> returns it or <code class="inline-code">undefined</code>. <code class="inline-code">runImmediately()</code> makes the next tick happen now, which is how a webhook can nudge a drain loop instead of waiting for the interval.</p>
 <h2 id="shutdown" class="heading-anchor"><a href="#shutdown" class="header-link">#</a> Shutdown</h2>
-<p><code class="inline-code">BaseServer.shutdown()</code> does three things in order: stops all processors and waits for in-flight items, deletes the <code class="inline-code">check.dat</code> port file, then closes the HTTP server.</p>
+<p><code class="inline-code">BaseServer.shutdown()</code> does three things in order: stops all processors and waits for in-flight items, then closes the HTTP server.</p>
 <p>Processors first is the important part. Stopping the listener first would leave a batch half-processed while the pod is already being torn down.</p>
 <p>Wire it to the signals your orchestrator sends:</p>
 
 <div class="code-block-wrapper">
   <div class="code-block-header">
     <span class="code-lang-tag">typescript</span>
-    <button class="copy-btn" data-code-id="code-ql6ekl8" title="复制代码">
+    <button class="copy-btn" data-code-id="code-rb7ln24" title="复制代码">
       <svg class="copy-icon" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
       <span class="copy-label">复制</span>
     </button>
   </div>
-  <pre class="code-block"><code id="code-ql6ekl8" class="language-typescript"><span class="token keyword">const</span> server = <span class="token keyword">new</span> <span class="token function">MyServer</span>();
+  <pre class="code-block"><code id="code-rb7ln24" class="language-typescript"><span class="token keyword">const</span> server = <span class="token keyword">new</span> <span class="token function">MyServer</span>();
 BaseServer.<span class="token function">startup</span>(server);
 
 <span class="token keyword">for</span> (<span class="token keyword">const</span> signal of [<span class="token string">&#039;SIGTERM&#039;</span>, <span class="token string">&#039;SIGINT&#039;</span>] as <span class="token keyword">const</span>) {
@@ -338,8 +338,8 @@ BaseServer.<span class="token function">startup</span>(server);
 <h3 id="the-http-side" class="heading-anchor"><a href="#the-http-side" class="header-link">#</a> The HTTP side</h3>
 <p><code class="inline-code">close()</code> stops accepting new connections and waits for in-flight requests to finish. Node 18 leaves idle keep-alive connections open at this point, which can delay the callback, so <code class="inline-code">shutdown()</code> closes idle connections explicitly. In-flight requests are left alone to complete — a shutdown that truncates a response mid-write is not graceful.</p>
 <p>Give the pod a <code class="inline-code">terminationGracePeriodSeconds</code> longer than your slowest request.</p>
-<h2 id="the-port-file" class="heading-anchor"><a href="#the-port-file" class="header-link">#</a> The port file</h2>
-<p>On startup the server writes the port it actually bound to into <code class="inline-code">./check.dat</code>, and <code class="inline-code">shutdown()</code> deletes it. With <code class="inline-code">port: 0</code> — bind anything free — that file is how a wrapper script discovers the real port. As a health signal it is weak; prefer <code class="inline-code">/health/live</code>.</p>
+<h2 id="the-listening-port" class="heading-anchor"><a href="#the-listening-port" class="header-link">#</a> The listening port</h2>
+<p>The server listens on the port in the <code class="inline-code">PORT</code> environment variable, and on 80 when it is unset or empty. A <code class="inline-code">PORT</code> that is set but not an integer between 0 and 65535 fails startup instead of falling back to 80. A <code class="inline-code">port</code> in <code class="inline-code">getWebConf()</code> is ignored. To source the port some other way, override the protected <code class="inline-code">getPort()</code>.</p>
 <hr class="divider" />
 <p>Next: <a href="08-config-and-cache.html" class="doc-link">Configuration and cache</a>.</p>
         </article>
@@ -420,8 +420,8 @@ BaseServer.<span class="token function">startup</span>(server);
               </li>
             
               <li class="toc-item level-2">
-                <a href="#the-port-file" class="toc-link" data-anchor="the-port-file">
-                  The port file
+                <a href="#the-listening-port" class="toc-link" data-anchor="the-listening-port">
+                  The listening port
                 </a>
               </li>
             

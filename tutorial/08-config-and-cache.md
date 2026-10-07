@@ -13,7 +13,7 @@ with dot notation.
 ```typescript
 AppConf.init(config);
 
-AppConf.getInstance()!.get('web.port');         // 3000
+AppConf.getInstance()!.get('web.contextRoot');  // '/api'
 AppConf.getInstance()!.get('database.host');    // 'db.internal'
 AppConf.getInstance()!.get('nope.nothing');     // undefined, no throw
 ```

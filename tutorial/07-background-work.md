@@ -83,7 +83,7 @@ nudge a drain loop instead of waiting for the interval.
 ## Shutdown
 
 `BaseServer.shutdown()` does three things in order: stops all processors and waits for
-in-flight items, deletes the `check.dat` port file, then closes the HTTP server.
+in-flight items, then closes the HTTP server.
 
 Processors first is the important part. Stopping the listener first would leave a batch
 half-processed while the pod is already being torn down.
@@ -124,11 +124,12 @@ complete — a shutdown that truncates a response mid-write is not graceful.
 
 Give the pod a `terminationGracePeriodSeconds` longer than your slowest request.
 
-## The port file
+## The listening port
 
-On startup the server writes the port it actually bound to into `./check.dat`, and
-`shutdown()` deletes it. With `port: 0` — bind anything free — that file is how a wrapper
-script discovers the real port. As a health signal it is weak; prefer `/health/live`.
+The server listens on the port in the `PORT` environment variable, and on 80 when it is unset
+or empty. A `PORT` that is set but not an integer between 0 and 65535 fails startup instead
+of falling back to 80. A `port` in `getWebConf()` is ignored. To source the port some other
+way, override the protected `getPort()`.
 
 ---
 

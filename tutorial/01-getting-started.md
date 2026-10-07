@@ -193,7 +193,7 @@ class GreetingServer extends BaseServer {
 
     protected async loadConfigFile(): Promise<void> {
         AppConf.init({
-            web: { port: 3000, ip: '0.0.0.0', contextRoot: '/api' },
+            web: { ip: '0.0.0.0', contextRoot: '/api' },
             database: {
                 host: 'localhost', port: 5432,
                 database: 'demo', user: 'demo', password: process.env.DB_PASSWORD,
@@ -255,7 +255,7 @@ the same: whatever you pass to `AppConf.init()` is what `AppConf.getInstance()!.
 reads, with dot notation for nesting:
 
 ```typescript
-AppConf.getInstance()!.get('web.port');        // 3000
+AppConf.getInstance()!.get('web.ip');          // '0.0.0.0'
 AppConf.getInstance()!.get('nope.nothing');    // undefined, no throw
 ```
 

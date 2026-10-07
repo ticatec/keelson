@@ -188,7 +188,7 @@ class GreetingServer extends BaseServer {
 
     protected async loadConfigFile(): Promise<void> {
         AppConf.init({
-            web: { port: 3000, ip: '0.0.0.0', contextRoot: '/api' },
+            web: { ip: '0.0.0.0', contextRoot: '/api' },
             database: {
                 host: 'localhost', port: 5432,
                 database: 'demo', user: 'demo', password: process.env.DB_PASSWORD,
@@ -248,7 +248,7 @@ GET /health                与 /health/ready 相同
 什么，嵌套用点号：
 
 ```typescript
-AppConf.getInstance()!.get('web.port');        // 3000
+AppConf.getInstance()!.get('web.ip');          // '0.0.0.0'
 AppConf.getInstance()!.get('nope.nothing');    // undefined，不抛异常
 ```
 

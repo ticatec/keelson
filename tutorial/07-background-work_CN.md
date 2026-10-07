@@ -78,8 +78,7 @@ protected async beforeStart(): Promise<void> {
 
 ## 关停
 
-`BaseServer.shutdown()` 按顺序做三件事：停掉所有处理器并等待在途条目、删掉 `check.dat`
-端口文件、关闭 HTTP 服务器。
+`BaseServer.shutdown()` 按顺序做两件事：停掉所有处理器并等待在途条目、关闭 HTTP 服务器。
 
 处理器排在最前面是关键。先关监听会让某一批数据处理到一半，而 pod 已经在被拆了。
 
@@ -116,11 +115,11 @@ for (const signal of ['SIGTERM', 'SIGINT'] as const) {
 
 给 pod 的 `terminationGracePeriodSeconds` 要比你最慢的请求更长。
 
-## 端口文件
+## 监听端口
 
-启动时服务器把自己实际绑定到的端口写进 `./check.dat`，`shutdown()` 删掉它。
-在 `port: 0`（随便找个空闲端口）的场景下，外层脚本就是靠这个文件发现真实端口的。
-作为健康信号它很弱，请用 `/health/live`。
+服务器监听环境变量 `PORT` 指定的端口，未设置或为空时使用 80。`PORT` 已设置但不是 0–65535
+的整数时，启动会直接失败，而不是悄悄退回 80。`getWebConf()` 里的 `port` 会被忽略。想从别处
+取端口，覆盖受保护的 `getPort()` 即可。
 
 ---
 
