@@ -2,7 +2,6 @@ import { setLoggerProvider, resetLoggerProvider } from '@ticatec/logger-api';
 import type { Logger } from '@ticatec/logger-api';
 import http from 'http';
 import net from 'net';
-import fs from 'fs';
 
 import AppConf from '../AppConf.js';
 import ProcessorManager from '../ProcessorManager.js';
@@ -121,7 +120,10 @@ class SlowServer extends BaseServer {
 
     protected async loadConfigFile(): Promise<void> {}
     protected getWebConf() {
-        return { port: this.listenPort, ip: '127.0.0.1', contextRoot: '/api' };
+        return { ip: '127.0.0.1', contextRoot: '/api' };
+    }
+    protected getPort(): number {
+        return this.listenPort;
     }
     protected async setupRoutes(): Promise<void> {
         await this.bindRoutes('/slow', async () => ({ default: SlowRoutes }));
@@ -172,7 +174,10 @@ class TestServer extends BaseServer {
 
     protected async loadConfigFile(): Promise<void> {}
     protected getWebConf() {
-        return { port: this.listenPort, ip: '127.0.0.1', contextRoot: '/api' };
+        return { ip: '127.0.0.1', contextRoot: '/api' };
+    }
+    protected getPort(): number {
+        return this.listenPort;
     }
     protected async postServerCreated(_server: http.Server): Promise<void> {
         if (this.failPostCreate) {
@@ -192,16 +197,6 @@ describe('keelson-express comprehensive test suite', () => {
     beforeAll(() => {
         resetLoggerProvider();
         setLoggerProvider(() => SILENT);
-    });
-
-    afterEach(() => {
-        if (fs.existsSync('./check.dat')) {
-            try {
-                fs.unlinkSync('./check.dat');
-            } catch {
-                // Ignore cleanup error
-            }
-        }
     });
 
     test('should initialize AppConf singleton and fetch nested properties', () => {
@@ -322,18 +317,66 @@ describe('keelson-express comprehensive test suite', () => {
         expect(await (protectedRoutes as any).isValidUser({ accountCode: 'U1', name: 'Bob' })).toBe(true);
     });
 
-    test('should start, write check.dat with actual port, and shutdown server gracefully', async () => {
+    test('should start on a dynamic port and shutdown server gracefully', async () => {
         const server = new TestServer();
         server.listenPort = 0; // Dynamic port
 
         await server.startup();
 
-        expect(fs.existsSync('./check.dat')).toBe(true);
-        const writtenPort = parseInt(fs.readFileSync('./check.dat', 'utf-8'), 10);
-        expect(writtenPort).toBeGreaterThan(0);
+        const address = (server as any).httpServer.address();
+        expect(address.port).toBeGreaterThan(0);
 
         await server.shutdown();
-        expect(fs.existsSync('./check.dat')).toBe(false);
+        expect((server as any).httpServer).toBeNull();
+    });
+
+    describe('listening port from the PORT environment variable', () => {
+        class EnvPortServer extends BaseServer {
+            protected async loadConfigFile(): Promise<void> {}
+            protected getWebConf() { return { ip: '127.0.0.1', contextRoot: '/api' }; }
+            protected async setupRoutes(): Promise<void> {}
+            public resolvePort(): number { return this.getPort(); }
+            public constructor() { super(); }
+        }
+        const saved = process.env.PORT;
+        afterEach(() => {
+            if (saved === undefined) { delete process.env.PORT; } else { process.env.PORT = saved; }
+        });
+
+        test('defaults to 80 when PORT is unset or empty', () => {
+            delete process.env.PORT;
+            expect(new EnvPortServer().resolvePort()).toBe(80);
+            process.env.PORT = '  ';
+            expect(new EnvPortServer().resolvePort()).toBe(80);
+        });
+
+        test('reads the port from PORT', () => {
+            process.env.PORT = '8123';
+            expect(new EnvPortServer().resolvePort()).toBe(8123);
+            process.env.PORT = '0';
+            expect(new EnvPortServer().resolvePort()).toBe(0);
+        });
+
+        test('rejects a PORT that is not a valid port instead of falling back to 80', () => {
+            for (const bad of ['abc', '80.5', '-1', '65536', '8080x']) {
+                process.env.PORT = bad;
+                expect(() => new EnvPortServer().resolvePort()).toThrow(/Invalid PORT/);
+            }
+        });
+
+        test('a server binds the port named by PORT and ignores a port in getWebConf()', async () => {
+            process.env.PORT = '0';
+            class Conf extends EnvPortServer {
+                protected getWebConf() { return { port: 1, ip: '127.0.0.1', contextRoot: '/api' }; }
+            }
+            const server = new Conf();
+            await server.startup();
+            try {
+                expect((server as any).httpServer.address().port).toBeGreaterThan(1);
+            } finally {
+                await server.shutdown();
+            }
+        });
     });
 
 
@@ -341,7 +384,7 @@ describe('keelson-express comprehensive test suite', () => {
         const server = new SlowServer();
         server.listenPort = 0;
         await server.startup();
-        const port = parseInt(fs.readFileSync('./check.dat', 'utf-8'), 10);
+        const port = (server as any).httpServer.address().port as number;
 
         // 关停期间必须让已经在处理的请求写完响应。closeAllConnections() 会把这条
         // 连接一起销毁，客户端拿到的是被截断的响应——那不是优雅关停。
@@ -441,7 +484,6 @@ describe('keelson-express comprehensive test suite', () => {
         server.failPostCreate = true;
 
         await expect(server.startup()).rejects.toThrow('Post server creation failed intentionally');
-        expect(fs.existsSync('./check.dat')).toBe(false);
     });
 
     test('should reject startup if port is invalid or occupied', async () => {

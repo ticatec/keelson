@@ -1,5 +1,22 @@
 # Changelog
 
+## [Unreleased]
+
+### Breaking Changes
+
+- **The listening port now comes from the `PORT` environment variable, default 80.**
+  The `port` returned by `getWebConf()` is ignored; `ip` and `contextRoot` are still read from it.
+  A `PORT` that is set but not an integer in 0-65535 fails startup rather than falling back to 80.
+  Override the protected `getPort()` to source the port elsewhere. Services that relied on
+  `getWebConf().port` must set `PORT` (or override `getPort()`) or they will bind 80.
+- **The `check.dat` port file is gone.** `BaseServer.writeCheckFile()` is removed, `shutdown()` no
+  longer deletes it, and `shutdown()` no longer takes a file-name argument. Anything that read the
+  bound port from `./check.dat` (wrapper scripts, dynamic `port: 0`) must use `PORT` directly.
+
+### Changed
+
+- Health check routes are now mounted after `retrieveUser()`, so `/health/*` requests carry the resolved user.
+
 ## [2.0.1] - 2026-10-02
 
 ### Added

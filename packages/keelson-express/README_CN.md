@@ -67,7 +67,6 @@ class MyServer extends BaseServer {
 
     protected getWebConf() {
         return {
-            port: 3000,
             ip: '0.0.0.0',
             contextRoot: '/api'
         };

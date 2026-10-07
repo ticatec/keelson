@@ -1,6 +1,5 @@
 import express, {Express, NextFunction, Request, Response} from 'express';
 import {handleError} from "@ticatec/node-exception";
-import fs from 'fs';
 import http from "http";
 import net from "net";
 import {getLogger, Logger} from "@ticatec/logger-api";
@@ -58,21 +57,24 @@ export default abstract class BaseServer {
     protected abstract loadConfigFile(): Promise<void>;
 
     /**
-     * Writes the listening port to check.dat file
-     * @param port The port number to write
-     * @param fileName The file name to write to (default: './check.dat')
+     * Port the server listens on. Read from the `PORT` environment variable, and 80 when it
+     * is unset or empty. Override to source the port elsewhere.
+     *
+     * A value that is set but is not an integer in 0-65535 is rejected rather than silently
+     * replaced by 80: a typo in a deployment manifest should fail startup, not quietly bind
+     * a different port. `0` is accepted and binds any free port.
      * @protected
      */
-    protected writeCheckFile(port: number, fileName: string = './check.dat') {
-        try {
-            this.logger.debug({port, fileName}, 'Writing listening port to check file');
-            fs.writeFileSync(fileName, `${port}`);
-        } catch (err) {
-            // 传 Error 本身，不要包成 {err}：Error 的 message 与 stack 都不是可枚举属性，
-            // 包进对象后经 JSON 序列化只剩 {"err":{"code":"ENOSPC"}} 这种残骸，
-            // 真正要看的那行没了。
-            this.logger.error(err, 'Error writing port file');
+    protected getPort(): number {
+        const raw = process.env.PORT;
+        if (raw == null || raw.trim() === '') {
+            return 80;
         }
+        const port = Number(raw);
+        if (!Number.isInteger(port) || port < 0 || port > 65535) {
+            throw new Error(`Invalid PORT environment variable '${raw}': must be an integer between 0 and 65535.`);
+        }
+        return port;
     }
 
     /**
@@ -85,7 +87,7 @@ export default abstract class BaseServer {
         try {
             await this.beforeStart();
             const webConf = this.getWebConf();
-            this.logger.debug({port: webConf.port, ip: webConf.ip, contextRoot: webConf.contextRoot}, 'Web configuration loaded');
+            this.logger.debug({ip: webConf.ip, contextRoot: webConf.contextRoot}, 'Web configuration loaded');
             this.contextRoot = webConf.contextRoot;
             await this.startWebServer(webConf);
         } catch (err) {
@@ -164,15 +166,16 @@ export default abstract class BaseServer {
      * @protected
      */
     protected async startWebServer(webConf: any): Promise<http.Server> {
+        const port = this.getPort();
         const app = express();
         app.disable("x-powered-by");
         const routerHelper = (await import("./RouterHelper.js")).default;
         app.use(routerHelper.setNoCache);
         this.app = app;
-        await this.addHealthCheck();
         this.setupExpress();
         await this.bindStaticSite();
         app.use(routerHelper.retrieveUser());
+        await this.addHealthCheck();
         await this.setupRoutes();
         app.use(routerHelper.actionNotFound());
         app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
@@ -185,14 +188,13 @@ export default abstract class BaseServer {
                 reject(err);
             };
 
-            const server: http.Server = app.listen(webConf.port, webConf.ip, async () => {
+            const server: http.Server = app.listen(port, webConf.ip, async () => {
                 server.removeListener('error', onError);
                 server.on('error', (err) => this.logger.error(err, 'Runtime server error'));
                 try {
                     const address = server.address() as net.AddressInfo;
-                    const actualPort = address?.port || webConf.port;
+                    const actualPort = address?.port ?? port;
                     await this.postServerCreated(server);
-                    this.writeCheckFile(actualPort);
                     this.httpServer = server;
                     this.logger.info({ip: webConf.ip, port: actualPort}, 'Web service started');
                     resolve(server);
@@ -208,21 +210,13 @@ export default abstract class BaseServer {
     /**
      * Gracefully shuts down the HTTP server and stops background processors
      */
-    async shutdown(checkFileName: string = './check.dat'): Promise<void> {
+    async shutdown(): Promise<void> {
         this.logger.info({}, 'Shutting down server');
         try {
             const {default: ProcessorManager} = await import('./ProcessorManager.js');
             await ProcessorManager.getInstance().stopAll();
         } catch (err) {
             this.logger.warn(err, 'Error stopping processor manager');
-        }
-
-        if (fs.existsSync(checkFileName)) {
-            try {
-                fs.unlinkSync(checkFileName);
-            } catch (err) {
-                this.logger.warn(err, 'Error removing check file');
-            }
         }
 
         if (this.httpServer) {
