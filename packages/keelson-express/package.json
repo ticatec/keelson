@@ -1,11 +1,14 @@
 {
   "name": "@ticatec/keelson-express",
-  "version": "2.1.0",
+  "version": "2.2.0",
   "description": "Enterprise-grade TypeScript framework for Express.js with built-in multi-tenant support, CRUD controllers, validation, authentication, and API gateway integration.",
   "type": "module",
   "main": "./lib/cjs/index.js",
   "module": "./lib/esm/index.js",
   "types": "./lib/cjs/index.d.ts",
+  "bin": {
+    "keelson-healthcheck": "./lib/cjs/bin/healthcheck.js"
+  },
   "sideEffects": false,
   "exports": {
     ".": {

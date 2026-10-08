@@ -13,6 +13,8 @@ import Controller from '../common/Controller.js';
 import CommonSearchController from '../common/CommonSearchController.js';
 import BaseController from '../common/BaseController.js';
 import CommonRoutes, { AuthenticatedRoutes } from '../CommonRoutes.js';
+import { probeHealth } from '../health/HealthProbe.js';
+import { parseListenPort } from '../Port.js';
 import BaseServer from '../BaseServer.js';
 import LoggedUser, {
     CommonUser,
@@ -328,6 +330,70 @@ describe('keelson-express comprehensive test suite', () => {
 
         await server.shutdown();
         expect((server as any).httpServer).toBeNull();
+    });
+
+    describe('health probe', () => {
+        test('probeHealth treats a 2xx answer from /health/live as healthy', async () => {
+            const server = new TestServer();
+            server.listenPort = 0;
+            await server.startup();
+            try {
+                const port = (server as any).httpServer.address().port as number;
+                expect(await probeHealth({ port })).toEqual({ ok: true, statusCode: 200 });
+            } finally {
+                await server.shutdown();
+            }
+        });
+
+        test('probeHealth treats a missing health endpoint (404) as unhealthy, not as alive', async () => {
+            const server = new TestServer();
+            server.listenPort = 0;
+            await server.startup();
+            try {
+                const port = (server as any).httpServer.address().port as number;
+                const result = await probeHealth({ port, path: '/health-check' });
+                expect(result.ok).toBe(false);
+                expect(result.statusCode).toBe(404);
+            } finally {
+                await server.shutdown();
+            }
+        });
+
+        test('probeHealth reports a refused connection as unhealthy', async () => {
+            const probe = http.createServer();
+            await new Promise<void>(resolve => probe.listen(0, '127.0.0.1', resolve));
+            const port = (probe.address() as net.AddressInfo).port;
+            await new Promise<void>(resolve => probe.close(() => resolve()));
+            const result = await probeHealth({ port });
+            expect(result.ok).toBe(false);
+            expect(result.error).toBeDefined();
+        });
+
+        test('probeHealth gives up on a server that never answers instead of hanging', async () => {
+            const silent = http.createServer(() => { /* never respond */ });
+            await new Promise<void>(resolve => silent.listen(0, '127.0.0.1', resolve));
+            const port = (silent.address() as net.AddressInfo).port;
+            try {
+                const started = Date.now();
+                const result = await probeHealth({ port, timeoutMs: 100 });
+                expect(result.ok).toBe(false);
+                expect(result.error).toMatch(/Timed out/);
+                expect(Date.now() - started).toBeLessThan(2000);
+            } finally {
+                silent.closeAllConnections?.();
+                await new Promise<void>(resolve => silent.close(() => resolve()));
+            }
+        });
+
+        test('parseListenPort is the one rule shared by the server and the health check', () => {
+            expect(parseListenPort(undefined)).toBe(80);
+            expect(parseListenPort('  ')).toBe(80);
+            expect(parseListenPort('8123')).toBe(8123);
+            expect(parseListenPort('0')).toBe(0);
+            for (const bad of ['abc', '80.5', '-1', '65536']) {
+                expect(() => parseListenPort(bad)).toThrow(/Invalid PORT/);
+            }
+        });
     });
 
     describe('listening port from the PORT environment variable', () => {

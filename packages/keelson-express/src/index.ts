@@ -28,6 +28,8 @@ export { default as CommonProcessor, ProcessStatus } from './CommonProcessor.js'
 export { HealthCheckRegistry } from './health/HealthCheckRegistry.js';
 export { HealthRoutes } from './health/HealthRoutes.js';
 export { createSystemHealthIndicator } from './health/BuiltinHealthIndicators.js';
+export { probeHealth } from './health/HealthProbe.js';
+export type { ProbeOptions, ProbeResult } from './health/HealthProbe.js';
 export type { HealthStatus, HealthCheckResult, HealthCheckIndicator, RegisteredCheck, ReadinessResponse } from './health/HealthCheckRegistry.js';
 
 export { getLogger } from '@ticatec/logger-api';

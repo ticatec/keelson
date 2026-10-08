@@ -8,6 +8,7 @@ import {HealthCheckRegistry} from "./health/HealthCheckRegistry.js";
 import type {HealthCheckIndicator} from "./health/HealthCheckRegistry.js";
 import {createSystemHealthIndicator} from "./health/BuiltinHealthIndicators.js";
 import {HealthRoutes} from "./health/HealthRoutes.js";
+import {parseListenPort} from "./Port.js";
 
 /**
  * Function signature for module loader
@@ -66,15 +67,7 @@ export default abstract class BaseServer {
      * @protected
      */
     protected getPort(): number {
-        const raw = process.env.PORT;
-        if (raw == null || raw.trim() === '') {
-            return 80;
-        }
-        const port = Number(raw);
-        if (!Number.isInteger(port) || port < 0 || port > 65535) {
-            throw new Error(`Invalid PORT environment variable '${raw}': must be an integer between 0 and 65535.`);
-        }
-        return port;
+        return parseListenPort(process.env.PORT);
     }
 
     /**

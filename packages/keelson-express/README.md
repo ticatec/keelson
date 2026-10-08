@@ -105,6 +105,15 @@ The framework includes built-in Kubernetes probe endpoints by default:
 - `GET /health/ready`: Readiness Probe (HTTP 200 when all critical components pass, HTTP 503 if any critical component is DOWN).
 - `GET /health`: Comprehensive aggregate status view.
 
+**Container health check.** The package ships a `keelson-healthcheck` command, so a service does not need its own health-check script. It probes `http://127.0.0.1:$PORT/health/live` and exits 0 on a 2xx answer, 1 otherwise. `PORT` is read exactly as the server reads it (unset = 80; an invalid value fails the check). A 404 or 5xx counts as unhealthy, and a server that does not answer within 2 seconds is abandoned.
+
+```dockerfile
+HEALTHCHECK --interval=10s --timeout=10s --start-period=60s --retries=3 \
+    CMD node ./node_modules/@ticatec/keelson-express/lib/cjs/bin/healthcheck.js || exit 1
+```
+
+Overrides: the first argument or `HEALTH_CHECK_PATH` (path to probe), `HEALTH_CHECK_HOST` (default `127.0.0.1`), `HEALTH_CHECK_TIMEOUT_MS` (default 2000). Use `probeHealth({port, path?, host?, timeoutMs?})` for a custom probe in code.
+
 Register custom health indicators (e.g. Database, Redis):
 
 ```typescript

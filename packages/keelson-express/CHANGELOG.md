@@ -1,6 +1,22 @@
 # Changelog
 
-## [Unreleased]
+## [2.2.0] - 2026-10-09
+
+### Added
+
+- **`keelson-healthcheck` command for container health checks.**
+  Probes `http://127.0.0.1:$PORT/health/live` and exits 0 on a 2xx answer, 1 otherwise. `PORT` is
+  resolved exactly as `BaseServer` resolves it (unset = 80; invalid = failure), through one shared
+  function, so the probe and the server cannot disagree about the port. Services stop carrying their
+  own `health-check.ts`; the Dockerfile runs
+  `HEALTHCHECK CMD node ./node_modules/@ticatec/keelson-express/lib/cjs/bin/healthcheck.js`.
+  Overrides: first argument or `HEALTH_CHECK_PATH` (path), `HEALTH_CHECK_HOST`, `HEALTH_CHECK_TIMEOUT_MS`.
+  Unlike the per-service copies it replaces, a 404 or 5xx is unhealthy (the copies accepted anything
+  below 500, so a missing health endpoint passed), and a server that never answers is abandoned after
+  the timeout instead of hanging until Docker's own timeout.
+- **`probeHealth(options)`** exported from the package entry point, for custom probes and tests.
+
+## [2.1.0] - 2026-10-07
 
 ### Breaking Changes
 

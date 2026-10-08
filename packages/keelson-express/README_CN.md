@@ -103,6 +103,15 @@ try {
 - `GET /health/ready`: 就绪探针 (Readiness Probe)，汇总所有关键探针，全部正常返回 HTTP 200，任一关键项 DOWN 返回 HTTP 503。
 - `GET /health`: 综合健康视图。
 
+**容器健康检查。** 包内自带 `keelson-healthcheck` 命令，服务不需要再自己写健康检查脚本。它请求 `http://127.0.0.1:$PORT/health/live`，返回 2xx 时退出码为 0，否则为 1。`PORT` 的读取规则与服务端完全一致（未设置为 80；值非法则检查失败）。404 或 5xx 都视为不健康，2 秒内没有响应也会放弃。
+
+```dockerfile
+HEALTHCHECK --interval=10s --timeout=10s --start-period=60s --retries=3 \
+    CMD node ./node_modules/@ticatec/keelson-express/lib/cjs/bin/healthcheck.js || exit 1
+```
+
+可覆盖项：第一个参数或 `HEALTH_CHECK_PATH`（探测路径）、`HEALTH_CHECK_HOST`（默认 `127.0.0.1`）、`HEALTH_CHECK_TIMEOUT_MS`（默认 2000）。需要在代码里自定义探测时用 `probeHealth({port, path?, host?, timeoutMs?})`。
+
 注册自定义组件探针（如数据库、Redis）：
 
 ```typescript
